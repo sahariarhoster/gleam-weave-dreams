@@ -211,12 +211,13 @@ export const runCampaignChunk = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
+    // Authorize BEFORE reading any campaign data
+    await assertCampaignManager(context.supabase, context.userId, data.id);
     const { data: camp, error: cErr } = await context.supabase
       .from("campaigns")
       .select("id, status, device_id, min_delay_seconds, max_delay_seconds, daily_limit, send_window_start, send_window_end, sent_count, failed_count")
       .eq("id", data.id)
       .single();
-    await assertCampaignManager(context.supabase, context.userId, data.id);
     if (cErr || !camp) throw new Error("Campaign not found");
     if (camp.status === "paused") return { ran: 0, reason: "paused" };
     if (camp.status === "completed" || camp.status === "failed") return { ran: 0, reason: camp.status };
