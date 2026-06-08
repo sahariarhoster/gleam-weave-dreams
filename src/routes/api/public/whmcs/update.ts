@@ -18,7 +18,7 @@ export const Route = createFileRoute("/api/public/whmcs/update")({
       POST: async ({ request }) => {
         if (!(await verifyWhmcsToken(request))) return json({ error: "unauthorized" }, 401);
         const input = Body.parse(await request.json());
-        const patch: Record<string, unknown> = {};
+        const patch: any = {};
         if (input.brand_name !== undefined) patch.name = input.brand_name;
         if (input.message_limit !== undefined) patch.message_limit = input.message_limit;
         if (input.device_limit !== undefined) patch.device_limit = input.device_limit;
