@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Soon } from "./brands";
+import { Soon } from "@/components/layout/soon";
 
 export const Route = createFileRoute("/_authenticated/blocked")({
   head: () => ({ meta: [{ title: "Blocked Numbers — WA Notifier" }] }),
