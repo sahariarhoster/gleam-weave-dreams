@@ -47,11 +47,14 @@ function LogsPage() {
 
   return (
     <div className="mx-auto max-w-7xl">
+      <PageHeader
+        icon={ListChecks}
+        title="Message Logs"
+        description="Every WhatsApp message sent through your devices, with delivery status."
+      />
       <Card className="border-border/60 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between gap-2">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <ListChecks className="h-4 w-4" /> Message Logs
-          </CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between gap-2 pb-3">
+          <div className="text-sm font-medium text-muted-foreground">All messages</div>
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
