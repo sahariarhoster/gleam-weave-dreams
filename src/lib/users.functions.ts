@@ -126,3 +126,33 @@ export const impersonateUser = createServerFn({ method: "POST" })
     });
     return { url: action_link as string };
   });
+
+export const createUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      email: z.string().email().max(255),
+      password: z.string().min(6).max(72),
+      full_name: z.string().min(1).max(100),
+      role: z.enum(["owner", "member"]).default("member"),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertOwner(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
+      email: data.email,
+      password: data.password,
+      email_confirm: true,
+      user_metadata: { full_name: data.full_name },
+    });
+    if (error) throw new Error(error.message);
+    const uid = created.user?.id;
+    if (!uid) throw new Error("User creation failed");
+    // handle_new_user trigger creates profile + default member role; override if owner requested
+    if (data.role === "owner") {
+      await supabaseAdmin.from("user_roles").delete().eq("user_id", uid);
+      await supabaseAdmin.from("user_roles").insert({ user_id: uid, role: "owner" });
+    }
+    return { ok: true, user_id: uid };
+  });
