@@ -66,11 +66,10 @@ function DashboardPage() {
       {/* Hero */}
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2 overflow-hidden border-border/60 bg-gradient-to-br from-primary/90 via-primary to-primary/70 text-primary-foreground shadow-lg">
-          <CardContent className="relative p-6">
-            <div className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/10 opacity-70" />
-            <div className="pointer-events-none absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-white/10 opacity-70" />
-            <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="space-y-2">
+          <CardContent className="relative p-5">
+            <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10 opacity-70" />
+            <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-1.5 min-w-0">
                 <Badge className="bg-white/20 text-primary-foreground hover:bg-white/30">
                   <Zap className="mr-1 h-3 w-3" /> Live overview
                 </Badge>
@@ -78,7 +77,7 @@ function DashboardPage() {
                 <div className="text-sm text-primary-foreground/80">
                   {stats.todayMessages} messages sent today • {stats.activeCampaigns} active campaigns
                 </div>
-                <div className="flex gap-2 pt-2">
+                <div className="flex gap-2 pt-1.5">
                   <Button asChild size="sm" variant="secondary">
                     <Link to="/send">Send SMS <ArrowUpRight className="ml-1 h-3 w-3" /></Link>
                   </Button>
@@ -87,7 +86,7 @@ function DashboardPage() {
                   </Button>
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-3 gap-2 md:shrink-0">
                 <HeroStat label="Sent" value={stats.delivered} />
                 <HeroStat label="Failed" value={stats.failed} />
                 <HeroStat label="Pending" value={stats.pending} />
