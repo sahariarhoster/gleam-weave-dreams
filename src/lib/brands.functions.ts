@@ -45,7 +45,7 @@ export const listBrands = createServerFn({ method: "GET" })
 
 const brandInput = z.object({
   name: z.string().min(1).max(100),
-  status: z.enum(["active", "inactive", "expired"]).default("active"),
+  status: z.enum(["active", "suspended", "expired"]).default("active"),
   expires_at: z.string().nullable().optional(),
   message_limit: z.number().int().nonnegative().nullable().optional(),
   device_limit: z.number().int().nonnegative().default(1),
