@@ -85,6 +85,7 @@ function DevicesPage() {
               <Button size="sm" className="gap-1"><Plus className="h-4 w-4" /> Add Device</Button>
             </DialogTrigger>
             <DeviceDialog
+              key={editing?.id ?? "new"}
               editing={editing}
               brands={brands.data ?? []}
               onDone={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["devices"] }); }}
