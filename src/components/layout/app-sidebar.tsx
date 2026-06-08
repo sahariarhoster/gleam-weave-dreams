@@ -46,6 +46,7 @@ const items = [
   { title: "Blocked Numbers", url: "/blocked", icon: Ban },
   { title: "Activity Log", url: "/activity", icon: ScrollText },
   { title: "Plugin Licenses", url: "/licenses", icon: KeyRound, brandOwnerOrOwner: true },
+  { title: "Device Requests", url: "/device-requests", icon: Wrench, anyRole: ["owner", "brand_owner", "sales_agent"] as string[] },
   { title: "Billing (WHMCS)", url: "/billing", icon: CreditCard, ownerOnly: true },
 
 ] as const;
