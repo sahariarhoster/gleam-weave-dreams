@@ -200,7 +200,7 @@ function Hero() {
           {/* Trust signals */}
           <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-sm text-foreground/70 md:gap-10">
             {[
-              "ক্রেডিট কার্ড ছাড়াই",
+              "আনলিমিটেড মেসেজ",
               "৫ মিনিটে সেটআপ",
               "বাংলায় ২৪/৭ সাপোর্ট",
             ].map((t) => (
