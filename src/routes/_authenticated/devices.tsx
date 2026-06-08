@@ -127,8 +127,8 @@ function DevicesPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
-                      <Button size="icon" variant="ghost" onClick={() => testMut.mutate(d.id)} disabled={testMut.isPending} title="Test connection">
-                        <Link2 className="h-4 w-4" />
+                      <Button size="sm" variant="outline" className="h-8 gap-1" onClick={() => testMut.mutate(d.id)} disabled={testMut.isPending} title="Test connection">
+                        <Link2 className="h-3.5 w-3.5" /> Test
                       </Button>
                       <Button size="icon" variant="ghost" onClick={() => { setEditing(d as Device); setOpen(true); }} title="Edit">
                         <Pencil className="h-4 w-4" />
