@@ -154,7 +154,7 @@ function UsersPage() {
 function AddBrandDialog({ userId, brands, onDone }: { userId: string; brands: { id: string; name: string }[]; onDone: () => void }) {
   const fn = useServerFn(addBrandMember);
   const [brandId, setBrandId] = useState("");
-  const [role, setRole] = useState<"brand_admin" | "sender">("sender");
+  const [role, setRole] = useState<"brand_admin" | "brand_member" | "sender">("brand_member");
   const mut = useMutation({
     mutationFn: () => fn({ data: { user_id: userId, brand_id: brandId, role } }),
     onSuccess: () => { toast.success("Added"); onDone(); },
@@ -173,9 +173,10 @@ function AddBrandDialog({ userId, brands, onDone }: { userId: string; brands: { 
           </Select>
         </div>
         <div className="space-y-1.5"><Label>Brand Role</Label>
-          <Select value={role} onValueChange={(v) => setRole(v as "brand_admin" | "sender")}>
+          <Select value={role} onValueChange={(v) => setRole(v as "brand_admin" | "brand_member" | "sender")}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
+              <SelectItem value="brand_member">Brand Member</SelectItem>
               <SelectItem value="brand_admin">Brand Admin</SelectItem>
               <SelectItem value="sender">Sender</SelectItem>
             </SelectContent>
@@ -194,13 +195,13 @@ function AddBrandDialog({ userId, brands, onDone }: { userId: string; brands: { 
 function AddUserButton({ onDone }: { onDone: () => void }) {
   const fn = useServerFn(createUser);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ email: "", password: "", full_name: "", role: "member" as "owner" | "admin" | "manager" | "brand_owner" | "support_agent" | "member" });
+  const [form, setForm] = useState({ email: "", password: "", full_name: "", role: "brand_owner" as "owner" | "admin" | "manager" | "brand_owner" | "support_agent" | "member" });
   const mut = useMutation({
     mutationFn: () => fn({ data: form }),
     onSuccess: () => {
       toast.success("User created");
       setOpen(false);
-      setForm({ email: "", password: "", full_name: "", role: "member" });
+      setForm({ email: "", password: "", full_name: "", role: "brand_owner" });
       onDone();
     },
     onError: (e) => toast.error((e as Error).message),

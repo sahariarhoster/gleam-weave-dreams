@@ -63,17 +63,27 @@ export const setUserRole = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+async function assertOwnerOrBrandOwner(supabase: any, userId: string, brandId: string) {
+  const { data: ownerRow } = await supabase
+    .from("user_roles").select("role").eq("user_id", userId).eq("role", "owner").maybeSingle();
+  if (ownerRow) return;
+  const { data: brand } = await supabase
+    .from("brands").select("created_by").eq("id", brandId).maybeSingle();
+  if (brand?.created_by === userId) return;
+  throw new Error("Forbidden: only the workspace owner or this brand's owner can manage members");
+}
+
 export const addBrandMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
     z.object({
       user_id: z.string().uuid(),
       brand_id: z.string().uuid(),
-      role: z.enum(["brand_admin", "sender"]).default("sender"),
+      role: z.enum(["brand_admin", "brand_member", "sender"]).default("brand_member"),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertOwner(context.supabase, context.userId);
+    await assertOwnerOrBrandOwner(context.supabase, context.userId, data.brand_id);
     const { error } = await context.supabase
       .from("brand_members")
       .upsert({ ...data }, { onConflict: "brand_id,user_id" });
@@ -134,7 +144,7 @@ export const createUser = createServerFn({ method: "POST" })
       email: z.string().email().max(255),
       password: z.string().min(6).max(72),
       full_name: z.string().min(1).max(100),
-      role: z.enum(["owner", "admin", "manager", "brand_owner", "support_agent", "member"]).default("member"),
+      role: z.enum(["owner", "admin", "manager", "brand_owner", "support_agent", "member"]).default("brand_owner"),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
