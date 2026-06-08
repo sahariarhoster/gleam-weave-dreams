@@ -28,7 +28,6 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && check_admin_referer('wanw_lic')) {
     <form method="post">
         <?php wp_nonce_field('wanw_lic'); ?>
         <p><label>License Key<br><input type="text" name="license_key" class="regular-text" value="<?php echo esc_attr(WANW_Settings::license()); ?>"></label></p>
-        <p><label>API Base URL<br><input type="url" name="api_base" class="regular-text" value="<?php echo esc_attr(WANW_Settings::api_base()); ?>"></label></p>
         <p>
             <button class="button button-primary">Activate</button>
             <button class="button" name="reset" value="1" onclick="return confirm('Clear license?');">Clear License</button>
