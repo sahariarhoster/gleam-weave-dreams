@@ -538,7 +538,7 @@ export type Database = {
         | "support_agent"
         | "manager"
         | "brand_owner"
-      brand_role: "brand_admin" | "sender"
+      brand_role: "brand_admin" | "sender" | "brand_member"
       brand_status: "active" | "suspended" | "expired"
       device_status: "active" | "inactive" | "disconnected"
     }
@@ -676,7 +676,7 @@ export const Constants = {
         "manager",
         "brand_owner",
       ],
-      brand_role: ["brand_admin", "sender"],
+      brand_role: ["brand_admin", "sender", "brand_member"],
       brand_status: ["active", "suspended", "expired"],
       device_status: ["active", "inactive", "disconnected"],
     },
