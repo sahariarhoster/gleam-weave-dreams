@@ -85,11 +85,14 @@ export const createDevice = createServerFn({ method: "POST" })
 
 export const updateDevice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => deviceInput.extend({ id: z.string().uuid() }).parse(d))
+  .inputValidator((d: unknown) =>
+    deviceInput.partial({ api_secret: true }).extend({ id: z.string().uuid() }).parse(d),
+  )
   .handler(async ({ data, context }) => {
     await assertOwner(context.supabase, context.userId);
-    const { id, ...rest } = data;
-    const { error } = await context.supabase.from("devices").update(rest).eq("id", id);
+    const { id, api_secret, ...rest } = data;
+    const patch = { ...rest, ...(api_secret && api_secret.length > 0 ? { api_secret } : {}) };
+    const { error } = await context.supabase.from("devices").update(patch).eq("id", id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
