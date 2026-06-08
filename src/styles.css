@@ -157,6 +157,10 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: var(--font-sans);
+  }
+  :lang(bn), .font-bangla {
+    font-family: var(--font-bangla);
   }
 }
 
