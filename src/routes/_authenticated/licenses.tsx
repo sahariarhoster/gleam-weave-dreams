@@ -2,21 +2,23 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { KeyRound, Copy, Trash2, Ban, Plus } from "lucide-react";
+import { KeyRound, Copy, Trash2, Ban, Plus, Download, Pencil, Check, X } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { listBrandsLite } from "@/lib/brands.functions";
+import { getMyRoles } from "@/lib/users.functions";
 import {
   listMyLicenses,
   generateLicense,
   revokeLicense,
   deleteLicense,
-  getLicenseSettings,
+  setBrandLicenseLimit,
 } from "@/lib/licenses.functions";
 
 export const Route = createFileRoute("/_authenticated/licenses")({
@@ -31,13 +33,17 @@ function LicensesPage() {
   const fnGen = useServerFn(generateLicense);
   const fnRevoke = useServerFn(revokeLicense);
   const fnDel = useServerFn(deleteLicense);
-  const fnSettings = useServerFn(getLicenseSettings);
+  const fnSetLimit = useServerFn(setBrandLicenseLimit);
+  const fnRoles = useServerFn(getMyRoles);
 
   const licenses = useQuery({ queryKey: ["licenses"], queryFn: () => fnList() });
   const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => fnBrands() });
-  const settings = useQuery({ queryKey: ["license-settings"], queryFn: () => fnSettings() });
+  const roles = useQuery({ queryKey: ["my-roles"], queryFn: () => fnRoles() });
+  const isOwner = (roles.data ?? []).includes("owner");
 
   const [brandId, setBrandId] = useState<string>("");
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState<number>(1);
 
   const genMut = useMutation({
     mutationFn: (b: string) => fnGen({ data: { brand_id: b } }),
@@ -54,11 +60,39 @@ function LicensesPage() {
     onSuccess: () => { toast.success("Deleted"); qc.invalidateQueries({ queryKey: ["licenses"] }); },
     onError: (e) => toast.error((e as Error).message),
   });
+  const limitMut = useMutation({
+    mutationFn: (p: { brand_id: string; limit: number }) => fnSetLimit({ data: p }),
+    onSuccess: () => {
+      toast.success("Limit updated");
+      setEditing(null);
+      qc.invalidateQueries({ queryKey: ["brands-lite"] });
+      qc.invalidateQueries({ queryKey: ["licenses"] });
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
 
   const copy = (txt: string) => { navigator.clipboard.writeText(txt); toast.success("Copied"); };
 
   return (
     <div className="mx-auto max-w-6xl space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between gap-2 text-base">
+            <span className="flex items-center gap-2"><Download className="h-4 w-4" /> WordPress Plugin</span>
+            <Button asChild size="sm" className="gap-1">
+              <a href="/wa-notifier-woocommerce.zip" download>
+                <Download className="h-4 w-4" /> Download Plugin
+              </a>
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            Install this plugin on your WooCommerce site, then run the setup wizard and paste a license key generated below.
+          </p>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
@@ -84,9 +118,73 @@ function LicensesPage() {
           >
             <Plus className="h-4 w-4" /> Generate
           </Button>
-          <p className="ml-auto text-xs text-muted-foreground">
-            Limit: {settings.data?.licenses_per_brand ?? 1} active license(s) per brand
-          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle className="text-base">Brand Limits</CardTitle></CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Brand</TableHead>
+                <TableHead>Active License Limit</TableHead>
+                {isOwner && <TableHead className="text-right">Actions</TableHead>}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {(brands.data ?? []).map((b: any) => (
+                <TableRow key={b.id}>
+                  <TableCell>{b.name}</TableCell>
+                  <TableCell>
+                    {editing === b.id ? (
+                      <Input
+                        type="number"
+                        min={1}
+                        max={1000}
+                        value={editValue}
+                        onChange={(e) => setEditValue(Number(e.target.value))}
+                        className="w-24"
+                      />
+                    ) : (
+                      <span>{b.license_limit ?? 1}</span>
+                    )}
+                  </TableCell>
+                  {isOwner && (
+                    <TableCell className="text-right">
+                      {editing === b.id ? (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => limitMut.mutate({ brand_id: b.id, limit: editValue })}
+                            disabled={limitMut.isPending}
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => { setEditing(b.id); setEditValue(b.license_limit ?? 1); }}
+                          className="gap-1"
+                        >
+                          <Pencil className="h-3.5 w-3.5" /> Edit
+                        </Button>
+                      )}
+                    </TableCell>
+                  )}
+                </TableRow>
+              ))}
+              {(brands.data ?? []).length === 0 && (
+                <TableRow><TableCell colSpan={isOwner ? 3 : 2} className="text-center text-muted-foreground">No brands</TableCell></TableRow>
+              )}
+            </TableBody>
+          </Table>
         </CardContent>
       </Card>
 
