@@ -195,13 +195,13 @@ function AddBrandDialog({ userId, brands, onDone }: { userId: string; brands: { 
 function AddUserButton({ onDone }: { onDone: () => void }) {
   const fn = useServerFn(createUser);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ email: "", password: "", full_name: "", role: "member" as "owner" | "admin" | "manager" | "brand_owner" | "support_agent" | "member" });
+  const [form, setForm] = useState({ email: "", password: "", full_name: "", role: "brand_owner" as "owner" | "admin" | "manager" | "brand_owner" | "support_agent" | "member" });
   const mut = useMutation({
     mutationFn: () => fn({ data: form }),
     onSuccess: () => {
       toast.success("User created");
       setOpen(false);
-      setForm({ email: "", password: "", full_name: "", role: "member" });
+      setForm({ email: "", password: "", full_name: "", role: "brand_owner" });
       onDone();
     },
     onError: (e) => toast.error((e as Error).message),
