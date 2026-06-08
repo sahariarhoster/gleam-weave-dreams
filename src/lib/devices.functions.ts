@@ -105,7 +105,7 @@ export const getDashboardStats = createServerFn({ method: "GET" })
       campaigns: campaignsQ.count ?? 0,
       activeCampaigns: activeQ.count ?? 0,
       blockedNumbers: blockedQ.count ?? 0,
-      totalMessages: (msgsQ.data ?? []).length,
+      totalMessages: (msgsQ.data ?? []).length + (pluginAllQ.data ?? []).length,
       delivered: totals.delivered,
       failed: totals.failed,
       pending: totals.pending,
