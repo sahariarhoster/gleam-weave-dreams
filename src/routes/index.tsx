@@ -186,7 +186,7 @@ function Hero() {
               className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl bg-primary px-8 py-4 text-base font-bold text-primary-foreground shadow-xl shadow-primary/25 transition-all hover:scale-[1.03] hover:bg-[color:var(--color-emerald-deep)] active:scale-95"
             >
               <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition duration-700 group-hover:translate-x-full" />
-              <span className="relative">ফ্রি ট্রায়াল শুরু করুন</span>
+              <span className="relative">এখনই শুরু করুন</span>
               <ArrowRight className="relative h-5 w-5 transition group-hover:translate-x-0.5" />
             </Link>
             <a
@@ -200,7 +200,7 @@ function Hero() {
           {/* Trust signals */}
           <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-sm text-foreground/70 md:gap-10">
             {[
-              "ক্রেডিট কার্ড ছাড়াই",
+              "আনলিমিটেড মেসেজ",
               "৫ মিনিটে সেটআপ",
               "বাংলায় ২৪/৭ সাপোর্ট",
             ].map((t) => (
@@ -582,81 +582,105 @@ function Testimonials() {
   );
 }
 
-/* ---------------- Pricing comparison ---------------- */
+/* ---------------- Pricing plans ---------------- */
 function PricingSection() {
-  const rows = [
-    { f: "প্রতি মেসেজ খরচ", ours: "৳০.১৫", api: "৳১.৫০ – ৳৩.০০" },
-    { f: "মাসিক ফি", ours: "৳৪৯৯ থেকে", api: "$XXX + ডেভেলপার ফি" },
-    { f: "সেটআপ সময়", ours: "৫ মিনিট", api: "২–৪ সপ্তাহ" },
-    { f: "বিজনেস ভেরিফিকেশন", ours: "প্রয়োজন নেই", api: "বাধ্যতামূলক" },
-    { f: "ফেসবুক বিজনেস ম্যানেজার", ours: "প্রয়োজন নেই", api: "বাধ্যতামূলক" },
-    { f: "টেমপ্লেট অনুমোদন", ours: "ইনস্ট্যান্ট", api: "২৪–৪৮ ঘণ্টা" },
-    { f: "WooCommerce ইন্টিগ্রেশন", ours: "বিল্ট-ইন প্লাগইন", api: "কাস্টম ডেভেলপমেন্ট" },
-    { f: "বাংলায় সাপোর্ট", ours: "২৪/৭", api: "ইংরেজি, লিমিটেড" },
+  const plans = [
+    {
+      name: "স্টার্টার",
+      price: "৬০০",
+      tagline: "ছোট ব্যবসা ও সিঙ্গেল স্টোরের জন্য পারফেক্ট",
+      features: [
+        "আনলিমিটেড মেসেজ",
+        "১ নাম্বার / ডিভাইস",
+        "আনলিমিটেড এজেন্ট",
+        "১ WordPress প্লাগইন লাইসেন্স",
+        "৬-লেয়ার অ্যান্টি-ব্যান প্রোটেকশন",
+        "বাংলায় ২৪/৭ সাপোর্ট",
+      ],
+      highlighted: false,
+      cta: "প্ল্যান নিন",
+    },
+    {
+      name: "প্রো",
+      price: "৮০০",
+      tagline: "একাধিক ব্র্যান্ড ও বড় টিমের জন্য",
+      features: [
+        "আনলিমিটেড মেসেজ",
+        "৩ নাম্বার / ডিভাইস",
+        "আনলিমিটেড এজেন্ট",
+        "৩ WordPress প্লাগইন লাইসেন্স",
+        "৬-লেয়ার অ্যান্টি-ব্যান প্রোটেকশন",
+        "প্রায়োরিটি সাপোর্ট",
+      ],
+      highlighted: true,
+      cta: "প্রো নিন",
+    },
   ];
+
   return (
     <section id="pricing" className="py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
-          <span className="inline-flex items-center rounded-full border border-[color:var(--color-gold)]/40 bg-[color:var(--color-gold-soft)]/30 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--color-emerald-deep)]">
-            <DollarSign className="mr-1 h-3 w-3" /> অবিশ্বাস্য কম দাম
+          <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
+            <DollarSign className="mr-1 h-3 w-3" /> সহজ ও স্বচ্ছ প্রাইসিং
           </span>
           <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-5xl">
-            অফিসিয়াল WhatsApp API-এর তুলনায় <span className="text-shimmer">১০x সস্তা</span>
+            আপনার জন্য সেরা <span className="text-primary">প্ল্যান</span> বেছে নিন
           </h2>
           <p className="mt-4 text-muted-foreground">
-            একই ডেলিভারি, একই রিচ — কিন্তু কয়েকগুণ কম খরচে। ছোট ব্যবসার জন্যও এখন আফোর্ডেবল।
+            কোনো লুকানো চার্জ নেই। প্রতিটি প্ল্যানে আনলিমিটেড মেসেজ ও আনলিমিটেড এজেন্ট অন্তর্ভুক্ত।
           </p>
         </div>
 
-        <div className="relative mx-auto mt-14 max-w-4xl">
-          <div className="absolute -inset-4 -z-10 bg-[radial-gradient(50%_60%_at_50%_50%,color-mix(in_oklab,var(--primary)_18%,transparent)_0%,transparent_70%)] blur-2xl" />
-          <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-2xl">
-            <div className="grid grid-cols-3 border-b border-border bg-secondary/40 text-sm font-semibold">
-              <div className="p-5 text-muted-foreground">তুলনা</div>
-              <div className="relative p-5 text-center text-foreground">
-                <div className="absolute inset-x-3 -top-2 mx-auto h-1 w-12 rounded-full bg-primary" />
-                <div className="flex items-center justify-center gap-1.5">
-                  <span className="grid h-5 w-5 place-items-center rounded-md bg-primary text-primary-foreground">
-                    <MessageSquare className="h-3 w-3" />
-                  </span>
-                  WA Suite
-                  <span className="rounded-full bg-[color:var(--color-gold)]/20 px-1.5 py-0.5 text-[9px] font-bold text-[color:var(--color-emerald-deep)]">
-                    BEST
-                  </span>
-                </div>
+        <div className="mx-auto mt-14 grid max-w-5xl gap-6 md:grid-cols-2">
+          {plans.map((p) => (
+            <div
+              key={p.name}
+              className={`relative overflow-hidden rounded-3xl border bg-card p-8 shadow-lg transition hover:shadow-2xl sm:p-10 ${
+                p.highlighted
+                  ? "border-primary/40 ring-2 ring-primary/30"
+                  : "border-border"
+              }`}
+            >
+              {p.highlighted && (
+                <span className="absolute right-6 top-6 rounded-full bg-primary px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-foreground">
+                  জনপ্রিয়
+                </span>
+              )}
+              <h3 className="font-display text-2xl font-bold text-foreground">{p.name}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">{p.tagline}</p>
+              <div className="mt-6 flex items-baseline gap-1">
+                <span className="font-display text-5xl font-extrabold text-foreground">৳{p.price}</span>
+                <span className="text-sm font-medium text-muted-foreground">/মাস</span>
               </div>
-              <div className="p-5 text-center text-muted-foreground">WhatsApp Official API</div>
-            </div>
-            {rows.map((r, i) => (
-              <div
-                key={r.f}
-                className={`grid grid-cols-3 text-sm ${i % 2 === 0 ? "bg-background" : "bg-secondary/20"}`}
+              <ul className="mt-8 space-y-3">
+                {p.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2.5 text-sm text-foreground">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <Link
+                to="/auth"
+                className={`mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold transition ${
+                  p.highlighted
+                    ? "bg-primary text-primary-foreground hover:bg-[color:var(--color-emerald-deep)]"
+                    : "border-2 border-border bg-background text-foreground hover:border-primary hover:text-primary"
+                }`}
               >
-                <div className="border-b border-border/50 p-4 text-muted-foreground">{r.f}</div>
-                <div className="relative border-x border-primary/15 border-b border-b-border/50 bg-primary/[0.04] p-4 text-center font-semibold text-primary">
-                  {r.ours}
-                </div>
-                <div className="border-b border-border/50 p-4 text-center text-muted-foreground">{r.api}</div>
-              </div>
-            ))}
-            <div className="grid grid-cols-3 bg-primary/8 text-sm font-bold">
-              <div className="p-5 text-foreground">মোট সঞ্চয়</div>
-              <div className="p-5 text-center">
-                <span className="rounded-full bg-primary px-3 py-1 text-primary-foreground">৮৫–৯৫%</span>
-              </div>
-              <div className="p-5 text-center text-muted-foreground">—</div>
+                {p.cta} <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
-          </div>
+          ))}
         </div>
 
-        <div className="mt-10 text-center">
-          <Link
-            to="/auth"
-            className="group inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_20px_50px_-15px_var(--primary)] transition hover:shadow-[0_25px_60px_-15px_var(--primary)]"
-          >
-            এখনই অ্যাকাউন্ট খুলুন <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
-          </Link>
+        <div className="mx-auto mt-8 max-w-3xl rounded-2xl border border-border bg-secondary/30 p-6 text-center">
+          <p className="text-sm font-semibold text-foreground">অ্যাড-অন চার্জ</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            অতিরিক্ত ডিভাইস <span className="font-bold text-foreground">৳২০০</span> প্রতি ডিভাইস ·
+            অতিরিক্ত WordPress প্লাগইন লাইসেন্স <span className="font-bold text-foreground">৳১৫০</span> প্রতি লাইসেন্স
+          </p>
         </div>
       </div>
     </section>
@@ -675,17 +699,17 @@ function FinalCta() {
           <div aria-hidden className="absolute -inset-x-10 top-1/3 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
           <div className="relative">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] backdrop-blur">
-              <Sparkles className="h-3 w-3" /> লিমিটেড অফার
+              <Sparkles className="h-3 w-3" /> এখনই শুরু করুন
             </span>
             <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-5xl">
-              আজই শুরু করুন। প্রথম{" "}
+              ৬০০ টাকা থেকে শুরু।{" "}
               <span className="text-primary">
-                ১০০ মেসেজ ফ্রি
+                আনলিমিটেড মেসেজ
               </span>
               ।
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-primary-foreground/85">
-              ক্রেডিট কার্ড লাগবে না। ৫ মিনিটে সেটআপ, বাংলায় সাপোর্ট।
+              ৫ মিনিটে সেটআপ, বাংলায় ২৪/৭ সাপোর্ট। কোনো লুকানো চার্জ নেই।
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link
@@ -693,7 +717,7 @@ function FinalCta() {
                 className="group relative inline-flex items-center gap-2 overflow-hidden rounded-lg bg-[color:var(--color-gold)] px-6 py-3 text-sm font-bold text-[color:var(--color-emerald-deep)] shadow-xl shadow-black/20 transition hover:scale-[1.02]"
               >
                 <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent transition duration-700 group-hover:translate-x-full" />
-                <span className="relative">ফ্রি অ্যাকাউন্ট খুলুন</span>
+                <span className="relative">অ্যাকাউন্ট খুলুন</span>
                 <ArrowRight className="relative h-4 w-4" />
               </Link>
               <a
