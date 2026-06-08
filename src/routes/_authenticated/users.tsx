@@ -69,8 +69,9 @@ function UsersPage() {
   return (
     <div className="mx-auto max-w-7xl">
       <Card className="border-border/60 shadow-sm">
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-base"><Users className="h-4 w-4" /> All Users</CardTitle>
+          <AddUserButton onDone={() => qc.invalidateQueries({ queryKey: ["users"] })} />
         </CardHeader>
         <CardContent>
           <Table>
