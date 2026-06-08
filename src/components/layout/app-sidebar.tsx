@@ -10,6 +10,8 @@ import {
   Ban,
   ScrollText,
   MessageCircle,
+  Contact,
+  FolderOpen,
 } from "lucide-react";
 import {
   Sidebar,
@@ -29,6 +31,8 @@ const items = [
   { title: "Devices", url: "/devices", icon: Smartphone },
   { title: "Brands", url: "/brands", icon: Building2 },
   { title: "Users", url: "/users", icon: Users },
+  { title: "Contacts", url: "/contacts", icon: Contact },
+  { title: "Groups", url: "/groups", icon: FolderOpen },
   { title: "All Campaigns", url: "/campaigns", icon: Megaphone },
   { title: "Send SMS", url: "/send", icon: Send },
   { title: "Message Logs", url: "/logs", icon: ListChecks },
