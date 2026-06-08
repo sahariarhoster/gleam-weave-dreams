@@ -49,7 +49,7 @@ export const setUserRole = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({
       user_id: z.string().uuid(),
-      role: z.enum(["owner", "member"]),
+      role: z.enum(["owner", "admin", "support_agent", "member"]),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -134,7 +134,7 @@ export const createUser = createServerFn({ method: "POST" })
       email: z.string().email().max(255),
       password: z.string().min(6).max(72),
       full_name: z.string().min(1).max(100),
-      role: z.enum(["owner", "member"]).default("member"),
+      role: z.enum(["owner", "admin", "support_agent", "member"]).default("member"),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -149,10 +149,10 @@ export const createUser = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     const uid = created.user?.id;
     if (!uid) throw new Error("User creation failed");
-    // handle_new_user trigger creates profile + default member role; override if owner requested
-    if (data.role === "owner") {
+    // handle_new_user trigger seeds default member role; override when a non-member role is requested
+    if (data.role !== "member") {
       await supabaseAdmin.from("user_roles").delete().eq("user_id", uid);
-      await supabaseAdmin.from("user_roles").insert({ user_id: uid, role: "owner" });
+      await supabaseAdmin.from("user_roles").insert({ user_id: uid, role: data.role });
     }
     return { ok: true, user_id: uid };
   });
