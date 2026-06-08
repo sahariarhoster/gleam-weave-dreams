@@ -92,6 +92,19 @@ function LicensesPage() {
     onError: (e) => toast.error((e as Error).message),
   });
 
+  const releaseMut = useMutation({
+    mutationFn: () => fnSetRelease({ data: {
+      plugin_version: rel.version,
+      plugin_download_url: rel.url || null,
+      plugin_changelog: rel.changelog || null,
+      plugin_tested_wp: rel.tested || null,
+      plugin_requires_wp: rel.requires || null,
+      plugin_requires_php: rel.requires_php || null,
+    } }),
+    onSuccess: () => { toast.success("Plugin release saved"); qc.invalidateQueries({ queryKey: ["plugin-release"] }); },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
   const copy = (txt: string) => { navigator.clipboard.writeText(txt); toast.success("Copied"); };
 
   return (
