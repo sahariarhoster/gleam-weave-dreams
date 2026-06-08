@@ -71,13 +71,13 @@ function Header() {
           >
             লগইন
           </Link>
-          <Link
-            to="/auth"
+          <a
+            href="#pricing"
             className="group relative inline-flex items-center gap-1.5 overflow-hidden rounded-md bg-foreground px-3.5 py-2 text-sm font-semibold text-background shadow-sm transition hover:opacity-95"
           >
-            <span className="relative z-10">শুরু করুন</span>
+            <span className="relative z-10">অর্ডার করুন</span>
             <ArrowRight className="relative z-10 h-3.5 w-3.5 transition group-hover:translate-x-0.5" />
-          </Link>
+          </a>
         </div>
       </div>
     </header>
@@ -129,14 +129,14 @@ function Hero() {
 
           {/* CTAs */}
           <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row">
-            <Link
-              to="/auth"
+            <a
+              href="#pricing"
               className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl bg-primary px-8 py-4 text-base font-bold text-primary-foreground shadow-xl shadow-primary/25 transition-all hover:scale-[1.03] hover:bg-[color:var(--color-emerald-deep)] active:scale-95"
             >
               <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition duration-700 group-hover:translate-x-full" />
-              <span className="relative">এখনই শুরু করুন</span>
+              <span className="relative">অর্ডার করুন এখনই</span>
               <ArrowRight className="relative h-5 w-5 transition group-hover:translate-x-0.5" />
-            </Link>
+            </a>
             <a
               href="#pricing"
               className="inline-flex items-center gap-2 rounded-xl border-2 border-border bg-background px-8 py-4 text-base font-bold text-foreground transition hover:border-primary hover:text-primary"
@@ -609,16 +609,16 @@ function PricingSection() {
                   </li>
                 ))}
               </ul>
-              <Link
-                to="/auth"
+              <a
+                href="#order"
                 className={`mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold transition ${
                   p.highlighted
                     ? "bg-primary text-primary-foreground hover:bg-[color:var(--color-emerald-deep)]"
                     : "border-2 border-border bg-background text-foreground hover:border-primary hover:text-primary"
                 }`}
               >
-                {p.cta} <ArrowRight className="h-4 w-4" />
-              </Link>
+                অর্ডার করুন <ArrowRight className="h-4 w-4" />
+              </a>
             </div>
           ))}
         </div>
@@ -647,7 +647,7 @@ function FinalCta() {
           <div aria-hidden className="absolute -inset-x-10 top-1/3 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
           <div className="relative">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] backdrop-blur">
-              <Sparkles className="h-3 w-3" /> এখনই শুরু করুন
+              <Sparkles className="h-3 w-3" /> অর্ডার করুন এখনই
             </span>
             <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-5xl">
               ৬০০ টাকা থেকে শুরু।{" "}
@@ -660,14 +660,14 @@ function FinalCta() {
               ৫ মিনিটে সেটআপ, বাংলায় ২৪/৭ সাপোর্ট। কোনো লুকানো চার্জ নেই।
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
-              <Link
-                to="/auth"
+              <a
+                href="#pricing"
                 className="group relative inline-flex items-center gap-2 overflow-hidden rounded-lg bg-[color:var(--color-gold)] px-6 py-3 text-sm font-bold text-[color:var(--color-emerald-deep)] shadow-xl shadow-black/20 transition hover:scale-[1.02]"
               >
                 <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent transition duration-700 group-hover:translate-x-full" />
-                <span className="relative">অ্যাকাউন্ট খুলুন</span>
+                <span className="relative">অর্ডার করুন এখনই</span>
                 <ArrowRight className="relative h-4 w-4" />
-              </Link>
+              </a>
               <a
                 href="#pricing"
                 className="inline-flex items-center gap-2 rounded-lg border border-white/30 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
@@ -713,7 +713,7 @@ function Footer() {
             <h4 className="text-sm font-semibold text-foreground">অ্যাকাউন্ট</h4>
             <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
               <li><Link to="/auth" className="hover:text-foreground">লগইন</Link></li>
-              <li><Link to="/auth" className="hover:text-foreground">সাইন আপ</Link></li>
+              <li><a href="#pricing" className="hover:text-foreground">অর্ডার করুন</a></li>
             </ul>
           </div>
         </div>
