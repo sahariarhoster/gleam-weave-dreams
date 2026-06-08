@@ -699,17 +699,17 @@ function FinalCta() {
           <div aria-hidden className="absolute -inset-x-10 top-1/3 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
           <div className="relative">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/30 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] backdrop-blur">
-              <Sparkles className="h-3 w-3" /> লিমিটেড অফার
+              <Sparkles className="h-3 w-3" /> এখনই শুরু করুন
             </span>
             <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-5xl">
-              আজই শুরু করুন। প্রথম{" "}
+              ৬০০ টাকা থেকে শুরু।{" "}
               <span className="text-primary">
-                ১০০ মেসেজ ফ্রি
+                আনলিমিটেড মেসেজ
               </span>
               ।
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-primary-foreground/85">
-              ক্রেডিট কার্ড লাগবে না। ৫ মিনিটে সেটআপ, বাংলায় সাপোর্ট।
+              ৫ মিনিটে সেটআপ, বাংলায় ২৪/৭ সাপোর্ট। কোনো লুকানো চার্জ নেই।
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link
@@ -717,7 +717,7 @@ function FinalCta() {
                 className="group relative inline-flex items-center gap-2 overflow-hidden rounded-lg bg-[color:var(--color-gold)] px-6 py-3 text-sm font-bold text-[color:var(--color-emerald-deep)] shadow-xl shadow-black/20 transition hover:scale-[1.02]"
               >
                 <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent transition duration-700 group-hover:translate-x-full" />
-                <span className="relative">ফ্রি অ্যাকাউন্ট খুলুন</span>
+                <span className="relative">অ্যাকাউন্ট খুলুন</span>
                 <ArrowRight className="relative h-4 w-4" />
               </Link>
               <a
