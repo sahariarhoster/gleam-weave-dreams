@@ -176,6 +176,12 @@ function NewCampaignDialog({ onDone }: { onDone: () => void }) {
   const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => fnBrands() });
   const devices = useQuery({ queryKey: ["devices"], queryFn: () => fnDevices() });
 
+  const PRESETS = {
+    direct:       { min: 0,  max: 2 },
+    safety_basic: { min: 5,  max: 15 },
+    safety_max:   { min: 20, max: 60 },
+  } as const;
+
   const [form, setForm] = useState({
     brand_id: "",
     device_id: "",
@@ -184,8 +190,26 @@ function NewCampaignDialog({ onDone }: { onDone: () => void }) {
     media_url: "",
     scheduled_at: "",
     send_mode: "safety_basic" as "direct" | "safety_basic" | "safety_max",
+    min_delay_seconds: 5,
+    max_delay_seconds: 15,
+    send_window_start: "00:00",
+    send_window_end: "23:59",
   });
   const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set());
+
+  function pickMode(m: "direct" | "safety_basic" | "safety_max") {
+    setForm({ ...form, send_mode: m, min_delay_seconds: PRESETS[m].min, max_delay_seconds: PRESETS[m].max });
+  }
+
+  function windowSec(s: string, e: string) {
+    const [sh, sm] = s.split(":").map(Number);
+    const [eh, em] = e.split(":").map(Number);
+    const a = sh * 3600 + sm * 60;
+    const b = eh * 3600 + em * 60;
+    return Math.max(b >= a ? b - a : 86400 - a + b, 60);
+  }
+  const avg = Math.max((form.min_delay_seconds + form.max_delay_seconds) / 2, 0.5);
+  const estimatedDaily = Math.floor(windowSec(form.send_window_start, form.send_window_end) / avg);
 
   const groups = useQuery({
     queryKey: ["groups", form.brand_id],
@@ -200,6 +224,8 @@ function NewCampaignDialog({ onDone }: { onDone: () => void }) {
           ...form,
           media_url: form.media_url || null,
           scheduled_at: form.scheduled_at ? new Date(form.scheduled_at).toISOString() : null,
+          min_delay_seconds: Number(form.min_delay_seconds),
+          max_delay_seconds: Number(form.max_delay_seconds),
           group_ids: Array.from(selectedGroups),
         },
       }),
