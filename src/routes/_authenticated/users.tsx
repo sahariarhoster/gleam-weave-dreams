@@ -230,6 +230,7 @@ function AddUserButton({ onDone }: { onDone: () => void }) {
               <SelectContent>
                 <SelectItem value="member">Member</SelectItem>
                 <SelectItem value="support_agent">Support Agent</SelectItem>
+                <SelectItem value="manager">Manager</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="owner">Owner</SelectItem>
               </SelectContent>
