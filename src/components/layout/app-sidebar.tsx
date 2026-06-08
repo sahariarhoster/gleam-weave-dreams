@@ -13,7 +13,7 @@ import {
   Contact,
   FolderOpen,
   KeyRound,
-  Settings,
+  
 } from "lucide-react";
 import {
   Sidebar,
