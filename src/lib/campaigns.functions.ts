@@ -82,6 +82,8 @@ export const createCampaign = createServerFn({ method: "POST" })
       .from("campaigns")
       .insert({
         ...rest,
+        ...preset,
+        send_mode,
         media_url: media_url || null,
         status,
         total_recipients: filtered.length,
