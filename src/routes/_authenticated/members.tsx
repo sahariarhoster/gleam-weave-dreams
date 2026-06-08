@@ -58,11 +58,23 @@ function MembersPage() {
 
   return (
     <div className="mx-auto max-w-5xl">
+      <PageHeader
+        icon={Users}
+        title="Brand Members"
+        description="Manage who can access and operate your brands."
+        actions={
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="gap-1" disabled={brands.length === 0}>
+                <UserPlus className="h-4 w-4" /> Add Member
+              </Button>
+            </DialogTrigger>
+            <MemberDialogShell brands={brands} form={form} setForm={setForm} createMut={createMut} />
+          </Dialog>
+        }
+      />
       <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Users className="h-4 w-4" /> Brand Members
-          </CardTitle>
+        <CardContent className="pt-6">
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button size="sm" className="gap-1" disabled={brands.length === 0}>
