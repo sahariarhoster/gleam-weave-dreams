@@ -217,8 +217,16 @@ async function getMyBrandIds(supabase: any, userId: string): Promise<string[]> {
     const { data } = await supabase.from("brands").select("id");
     return (data ?? []).map((b: any) => b.id as string);
   }
-  const { data } = await supabase.from("brands").select("id").eq("created_by", userId);
-  return (data ?? []).map((b: any) => b.id as string);
+  const [ownedRes, memberRes] = await Promise.all([
+    supabase.from("brands").select("id").eq("created_by", userId),
+    supabase.from("brand_members").select("brand_id").eq("user_id", userId),
+  ]);
+  return Array.from(
+    new Set([
+      ...((ownedRes.data ?? []).map((b: any) => b.id as string)),
+      ...((memberRes.data ?? []).map((m: any) => m.brand_id as string)),
+    ]),
+  );
 }
 
 export const listMyBrandMembers = createServerFn({ method: "GET" })
