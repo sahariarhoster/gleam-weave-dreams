@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { KeyRound, Copy, Trash2, Ban, Plus, Download, Pencil, Check, X } from "lucide-react";
+import { KeyRound, Copy, Trash2, Ban, Plus, Download, Pencil, Check, X, Package, Save } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { listBrandsLite } from "@/lib/brands.functions";
 import { getMyRoles } from "@/lib/users.functions";
@@ -20,6 +22,7 @@ import {
   deleteLicense,
   setBrandLicenseLimit,
 } from "@/lib/licenses.functions";
+import { getPluginRelease, setPluginRelease } from "@/lib/plugin-release.functions";
 
 export const Route = createFileRoute("/_authenticated/licenses")({
   head: () => ({ meta: [{ title: "Plugin Licenses — WA Notifier" }] }),
@@ -35,15 +38,33 @@ function LicensesPage() {
   const fnDel = useServerFn(deleteLicense);
   const fnSetLimit = useServerFn(setBrandLicenseLimit);
   const fnRoles = useServerFn(getMyRoles);
+  const fnGetRelease = useServerFn(getPluginRelease);
+  const fnSetRelease = useServerFn(setPluginRelease);
 
   const licenses = useQuery({ queryKey: ["licenses"], queryFn: () => fnList() });
   const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => fnBrands() });
   const roles = useQuery({ queryKey: ["my-roles"], queryFn: () => fnRoles() });
+  const release = useQuery({ queryKey: ["plugin-release"], queryFn: () => fnGetRelease() });
   const isOwner = (roles.data ?? []).includes("owner");
 
   const [brandId, setBrandId] = useState<string>("");
   const [editing, setEditing] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<number>(1);
+  const [rel, setRel] = useState<{ version: string; url: string; changelog: string; tested: string; requires: string; requires_php: string }>({
+    version: "", url: "", changelog: "", tested: "", requires: "", requires_php: "",
+  });
+  const [relLoaded, setRelLoaded] = useState(false);
+  if (!relLoaded && release.data) {
+    setRel({
+      version: release.data.plugin_version ?? "",
+      url: release.data.plugin_download_url ?? "",
+      changelog: release.data.plugin_changelog ?? "",
+      tested: release.data.plugin_tested_wp ?? "",
+      requires: release.data.plugin_requires_wp ?? "",
+      requires_php: release.data.plugin_requires_php ?? "",
+    });
+    setRelLoaded(true);
+  }
 
   const genMut = useMutation({
     mutationFn: (b: string) => fnGen({ data: { brand_id: b } }),
@@ -71,6 +92,19 @@ function LicensesPage() {
     onError: (e) => toast.error((e as Error).message),
   });
 
+  const releaseMut = useMutation({
+    mutationFn: () => fnSetRelease({ data: {
+      plugin_version: rel.version,
+      plugin_download_url: rel.url || null,
+      plugin_changelog: rel.changelog || null,
+      plugin_tested_wp: rel.tested || null,
+      plugin_requires_wp: rel.requires || null,
+      plugin_requires_php: rel.requires_php || null,
+    } }),
+    onSuccess: () => { toast.success("Plugin release saved"); qc.invalidateQueries({ queryKey: ["plugin-release"] }); },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
   const copy = (txt: string) => { navigator.clipboard.writeText(txt); toast.success("Copied"); };
 
   return (
@@ -92,6 +126,53 @@ function LicensesPage() {
           </p>
         </CardContent>
       </Card>
+
+      {isOwner && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Package className="h-4 w-4" /> Plugin Release (Auto-Update)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Sites with an active license will see this version on their WordPress Plugins screen and can update with one click.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label>Version (x.y.z)</Label>
+                <Input value={rel.version} onChange={(e) => setRel({ ...rel, version: e.target.value })} placeholder="1.0.1" />
+              </div>
+              <div className="space-y-1">
+                <Label>Download URL (leave blank to use /wa-notifier-woocommerce.zip)</Label>
+                <Input value={rel.url} onChange={(e) => setRel({ ...rel, url: e.target.value })} placeholder="https://..." />
+              </div>
+              <div className="space-y-1">
+                <Label>Tested up to (WP)</Label>
+                <Input value={rel.tested} onChange={(e) => setRel({ ...rel, tested: e.target.value })} placeholder="6.6" />
+              </div>
+              <div className="space-y-1">
+                <Label>Requires WP</Label>
+                <Input value={rel.requires} onChange={(e) => setRel({ ...rel, requires: e.target.value })} placeholder="6.0" />
+              </div>
+              <div className="space-y-1">
+                <Label>Requires PHP</Label>
+                <Input value={rel.requires_php} onChange={(e) => setRel({ ...rel, requires_php: e.target.value })} placeholder="7.4" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Changelog</Label>
+              <Textarea rows={4} value={rel.changelog} onChange={(e) => setRel({ ...rel, changelog: e.target.value })} placeholder="- Fixed ..." />
+            </div>
+            <div className="flex justify-end">
+              <Button onClick={() => releaseMut.mutate()} disabled={releaseMut.isPending} className="gap-1">
+                <Save className="h-4 w-4" /> Save Release
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
 
       <Card>
         <CardHeader>

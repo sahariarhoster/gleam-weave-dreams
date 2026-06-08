@@ -555,16 +555,34 @@ export type Database = {
         Row: {
           id: boolean
           licenses_per_brand: number
+          plugin_changelog: string | null
+          plugin_download_url: string | null
+          plugin_requires_php: string | null
+          plugin_requires_wp: string | null
+          plugin_tested_wp: string | null
+          plugin_version: string
           updated_at: string
         }
         Insert: {
           id?: boolean
           licenses_per_brand?: number
+          plugin_changelog?: string | null
+          plugin_download_url?: string | null
+          plugin_requires_php?: string | null
+          plugin_requires_wp?: string | null
+          plugin_tested_wp?: string | null
+          plugin_version?: string
           updated_at?: string
         }
         Update: {
           id?: boolean
           licenses_per_brand?: number
+          plugin_changelog?: string | null
+          plugin_download_url?: string | null
+          plugin_requires_php?: string | null
+          plugin_requires_wp?: string | null
+          plugin_tested_wp?: string | null
+          plugin_version?: string
           updated_at?: string
         }
         Relationships: []

@@ -25,6 +25,7 @@ import { Route as AuthenticatedCampaignsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedBrandsRouteImport } from './routes/_authenticated/brands'
 import { Route as AuthenticatedBlockedRouteImport } from './routes/_authenticated/blocked'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
+import { Route as ApiPublicPluginUpdateCheckRouteImport } from './routes/api/public/plugin/update-check'
 import { Route as ApiPublicPluginSendRouteImport } from './routes/api/public/plugin/send'
 import { Route as ApiPublicPluginSelectDeviceRouteImport } from './routes/api/public/plugin/select-device'
 import { Route as ApiPublicPluginHeartbeatRouteImport } from './routes/api/public/plugin/heartbeat'
@@ -111,6 +112,12 @@ const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
   path: '/activity',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicPluginUpdateCheckRoute =
+  ApiPublicPluginUpdateCheckRouteImport.update({
+    id: '/api/public/plugin/update-check',
+    path: '/api/public/plugin/update-check',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPluginSendRoute = ApiPublicPluginSendRouteImport.update({
   id: '/api/public/plugin/send',
   path: '/api/public/plugin/send',
@@ -166,6 +173,7 @@ export interface FileRoutesByFullPath {
   '/api/public/plugin/heartbeat': typeof ApiPublicPluginHeartbeatRoute
   '/api/public/plugin/select-device': typeof ApiPublicPluginSelectDeviceRoute
   '/api/public/plugin/send': typeof ApiPublicPluginSendRoute
+  '/api/public/plugin/update-check': typeof ApiPublicPluginUpdateCheckRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -189,6 +197,7 @@ export interface FileRoutesByTo {
   '/api/public/plugin/heartbeat': typeof ApiPublicPluginHeartbeatRoute
   '/api/public/plugin/select-device': typeof ApiPublicPluginSelectDeviceRoute
   '/api/public/plugin/send': typeof ApiPublicPluginSendRoute
+  '/api/public/plugin/update-check': typeof ApiPublicPluginUpdateCheckRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -214,6 +223,7 @@ export interface FileRoutesById {
   '/api/public/plugin/heartbeat': typeof ApiPublicPluginHeartbeatRoute
   '/api/public/plugin/select-device': typeof ApiPublicPluginSelectDeviceRoute
   '/api/public/plugin/send': typeof ApiPublicPluginSendRoute
+  '/api/public/plugin/update-check': typeof ApiPublicPluginUpdateCheckRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -239,6 +249,7 @@ export interface FileRouteTypes {
     | '/api/public/plugin/heartbeat'
     | '/api/public/plugin/select-device'
     | '/api/public/plugin/send'
+    | '/api/public/plugin/update-check'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -262,6 +273,7 @@ export interface FileRouteTypes {
     | '/api/public/plugin/heartbeat'
     | '/api/public/plugin/select-device'
     | '/api/public/plugin/send'
+    | '/api/public/plugin/update-check'
   id:
     | '__root__'
     | '/'
@@ -286,6 +298,7 @@ export interface FileRouteTypes {
     | '/api/public/plugin/heartbeat'
     | '/api/public/plugin/select-device'
     | '/api/public/plugin/send'
+    | '/api/public/plugin/update-check'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -298,6 +311,7 @@ export interface RootRouteChildren {
   ApiPublicPluginHeartbeatRoute: typeof ApiPublicPluginHeartbeatRoute
   ApiPublicPluginSelectDeviceRoute: typeof ApiPublicPluginSelectDeviceRoute
   ApiPublicPluginSendRoute: typeof ApiPublicPluginSendRoute
+  ApiPublicPluginUpdateCheckRoute: typeof ApiPublicPluginUpdateCheckRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -414,6 +428,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedActivityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/plugin/update-check': {
+      id: '/api/public/plugin/update-check'
+      path: '/api/public/plugin/update-check'
+      fullPath: '/api/public/plugin/update-check'
+      preLoaderRoute: typeof ApiPublicPluginUpdateCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/plugin/send': {
       id: '/api/public/plugin/send'
       path: '/api/public/plugin/send'
@@ -504,6 +525,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPluginHeartbeatRoute: ApiPublicPluginHeartbeatRoute,
   ApiPublicPluginSelectDeviceRoute: ApiPublicPluginSelectDeviceRoute,
   ApiPublicPluginSendRoute: ApiPublicPluginSendRoute,
+  ApiPublicPluginUpdateCheckRoute: ApiPublicPluginUpdateCheckRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
