@@ -222,6 +222,7 @@ export type Database = {
           min_delay_seconds: number
           name: string
           scheduled_at: string | null
+          send_mode: string
           send_window_end: string | null
           send_window_start: string | null
           sent_count: number
@@ -245,6 +246,7 @@ export type Database = {
           min_delay_seconds?: number
           name: string
           scheduled_at?: string | null
+          send_mode?: string
           send_window_end?: string | null
           send_window_start?: string | null
           sent_count?: number
@@ -268,6 +270,7 @@ export type Database = {
           min_delay_seconds?: number
           name?: string
           scheduled_at?: string | null
+          send_mode?: string
           send_window_end?: string | null
           send_window_start?: string | null
           sent_count?: number
