@@ -20,6 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
+  ssr: false,
   head: () => ({ meta: [{ title: "Sign in — WA Suite" }] }),
   component: AuthPage,
 });
@@ -41,10 +42,13 @@ function AuthPage() {
     e.preventDefault();
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      setLoading(false);
+      return toast.error(error.message);
+    }
     toast.success("Welcome back!");
-    navigate({ to: "/dashboard" });
+    // Hard navigation avoids the extra SSR roundtrip on shared hosting
+    window.location.assign("/dashboard");
   }
 
   async function forgot() {

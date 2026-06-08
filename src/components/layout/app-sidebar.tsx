@@ -56,7 +56,7 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const fnRoles = useServerFn(getMyRoles);
-  const roles = useQuery({ queryKey: ["my-roles"], queryFn: () => fnRoles() });
+  const roles = useQuery({ queryKey: ["my-roles"], queryFn: () => fnRoles(), staleTime: 5 * 60 * 1000, gcTime: 30 * 60 * 1000, refetchOnWindowFocus: false, refetchOnMount: false });
   const isOwner = (roles.data ?? []).includes("owner");
   const isBrandOwner = (roles.data ?? []).includes("brand_owner");
   const userRoles = roles.data ?? [];
