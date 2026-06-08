@@ -1,0 +1,1 @@
+UPDATE public.system_settings SET plugin_version = '1.0.7', plugin_changelog = 'v1.0.7 — Plugin updates now appear automatically (hourly check + read-time injection) without waiting for WordPress''s 12-hour cycle.', updated_at = now();
