@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "rm -rf .output && NODE_ENV=production vite build --mode production",
-    "build:dev": "rm -rf .output && NODE_ENV=production vite build --mode production",
-    "start": "NODE_ENV=production node .output/server/index.mjs",
+    "build": "rm -rf .output && NODE_ENV=production RAYON_NUM_THREADS=1 UV_THREADPOOL_SIZE=1 NODE_OPTIONS=--max-old-space-size=768 vite build --mode production",
+    "build:dev": "rm -rf .output && NODE_ENV=production RAYON_NUM_THREADS=1 UV_THREADPOOL_SIZE=1 NODE_OPTIONS=--max-old-space-size=768 vite build --mode production",
+    "start": "NODE_ENV=production UV_THREADPOOL_SIZE=1 NODE_OPTIONS=--max-old-space-size=512 node .output/server/index.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write ."
