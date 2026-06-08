@@ -13,6 +13,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { listDevices, sendSingleMessage } from "@/lib/devices.functions";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/send")({
   head: () => ({ meta: [{ title: "Send SMS — WA Notifier" }] }),
@@ -38,20 +39,17 @@ function SendSmsPage() {
   });
 
   return (
-    <div className="mx-auto max-w-xl">
+    <div className="mx-auto max-w-2xl">
+      <PageHeader
+        icon={Send}
+        title="Send Message"
+        description="Send a WhatsApp message to a single phone number."
+      />
       <Card className="border-border/60 shadow-sm">
-        <CardContent className="p-6">
-          <div className="mb-6 flex flex-col items-center gap-2 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary">
-              <Send className="h-5 w-5" />
-            </div>
-            <h2 className="text-lg font-semibold">Send Single Message</h2>
-            <p className="text-sm text-muted-foreground">Send a WhatsApp message to a single phone number.</p>
-          </div>
-
+        <CardContent className="p-4 sm:p-5">
           <form
             onSubmit={(e) => { e.preventDefault(); mut.mutate(); }}
-            className="space-y-4"
+            className="space-y-3.5"
           >
             <div className="space-y-1.5">
               <Label>Device</Label>

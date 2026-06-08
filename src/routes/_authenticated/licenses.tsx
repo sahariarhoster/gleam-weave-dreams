@@ -23,6 +23,7 @@ import {
   setBrandLicenseLimit,
 } from "@/lib/licenses.functions";
 import { getPluginRelease, setPluginRelease } from "@/lib/plugin-release.functions";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/licenses")({
   head: () => ({ meta: [{ title: "Plugin Licenses — WA Notifier" }] }),
@@ -108,19 +109,21 @@ function LicensesPage() {
   const copy = (txt: string) => { navigator.clipboard.writeText(txt); toast.success("Copied"); };
 
   return (
-    <div className="mx-auto max-w-6xl space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-between gap-2 text-base">
-            <span className="flex items-center gap-2"><Download className="h-4 w-4" /> WordPress Plugin</span>
-            <Button asChild size="sm" className="gap-1">
-              <a href="/wa-notifier-woocommerce.zip" download>
-                <Download className="h-4 w-4" /> Download Plugin
-              </a>
-            </Button>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+    <div className="mx-auto max-w-6xl space-y-3">
+      <PageHeader
+        icon={KeyRound}
+        title="Plugin Licenses"
+        description="Manage WordPress plugin licenses and releases."
+        actions={
+          <Button asChild size="sm" className="gap-1">
+            <a href="/wa-notifier-woocommerce.zip" download>
+              <Download className="h-4 w-4" /> Download Plugin
+            </a>
+          </Button>
+        }
+      />
+      <Card className="border-border/60 shadow-sm">
+        <CardContent className="p-4">
           <p className="text-sm text-muted-foreground">
             Install this plugin on your WooCommerce site, then run the setup wizard and paste a license key generated below.
           </p>
