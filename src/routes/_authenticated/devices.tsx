@@ -52,12 +52,14 @@ function DevicesPage() {
 
   const [editing, setEditing] = useState<Device | null>(null);
   const [open, setOpen] = useState(false);
+  const [testing, setTesting] = useState<Device | null>(null);
 
   const testMut = useMutation({
-    mutationFn: (id: string) => fnTest({ data: { id } }),
+    mutationFn: (args: { id: string; recipient: string; message?: string }) => fnTest({ data: args }),
     onSuccess: (r) => {
-      toast.success(r.status === 200 ? "Connected ✓" : `Status ${r.status}: ${r.message}`);
+      toast.success(r.status === 200 ? "Sent ✓" : `Status ${r.status}: ${r.message}`);
       qc.invalidateQueries({ queryKey: ["devices"] });
+      setTesting(null);
     },
     onError: (e) => toast.error((e as Error).message),
   });
@@ -127,7 +129,7 @@ function DevicesPage() {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
-                      <Button size="sm" variant="outline" className="h-8 gap-1" onClick={() => testMut.mutate(d.id)} disabled={testMut.isPending} title="Test connection">
+                      <Button size="sm" variant="outline" className="h-8 gap-1" onClick={() => setTesting(d as Device)} title="Send test message">
                         <Link2 className="h-3.5 w-3.5" /> Test
                       </Button>
                       <Button size="icon" variant="ghost" onClick={() => { setEditing(d as Device); setOpen(true); }} title="Edit">
