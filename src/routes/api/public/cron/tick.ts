@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { timingSafeEqual } from "node:crypto";
 
 // Cron tick: processes scheduled + running campaigns in small batches.
 // Called every minute by pg_cron.
@@ -8,7 +9,10 @@ export const Route = createFileRoute("/api/public/cron/tick")({
       POST: async ({ request }) => {
         const expected = process.env.CRON_SECRET;
         const provided = request.headers.get("x-cron-secret");
-        if (!expected || provided !== expected) {
+        const enc = new TextEncoder();
+        const a = enc.encode(provided ?? "");
+        const b = enc.encode(expected ?? "");
+        if (!expected || !provided || a.length !== b.length || !timingSafeEqual(a, b)) {
           return new Response("Forbidden", { status: 403 });
         }
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
