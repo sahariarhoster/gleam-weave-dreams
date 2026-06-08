@@ -173,9 +173,10 @@ function AddBrandDialog({ userId, brands, onDone }: { userId: string; brands: { 
           </Select>
         </div>
         <div className="space-y-1.5"><Label>Brand Role</Label>
-          <Select value={role} onValueChange={(v) => setRole(v as "brand_admin" | "sender")}>
+          <Select value={role} onValueChange={(v) => setRole(v as "brand_admin" | "brand_member" | "sender")}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
+              <SelectItem value="brand_member">Brand Member</SelectItem>
               <SelectItem value="brand_admin">Brand Admin</SelectItem>
               <SelectItem value="sender">Sender</SelectItem>
             </SelectContent>
