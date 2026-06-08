@@ -49,7 +49,7 @@ export const setUserRole = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({
       user_id: z.string().uuid(),
-      role: z.enum(["owner", "admin", "support_agent", "member"]),
+      role: z.enum(["owner", "admin", "manager", "support_agent", "member"]),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -134,7 +134,7 @@ export const createUser = createServerFn({ method: "POST" })
       email: z.string().email().max(255),
       password: z.string().min(6).max(72),
       full_name: z.string().min(1).max(100),
-      role: z.enum(["owner", "admin", "support_agent", "member"]).default("member"),
+      role: z.enum(["owner", "admin", "manager", "support_agent", "member"]).default("member"),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -155,4 +155,27 @@ export const createUser = createServerFn({ method: "POST" })
       await supabaseAdmin.from("user_roles").insert({ user_id: uid, role: data.role });
     }
     return { ok: true, user_id: uid };
+  });
+
+export const resetUserPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      user_id: z.string().uuid(),
+      password: z.string().min(6).max(72),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertOwner(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.user_id, {
+      password: data.password,
+    });
+    if (error) throw new Error(error.message);
+    await context.supabase.from("activity_log").insert({
+      user_id: context.userId,
+      action: "reset_password",
+      details: { target_user_id: data.user_id },
+    });
+    return { ok: true };
   });

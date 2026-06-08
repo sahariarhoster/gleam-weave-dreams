@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Users, ShieldCheck, UserPlus, X, LogIn } from "lucide-react";
+import { Users, ShieldCheck, UserPlus, X, LogIn, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { listUsers, setUserRole, addBrandMember, removeBrandMember, impersonateUser, createUser } from "@/lib/users.functions";
+import { listUsers, setUserRole, addBrandMember, removeBrandMember, impersonateUser, createUser, resetUserPassword } from "@/lib/users.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { listBrandsLite } from "@/lib/brands.functions";
 
@@ -32,7 +32,7 @@ function UsersPage() {
   const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => fnBrands() });
 
   const roleMut = useMutation({
-    mutationFn: (v: { user_id: string; role: "owner" | "admin" | "support_agent" | "member" }) => fnSetRole({ data: v }),
+    mutationFn: (v: { user_id: string; role: "owner" | "admin" | "manager" | "support_agent" | "member" }) => fnSetRole({ data: v }),
     onSuccess: () => { toast.success("Role updated"); qc.invalidateQueries({ queryKey: ["users"] }); },
     onError: (e) => toast.error((e as Error).message),
   });
@@ -93,12 +93,13 @@ function UsersPage() {
                   <TableCell>
                     <Select
                       value={u.roles?.[0] ?? "member"}
-                      onValueChange={(v) => roleMut.mutate({ user_id: u.id, role: v as "owner" | "admin" | "support_agent" | "member" })}
+                      onValueChange={(v) => roleMut.mutate({ user_id: u.id, role: v as "owner" | "admin" | "manager" | "support_agent" | "member" })}
                     >
                       <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="owner">Owner</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
+                        <SelectItem value="manager">Manager</SelectItem>
                         <SelectItem value="support_agent">Support Agent</SelectItem>
                         <SelectItem value="member">Member</SelectItem>
                       </SelectContent>
@@ -130,6 +131,7 @@ function UsersPage() {
                       >
                         <LogIn className="h-4 w-4" /> Login as
                       </Button>
+                      <ResetPasswordButton userId={u.id} email={u.email} />
                       <Dialog open={openFor === u.id} onOpenChange={(v) => setOpenFor(v ? u.id : null)}>
                         <DialogTrigger asChild>
                           <Button size="sm" variant="outline" className="gap-1"><UserPlus className="h-4 w-4" /> Add to Brand</Button>
@@ -191,7 +193,7 @@ function AddBrandDialog({ userId, brands, onDone }: { userId: string; brands: { 
 function AddUserButton({ onDone }: { onDone: () => void }) {
   const fn = useServerFn(createUser);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ email: "", password: "", full_name: "", role: "member" as "owner" | "admin" | "support_agent" | "member" });
+  const [form, setForm] = useState({ email: "", password: "", full_name: "", role: "member" as "owner" | "admin" | "manager" | "support_agent" | "member" });
   const mut = useMutation({
     mutationFn: () => fn({ data: form }),
     onSuccess: () => {
@@ -223,11 +225,12 @@ function AddUserButton({ onDone }: { onDone: () => void }) {
             <Input required type="password" minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
           </div>
           <div className="space-y-1.5"><Label>Role</Label>
-            <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as "owner" | "admin" | "support_agent" | "member" })}>
+            <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as "owner" | "admin" | "manager" | "support_agent" | "member" })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="member">Member</SelectItem>
                 <SelectItem value="support_agent">Support Agent</SelectItem>
+                <SelectItem value="manager">Manager</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="owner">Owner</SelectItem>
               </SelectContent>
@@ -236,6 +239,43 @@ function AddUserButton({ onDone }: { onDone: () => void }) {
           <DialogFooter>
             <Button type="submit" disabled={mut.isPending} className="w-full">
               {mut.isPending ? "Creating…" : "Create User"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ResetPasswordButton({ userId, email }: { userId: string; email: string }) {
+  const fn = useServerFn(resetUserPassword);
+  const [open, setOpen] = useState(false);
+  const [password, setPassword] = useState("");
+  const mut = useMutation({
+    mutationFn: () => fn({ data: { user_id: userId, password } }),
+    onSuccess: () => { toast.success("Password updated"); setOpen(false); setPassword(""); },
+    onError: (e) => toast.error((e as Error).message),
+  });
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="ghost" className="gap-1" title="Reset password">
+          <KeyRound className="h-4 w-4" /> Reset
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Reset Password</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-3">
+          <p className="text-sm text-muted-foreground">Set a new password for <span className="font-medium">{email}</span>.</p>
+          <div className="space-y-1.5">
+            <Label>New Password</Label>
+            <Input required type="password" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" />
+          </div>
+          <DialogFooter>
+            <Button type="submit" disabled={mut.isPending} className="w-full">
+              {mut.isPending ? "Updating…" : "Update Password"}
             </Button>
           </DialogFooter>
         </form>
