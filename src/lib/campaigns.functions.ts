@@ -4,6 +4,12 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 // ============ CRUD ============
 
+export const SEND_MODE_PRESETS = {
+  direct:       { min_delay_seconds: 0,  max_delay_seconds: 2,  daily_limit: 5000, send_window_start: "00:00", send_window_end: "23:59" },
+  safety_basic: { min_delay_seconds: 5,  max_delay_seconds: 15, daily_limit: 500,  send_window_start: "09:00", send_window_end: "21:00" },
+  safety_max:   { min_delay_seconds: 20, max_delay_seconds: 60, daily_limit: 200,  send_window_start: "10:00", send_window_end: "20:00" },
+} as const;
+
 const campaignInput = z.object({
   brand_id: z.string().uuid(),
   device_id: z.string().uuid(),
@@ -11,11 +17,7 @@ const campaignInput = z.object({
   message: z.string().min(1).max(4000),
   media_url: z.string().url().nullable().optional().or(z.literal("")),
   scheduled_at: z.string().nullable().optional(),
-  min_delay_seconds: z.number().int().min(0).max(600).default(5),
-  max_delay_seconds: z.number().int().min(0).max(600).default(15),
-  daily_limit: z.number().int().min(1).max(100000).default(500),
-  send_window_start: z.string().default("09:00"),
-  send_window_end: z.string().default("21:00"),
+  send_mode: z.enum(["direct", "safety_basic", "safety_max"]).default("safety_basic"),
   group_ids: z.array(z.string().uuid()).min(1),
 });
 
