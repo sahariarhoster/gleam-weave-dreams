@@ -5,7 +5,10 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const Body = z.object({
   service_id: z.union([z.string(), z.number()]).transform((v) => String(v)),
-  product_id: z.union([z.string(), z.number()]).optional().transform((v) => (v == null ? null : String(v))),
+  product_id: z
+    .union([z.string(), z.number()])
+    .optional()
+    .transform((v) => (v == null ? null : String(v))),
   brand_name: z.string().min(1).max(100),
   owner_email: z.string().email().max(255),
   owner_name: z.string().min(1).max(100),
@@ -20,31 +23,42 @@ export const Route = createFileRoute("/api/public/whmcs/provision")({
       POST: async ({ request }) => {
         if (!(await verifyWhmcsToken(request))) return json({ error: "unauthorized" }, 401);
         let input: z.infer<typeof Body>;
-        try { input = Body.parse(await request.json()); }
-        catch (e) { return json({ error: "invalid_input", detail: (e as Error).message }, 400); }
+        try {
+          input = Body.parse(await request.json());
+        } catch (e) {
+          return json({ error: "invalid_input", detail: (e as Error).message }, 400);
+        }
 
         // If service already provisioned, return existing
         const { data: existing } = await supabaseAdmin
-          .from("brands").select("id, name").eq("whmcs_service_id", input.service_id).maybeSingle();
+          .from("brands")
+          .select("id, name")
+          .eq("whmcs_service_id", input.service_id)
+          .maybeSingle();
         if (existing) return json({ ok: true, already: true, brand_id: existing.id });
 
         // Create or reuse user
         let userId: string | null = null;
         let generatedPassword: string | null = null;
         const { data: list } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
-        const found = (list?.users ?? []).find((u) => u.email?.toLowerCase() === input.owner_email.toLowerCase());
+        const found = (list?.users ?? []).find(
+          (u) => u.email?.toLowerCase() === input.owner_email.toLowerCase(),
+        );
         if (found) {
           userId = found.id;
         } else {
           generatedPassword = Array.from(crypto.getRandomValues(new Uint8Array(12)))
-            .map((b) => "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"[b % 57]).join("");
+            .map((b) => "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"[b % 57])
+            .join("");
           const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
             email: input.owner_email,
             password: generatedPassword,
             email_confirm: true,
             user_metadata: { full_name: input.owner_name },
           });
-          if (error || !created.user) return json({ error: "user_create_failed", detail: error?.message }, 500);
+          if (error || !created.user) {
+            return json({ error: "user_create_failed", detail: error?.message }, 500);
+          }
           userId = created.user.id;
         }
 
