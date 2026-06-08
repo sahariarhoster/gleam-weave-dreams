@@ -180,10 +180,10 @@ function TrustStrip() {
 function FeatureSection(props: {
   id: string;
   eyebrow: string;
-  title: React.ReactNode;
+  title: ReactNode;
   description: string;
   bullets: string[];
-  visual: React.ReactNode;
+  visual: ReactNode;
   reverse?: boolean;
 }) {
   return (
