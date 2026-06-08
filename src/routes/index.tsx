@@ -246,31 +246,6 @@ function Hero() {
 
 
 
-/* ---------------- Logo marquee ---------------- */
-function LogoMarquee() {
-  const brands = [
-    "Daraz Sellers", "Rokomari", "Pickaboo", "Chaldal Partners", "Foodpanda",
-    "Evaly Stores", "Othoba", "Ajkerdeal", "Pathao Pay", "bKash Merchants",
-  ];
-  return (
-    <section className="border-y border-border/60 bg-secondary/30 py-7 overflow-hidden">
-      <p className="mb-4 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-        বাংলাদেশের শীর্ষ ব্র্যান্ড ও মার্চেন্টদের আস্থা
-      </p>
-      <div className="relative">
-        <div className="absolute inset-y-0 left-0 z-10 w-24 bg-gradient-to-r from-background to-transparent" />
-        <div className="absolute inset-y-0 right-0 z-10 w-24 bg-gradient-to-l from-background to-transparent" />
-        <div className="flex w-max gap-12 animate-marquee">
-          {[...brands, ...brands].map((b, i) => (
-            <span key={i} className="font-display text-xl font-bold tracking-tight text-muted-foreground/60 whitespace-nowrap">
-              {b}
-            </span>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
 
 /* ---------------- Trust strip ---------------- */
 function TrustStrip() {
