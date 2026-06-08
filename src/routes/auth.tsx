@@ -20,6 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
+  ssr: false,
   head: () => ({ meta: [{ title: "Sign in — WA Suite" }] }),
   component: AuthPage,
 });
@@ -46,7 +47,11 @@ function AuthPage() {
       return toast.error(error.message);
     }
     toast.success("Welcome back!");
-    navigate({ to: "/dashboard", replace: true });
+    try {
+      await navigate({ to: "/dashboard", replace: true });
+    } finally {
+      setLoading(false);
+    }
   }
 
   async function forgot() {
