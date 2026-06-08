@@ -45,19 +45,21 @@ function BrandsPage() {
 
   return (
     <div className="mx-auto max-w-7xl">
-      <Card className="border-border/60 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Building2 className="h-4 w-4" /> All Brands
-          </CardTitle>
+      <PageHeader
+        icon={Building2}
+        title="Brands"
+        description="Each brand groups its own devices, contacts, campaigns and members."
+        actions={
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
             <DialogTrigger asChild>
               <Button size="sm" className="gap-1"><Plus className="h-4 w-4" /> Add Brand</Button>
             </DialogTrigger>
             <BrandDialog editing={editing} onDone={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["brands"] }); }} />
           </Dialog>
-        </CardHeader>
-        <CardContent>
+        }
+      />
+      <Card className="border-border/60 shadow-sm">
+        <CardContent className="pt-6">
           <Table>
             <TableHeader>
               <TableRow>
