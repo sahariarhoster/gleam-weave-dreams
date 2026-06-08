@@ -9,9 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { listUsers, setUserRole, addBrandMember, removeBrandMember, impersonateUser } from "@/lib/users.functions";
+import { listUsers, setUserRole, addBrandMember, removeBrandMember, impersonateUser, createUser } from "@/lib/users.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { listBrandsLite } from "@/lib/brands.functions";
 
