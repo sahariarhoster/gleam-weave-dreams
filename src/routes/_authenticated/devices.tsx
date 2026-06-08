@@ -24,6 +24,7 @@ import {
   listDevices, createDevice, updateDevice, deleteDevice, testDeviceConnection,
 } from "@/lib/devices.functions";
 import { listBrandsLite } from "@/lib/brands.functions";
+import { getMyRoles } from "@/lib/users.functions";
 
 export const Route = createFileRoute("/_authenticated/devices")({
   head: () => ({ meta: [{ title: "Devices — WA Notifier" }] }),
@@ -46,9 +47,12 @@ function DevicesPage() {
   const fnBrands = useServerFn(listBrandsLite);
   const fnTest = useServerFn(testDeviceConnection);
   const fnDelete = useServerFn(deleteDevice);
+  const fnRoles = useServerFn(getMyRoles);
 
   const devices = useQuery({ queryKey: ["devices"], queryFn: () => fnList() });
   const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => fnBrands() });
+  const roles = useQuery({ queryKey: ["my-roles"], queryFn: () => fnRoles() });
+  const isOwner = (roles.data ?? []).includes("owner");
 
   const [editing, setEditing] = useState<Device | null>(null);
   const [open, setOpen] = useState(false);
@@ -80,24 +84,26 @@ function DevicesPage() {
           <CardTitle className="flex items-center gap-2 text-base">
             <Smartphone className="h-4 w-4" /> All Devices
           </CardTitle>
-          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="gap-1"><Plus className="h-4 w-4" /> Add Device</Button>
-            </DialogTrigger>
-            <DeviceDialog
-              key={editing?.id ?? "new"}
-              editing={editing}
-              brands={brands.data ?? []}
-              onDone={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["devices"] }); }}
-            />
-          </Dialog>
+          {isOwner && (
+            <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="gap-1"><Plus className="h-4 w-4" /> Add Device</Button>
+              </DialogTrigger>
+              <DeviceDialog
+                key={editing?.id ?? "new"}
+                editing={editing}
+                brands={brands.data ?? []}
+                onDone={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["devices"] }); }}
+              />
+            </Dialog>
+          )}
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Device ID</TableHead>
+                {isOwner && <TableHead>Device ID</TableHead>}
                 <TableHead>SIM</TableHead>
                 <TableHead>Linked Brand</TableHead>
                 <TableHead>Status</TableHead>
@@ -106,17 +112,17 @@ function DevicesPage() {
             </TableHeader>
             <TableBody>
               {devices.isLoading && (
-                <TableRow><TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">Loading…</TableCell></TableRow>
+                <TableRow><TableCell colSpan={isOwner ? 6 : 5} className="py-10 text-center text-sm text-muted-foreground">Loading…</TableCell></TableRow>
               )}
               {!devices.isLoading && (devices.data?.length ?? 0) === 0 && (
-                <TableRow><TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-                  No devices yet. Add one to start sending.
+                <TableRow><TableCell colSpan={isOwner ? 6 : 5} className="py-10 text-center text-sm text-muted-foreground">
+                  No devices yet.
                 </TableCell></TableRow>
               )}
               {(devices.data ?? []).map((d) => (
                 <TableRow key={d.id}>
                   <TableCell className="font-medium">{d.name}</TableCell>
-                  <TableCell className="max-w-[280px] truncate font-mono text-xs">{d.device_unique_id}</TableCell>
+                  {isOwner && <TableCell className="max-w-[280px] truncate font-mono text-xs">{d.device_unique_id}</TableCell>}
                   <TableCell className="text-sm">{d.sim_info ?? "—"}</TableCell>
                   <TableCell>
                     {d.brands?.name ? <Badge variant="secondary">{d.brands.name}</Badge> : <span className="text-xs text-muted-foreground">—</span>}
@@ -133,26 +139,30 @@ function DevicesPage() {
                       <Button size="sm" variant="outline" className="h-8 gap-1" onClick={() => setTesting(d as Device)} title="Send test message">
                         <Link2 className="h-3.5 w-3.5" /> Test
                       </Button>
-                      <Button size="icon" variant="ghost" onClick={() => { setEditing(d as Device); setOpen(true); }} title="Edit">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button size="icon" variant="ghost" className="text-rose-600 hover:bg-rose-50 hover:text-rose-700" title="Delete">
-                            <Trash2 className="h-4 w-4" />
+                      {isOwner && (
+                        <>
+                          <Button size="icon" variant="ghost" onClick={() => { setEditing(d as Device); setOpen(true); }} title="Edit">
+                            <Pencil className="h-4 w-4" />
                           </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete this device?</AlertDialogTitle>
-                            <AlertDialogDescription>This cannot be undone. Campaigns linked to this device may fail.</AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteMut.mutate(d.id)} className="bg-rose-600 hover:bg-rose-700">Delete</AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="icon" variant="ghost" className="text-rose-600 hover:bg-rose-50 hover:text-rose-700" title="Delete">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete this device?</AlertDialogTitle>
+                                <AlertDialogDescription>This cannot be undone. Campaigns linked to this device may fail.</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => deleteMut.mutate(d.id)} className="bg-rose-600 hover:bg-rose-700">Delete</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>

@@ -12,6 +12,16 @@ async function assertOwner(supabase: any, userId: string) {
   if (!data) throw new Error("Forbidden: owner only");
 }
 
+export const getMyRoles = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId);
+    return (data ?? []).map((r: any) => r.role as string);
+  });
+
 export const listUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
