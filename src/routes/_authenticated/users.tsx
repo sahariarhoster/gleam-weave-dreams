@@ -131,6 +131,7 @@ function UsersPage() {
                       >
                         <LogIn className="h-4 w-4" /> Login as
                       </Button>
+                      <ResetPasswordButton userId={u.id} email={u.email} />
                       <Dialog open={openFor === u.id} onOpenChange={(v) => setOpenFor(v ? u.id : null)}>
                         <DialogTrigger asChild>
                           <Button size="sm" variant="outline" className="gap-1"><UserPlus className="h-4 w-4" /> Add to Brand</Button>
