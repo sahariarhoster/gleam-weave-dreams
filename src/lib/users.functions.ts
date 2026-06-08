@@ -13,30 +13,16 @@ async function assertOwner(supabase: any, userId: string) {
 }
 
 export const getMyRoles = createServerFn({ method: "GET" })
-  .handler(async () => {
-    // Tolerate unauthenticated callers (e.g. during sign-out/redirect) by
-    // returning [] instead of throwing — avoids runtime blank-screen errors.
-    const { getRequest } = await import("@tanstack/react-start/server");
-    const req = getRequest();
-    const authHeader = req?.headers?.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) return [] as string[];
-    const token = authHeader.slice("Bearer ".length);
-    if (!token) return [] as string[];
-    const { createClient } = await import("@supabase/supabase-js");
-    const supabase = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_PUBLISHABLE_KEY!,
-      {
-        global: { headers: { Authorization: `Bearer ${token}` } },
-        auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
-      },
-    );
-    const { data: claimsRes } = await supabase.auth.getClaims(token);
-    const uid = claimsRes?.claims?.sub;
-    if (!uid) return [] as string[];
-    const { data } = await supabase.from("user_roles").select("role").eq("user_id", uid);
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId);
+    if (error) return [] as string[];
     return (data ?? []).map((r: any) => r.role as string);
   });
+
 
 export const listUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
