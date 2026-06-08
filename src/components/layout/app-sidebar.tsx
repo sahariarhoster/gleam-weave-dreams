@@ -76,7 +76,7 @@ export function AppSidebar() {
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <div className="truncate text-sm font-semibold">WA Notifier</div>
+              <div className="truncate text-sm font-semibold">WA Suite</div>
               <div className="truncate text-[10px] uppercase tracking-wider text-sidebar-foreground/60">
                 WhatsApp Suite
               </div>

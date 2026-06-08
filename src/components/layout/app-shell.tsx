@@ -18,7 +18,7 @@ const titles: Record<string, string> = {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const title = titles[pathname] ?? "WA Notifier";
+  const title = titles[pathname] ?? "WA Suite";
 
   return (
     <SidebarProvider>

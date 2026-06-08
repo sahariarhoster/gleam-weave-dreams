@@ -26,7 +26,7 @@ import { getPluginRelease, setPluginRelease } from "@/lib/plugin-release.functio
 import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/licenses")({
-  head: () => ({ meta: [{ title: "Plugin Licenses — WA Notifier" }] }),
+  head: () => ({ meta: [{ title: "Plugin Licenses — WA Suite" }] }),
   component: LicensesPage,
 });
 

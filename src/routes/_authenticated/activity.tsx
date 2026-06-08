@@ -13,7 +13,7 @@ import { listBrandsLite } from "@/lib/brands.functions";
 import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/activity")({
-  head: () => ({ meta: [{ title: "Activity Log — WA Notifier" }] }),
+  head: () => ({ meta: [{ title: "Activity Log — WA Suite" }] }),
   component: ActivityPage,
 });
 

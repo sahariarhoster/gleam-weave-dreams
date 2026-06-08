@@ -205,7 +205,7 @@ export const testDeviceConnection = createServerFn({ method: "POST" })
       secret: device.api_secret,
       account: device.device_unique_id,
       recipient,
-      message: data.message ?? "✅ Test message from WA Notifier",
+      message: data.message ?? "✅ Test message from WA Suite",
     });
     await context.supabase
       .from("devices")

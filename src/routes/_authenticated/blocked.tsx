@@ -20,7 +20,7 @@ import { listBrandsLite } from "@/lib/brands.functions";
 import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/blocked")({
-  head: () => ({ meta: [{ title: "Blocked Numbers — WA Notifier" }] }),
+  head: () => ({ meta: [{ title: "Blocked Numbers — WA Suite" }] }),
   component: BlockedPage,
 });
 

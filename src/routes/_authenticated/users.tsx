@@ -18,7 +18,7 @@ import { listBrandsLite } from "@/lib/brands.functions";
 import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/users")({
-  head: () => ({ meta: [{ title: "Users — WA Notifier" }] }),
+  head: () => ({ meta: [{ title: "Users — WA Suite" }] }),
   component: UsersPage,
 });
 

@@ -1,19 +1,19 @@
 <?php
 /**
- * WA Notifier — WHMCS Provisioning Module
+ * WA Suite — WHMCS Provisioning Module
  *
  * Place in: /modules/servers/wanotifier/wanotifier.php
  *
  * On the WHMCS server, configure:
- *   - Hostname: full URL of your WA Notifier install (e.g. https://app.example.com)
- *   - Access Hash: the API token from WA Notifier → Billing
+ *   - Hostname: full URL of your WA Suite install (e.g. https://app.example.com)
+ *   - Access Hash: the API token from WA Suite → Billing
  */
 
 if (!defined("WHMCS")) die("This file cannot be accessed directly");
 
 function wanotifier_MetaData() {
     return [
-        "DisplayName" => "WA Notifier",
+        "DisplayName" => "WA Suite",
         "APIVersion" => "1.1",
         "RequiresServer" => true,
     ];

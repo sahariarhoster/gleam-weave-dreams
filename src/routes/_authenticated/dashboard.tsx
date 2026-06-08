@@ -38,7 +38,7 @@ import { Button } from "@/components/ui/button";
 import { getDashboardStats } from "@/lib/devices.functions";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — WA Notifier" }] }),
+  head: () => ({ meta: [{ title: "Dashboard — WA Suite" }] }),
   component: DashboardPage,
 });
 
