@@ -167,6 +167,28 @@ function BrandDialog({ editing, onDone }: { editing: Brand | null; onDone: () =>
           </div>
           <div className="space-y-1.5"><Label>Expires At</Label>
             <Input type="date" value={form.expires_at} onChange={(e) => setForm({ ...form, expires_at: e.target.value })} />
+            <div className="flex gap-1.5 pt-1">
+              {[
+                { label: "1 month", months: 1 },
+                { label: "3 months", months: 3 },
+                { label: "6 months", months: 6 },
+                { label: "1 year", months: 12 },
+              ].map((p) => (
+                <Button
+                  key={p.label}
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const d = new Date();
+                    d.setMonth(d.getMonth() + p.months);
+                    setForm({ ...form, expires_at: d.toISOString().slice(0, 10) });
+                  }}
+                >
+                  {p.label}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
