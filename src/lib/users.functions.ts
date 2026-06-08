@@ -223,8 +223,8 @@ async function getMyBrandIds(supabase: any, userId: string): Promise<string[]> {
   ]);
   return Array.from(
     new Set([
-      ...((ownedRes.data ?? []).map((b: any) => b.id as string)),
-      ...((memberRes.data ?? []).map((m: any) => m.brand_id as string)),
+      ...(ownedRes.data ?? []).map((b: any) => b.id as string),
+      ...(memberRes.data ?? []).map((m: any) => m.brand_id as string),
     ]),
   );
 }
