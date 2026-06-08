@@ -59,13 +59,16 @@ export function AppSidebar() {
   const roles = useQuery({ queryKey: ["my-roles"], queryFn: () => fnRoles() });
   const isOwner = (roles.data ?? []).includes("owner");
   const isBrandOwner = (roles.data ?? []).includes("brand_owner");
+  const userRoles = roles.data ?? [];
   const visibleItems = items.filter((i) => {
     const o = "ownerOnly" in i && (i as any).ownerOnly;
     const b = "brandOwnerOnly" in i && (i as any).brandOwnerOnly;
     const bo = "brandOwnerOrOwner" in i && (i as any).brandOwnerOrOwner;
+    const ar = "anyRole" in i ? ((i as any).anyRole as string[] | undefined) : undefined;
     if (o) return isOwner;
     if (b) return isBrandOwner;
     if (bo) return isOwner || isBrandOwner;
+    if (ar) return ar.some((r) => userRoles.includes(r));
     return true;
   });
 
