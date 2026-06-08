@@ -20,6 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
+  ssr: false,
   head: () => ({ meta: [{ title: "Sign in — WA Suite" }] }),
   component: AuthPage,
 });
@@ -40,12 +41,17 @@ function AuthPage() {
   async function signIn(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setLoading(false);
       return toast.error(error.message);
     }
+    if (!data.session) {
+      setLoading(false);
+      return toast.error("Sign in failed. Please try again.");
+    }
     toast.success("Welcome back!");
+    setLoading(false);
     navigate({ to: "/dashboard", replace: true });
   }
 
