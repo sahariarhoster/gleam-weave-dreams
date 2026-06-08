@@ -14,6 +14,7 @@ import {
   FolderOpen,
   KeyRound,
   CreditCard,
+  Wrench,
 } from "lucide-react";
 import {
   Sidebar,

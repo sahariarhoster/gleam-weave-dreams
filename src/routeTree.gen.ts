@@ -19,6 +19,7 @@ import { Route as AuthenticatedLogsRouteImport } from './routes/_authenticated/l
 import { Route as AuthenticatedLicensesRouteImport } from './routes/_authenticated/licenses'
 import { Route as AuthenticatedGroupsRouteImport } from './routes/_authenticated/groups'
 import { Route as AuthenticatedDevicesRouteImport } from './routes/_authenticated/devices'
+import { Route as AuthenticatedDeviceRequestsRouteImport } from './routes/_authenticated/device-requests'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedContactsRouteImport } from './routes/_authenticated/contacts'
 import { Route as AuthenticatedCampaignsRouteImport } from './routes/_authenticated/campaigns'
@@ -89,6 +90,12 @@ const AuthenticatedDevicesRoute = AuthenticatedDevicesRouteImport.update({
   path: '/devices',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDeviceRequestsRoute =
+  AuthenticatedDeviceRequestsRouteImport.update({
+    id: '/device-requests',
+    path: '/device-requests',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -203,6 +210,7 @@ export interface FileRoutesByFullPath {
   '/campaigns': typeof AuthenticatedCampaignsRoute
   '/contacts': typeof AuthenticatedContactsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/device-requests': typeof AuthenticatedDeviceRequestsRoute
   '/devices': typeof AuthenticatedDevicesRoute
   '/groups': typeof AuthenticatedGroupsRoute
   '/licenses': typeof AuthenticatedLicensesRoute
@@ -234,6 +242,7 @@ export interface FileRoutesByTo {
   '/campaigns': typeof AuthenticatedCampaignsRoute
   '/contacts': typeof AuthenticatedContactsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/device-requests': typeof AuthenticatedDeviceRequestsRoute
   '/devices': typeof AuthenticatedDevicesRoute
   '/groups': typeof AuthenticatedGroupsRoute
   '/licenses': typeof AuthenticatedLicensesRoute
@@ -267,6 +276,7 @@ export interface FileRoutesById {
   '/_authenticated/campaigns': typeof AuthenticatedCampaignsRoute
   '/_authenticated/contacts': typeof AuthenticatedContactsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/device-requests': typeof AuthenticatedDeviceRequestsRoute
   '/_authenticated/devices': typeof AuthenticatedDevicesRoute
   '/_authenticated/groups': typeof AuthenticatedGroupsRoute
   '/_authenticated/licenses': typeof AuthenticatedLicensesRoute
@@ -300,6 +310,7 @@ export interface FileRouteTypes {
     | '/campaigns'
     | '/contacts'
     | '/dashboard'
+    | '/device-requests'
     | '/devices'
     | '/groups'
     | '/licenses'
@@ -331,6 +342,7 @@ export interface FileRouteTypes {
     | '/campaigns'
     | '/contacts'
     | '/dashboard'
+    | '/device-requests'
     | '/devices'
     | '/groups'
     | '/licenses'
@@ -363,6 +375,7 @@ export interface FileRouteTypes {
     | '/_authenticated/campaigns'
     | '/_authenticated/contacts'
     | '/_authenticated/dashboard'
+    | '/_authenticated/device-requests'
     | '/_authenticated/devices'
     | '/_authenticated/groups'
     | '/_authenticated/licenses'
@@ -474,6 +487,13 @@ declare module '@tanstack/react-router' {
       path: '/devices'
       fullPath: '/devices'
       preLoaderRoute: typeof AuthenticatedDevicesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/device-requests': {
+      id: '/_authenticated/device-requests'
+      path: '/device-requests'
+      fullPath: '/device-requests'
+      preLoaderRoute: typeof AuthenticatedDeviceRequestsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -627,6 +647,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCampaignsRoute: typeof AuthenticatedCampaignsRoute
   AuthenticatedContactsRoute: typeof AuthenticatedContactsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDeviceRequestsRoute: typeof AuthenticatedDeviceRequestsRoute
   AuthenticatedDevicesRoute: typeof AuthenticatedDevicesRoute
   AuthenticatedGroupsRoute: typeof AuthenticatedGroupsRoute
   AuthenticatedLicensesRoute: typeof AuthenticatedLicensesRoute
@@ -644,6 +665,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCampaignsRoute: AuthenticatedCampaignsRoute,
   AuthenticatedContactsRoute: AuthenticatedContactsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDeviceRequestsRoute: AuthenticatedDeviceRequestsRoute,
   AuthenticatedDevicesRoute: AuthenticatedDevicesRoute,
   AuthenticatedGroupsRoute: AuthenticatedGroupsRoute,
   AuthenticatedLicensesRoute: AuthenticatedLicensesRoute,
