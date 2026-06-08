@@ -12,6 +12,8 @@ import {
   MessageCircle,
   Contact,
   FolderOpen,
+  KeyRound,
+  Settings,
 } from "lucide-react";
 import {
   Sidebar,
