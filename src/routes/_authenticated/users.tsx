@@ -9,9 +9,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { listUsers, setUserRole, addBrandMember, removeBrandMember, impersonateUser } from "@/lib/users.functions";
+import { listUsers, setUserRole, addBrandMember, removeBrandMember, impersonateUser, createUser } from "@/lib/users.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { listBrandsLite } from "@/lib/brands.functions";
 
@@ -68,8 +69,9 @@ function UsersPage() {
   return (
     <div className="mx-auto max-w-7xl">
       <Card className="border-border/60 shadow-sm">
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-base"><Users className="h-4 w-4" /> All Users</CardTitle>
+          <AddUserButton onDone={() => qc.invalidateQueries({ queryKey: ["users"] })} />
         </CardHeader>
         <CardContent>
           <Table>
@@ -181,5 +183,59 @@ function AddBrandDialog({ userId, brands, onDone }: { userId: string; brands: { 
         </Button>
       </DialogFooter>
     </DialogContent>
+  );
+}
+
+function AddUserButton({ onDone }: { onDone: () => void }) {
+  const fn = useServerFn(createUser);
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ email: "", password: "", full_name: "", role: "member" as "owner" | "member" });
+  const mut = useMutation({
+    mutationFn: () => fn({ data: form }),
+    onSuccess: () => {
+      toast.success("User created");
+      setOpen(false);
+      setForm({ email: "", password: "", full_name: "", role: "member" });
+      onDone();
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" className="gap-1"><UserPlus className="h-4 w-4" /> Add User</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader><DialogTitle>Add New User</DialogTitle></DialogHeader>
+        <form
+          onSubmit={(e) => { e.preventDefault(); mut.mutate(); }}
+          className="space-y-3"
+        >
+          <div className="space-y-1.5"><Label>Full Name</Label>
+            <Input required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
+          </div>
+          <div className="space-y-1.5"><Label>Email</Label>
+            <Input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          </div>
+          <div className="space-y-1.5"><Label>Password</Label>
+            <Input required type="password" minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+          </div>
+          <div className="space-y-1.5"><Label>Role</Label>
+            <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as "owner" | "member" })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="member">Member</SelectItem>
+                <SelectItem value="owner">Owner</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button type="submit" disabled={mut.isPending} className="w-full">
+              {mut.isPending ? "Creating…" : "Create User"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
