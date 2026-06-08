@@ -276,7 +276,7 @@ function BulkSection() {
     <FeatureSection
       id="bulk"
       eyebrow="বাল্ক মেসেজিং"
-      title={<>একসাথে হাজারো কাস্টমারকে <span className="text-shimmer">হোয়াটসঅ্যাপ</span> পাঠান</>}
+      title={<>একসাথে হাজারো কাস্টমারকে <span className="text-primary">হোয়াটসঅ্যাপ</span> পাঠান</>}
       description="CSV আপলোড করুন, কন্টাক্ট গ্রুপ তৈরি করুন, এবং পার্সোনালাইজড টেমপ্লেট দিয়ে ক্যাম্পেইন চালান। শিডিউল করুন, রিয়েল-টাইম রিপোর্ট দেখুন।"
       bullets={[
         "CSV/Excel ইম্পোর্ট, আনলিমিটেড কন্টাক্ট গ্রুপ",
@@ -360,7 +360,7 @@ function PluginSection() {
       id="plugin"
       reverse
       eyebrow="WordPress প্লাগইন"
-      title={<>প্রতিটি WooCommerce অর্ডারে <span className="text-shimmer">অটো নোটিফিকেশন</span></>}
+      title={<>প্রতিটি WooCommerce অর্ডারে <span className="text-primary">অটো নোটিফিকেশন</span></>}
       description="মাত্র ৫ মিনিটে আপনার WordPress সাইটে প্লাগইন ইনস্টল করুন। প্রতিটি অর্ডার স্ট্যাটাস চেঞ্জে কাস্টমার এবং অ্যাডমিন — দু'জনেই অটোমেটিক হোয়াটসঅ্যাপ মেসেজ পাবেন।"
       bullets={[
         "৭টি অর্ডার স্ট্যাটাসে আলাদা টেমপ্লেট (Bangla ডিফল্ট)",
@@ -437,7 +437,7 @@ function ProtectionSection() {
             এক্সট্রিম ব্যান প্রোটেকশন
           </span>
           <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-5xl">
-            আপনার নাম্বার নিরাপদ। <span className="text-shimmer">ব্যান বা রেস্ট্রিকশন নেই।</span>
+            আপনার নাম্বার নিরাপদ। <span className="text-primary">ব্যান বা রেস্ট্রিকশন নেই।</span>
           </h2>
           <p className="mt-4 text-muted-foreground">
             আমাদের ৬-লেয়ার সেফটি ইঞ্জিন প্রতিটি মেসেজ পাঠানোর আগে চেক করে — তাই হোয়াটসঅ্যাপ আপনাকে কখনই বট হিসাবে চিহ্নিত করবে না।
@@ -500,7 +500,7 @@ function Testimonials() {
             গ্রাহকদের কথা
           </span>
           <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl">
-            ২,৫০০+ ব্যবসা ইতিমধ্যে <span className="text-shimmer">আমাদের সাথে</span>
+            ২,৫০০+ ব্যবসা ইতিমধ্যে <span className="text-primary">আমাদের সাথে</span>
           </h2>
         </div>
         <div className="mt-12 grid gap-5 md:grid-cols-3">
