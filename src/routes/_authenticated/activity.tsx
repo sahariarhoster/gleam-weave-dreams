@@ -30,11 +30,11 @@ function ActivityPage() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <Card className="border-border/60 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between gap-2">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <ScrollText className="h-4 w-4" /> Activity Log
-          </CardTitle>
+      <PageHeader
+        icon={ScrollText}
+        title="Activity Log"
+        description="Audit trail of system events, plugin pings and admin actions."
+        actions={
           <Select value={brand} onValueChange={setBrand}>
             <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -44,8 +44,10 @@ function ActivityPage() {
               ))}
             </SelectContent>
           </Select>
-        </CardHeader>
-        <CardContent>
+        }
+      />
+      <Card className="border-border/60 shadow-sm">
+        <CardContent className="pt-6">
           <Table>
             <TableHeader>
               <TableRow>
