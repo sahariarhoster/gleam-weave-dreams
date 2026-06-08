@@ -216,7 +216,7 @@ function DeviceDialog({
 
   const mut = useMutation({
     mutationFn: async () => {
-      const payload = {
+      
       const base = {
         name: form.name,
         device_unique_id: form.device_unique_id,
