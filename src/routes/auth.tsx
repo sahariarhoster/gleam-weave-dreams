@@ -252,7 +252,7 @@ function AuthPage() {
               </p>
             </form>
           </div>
-          </div>
+
 
 
           <p className="mt-6 text-center text-xs text-slate-500">
