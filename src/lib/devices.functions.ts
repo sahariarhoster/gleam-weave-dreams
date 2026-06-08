@@ -93,16 +93,29 @@ export const deleteDevice = createServerFn({ method: "POST" })
 
 export const testDeviceConnection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .inputValidator((d: unknown) =>
+    z.object({
+      id: z.string().uuid(),
+      recipient: z.string().min(5).max(20),
+      message: z.string().min(1).max(500).optional(),
+    }).parse(d),
+  )
   .handler(async ({ data, context }) => {
     const { data: device, error } = await context.supabase
       .from("devices")
-      .select("api_secret")
+      .select("api_secret, device_unique_id")
       .eq("id", data.id)
       .single();
     if (error || !device) throw new Error("Device not found");
+    let recipient = data.recipient.trim();
+    if (!recipient.startsWith("+")) recipient = "+880" + recipient.replace(/^0+/, "");
     const { bdwebs } = await import("@/lib/bdwebs.server");
-    const res = await bdwebs.getCredits(device.api_secret);
+    const res = await bdwebs.sendWhatsApp({
+      secret: device.api_secret,
+      account: device.device_unique_id,
+      recipient,
+      message: data.message ?? "✅ Test message from WA Notifier",
+    });
     await context.supabase
       .from("devices")
       .update({
@@ -110,7 +123,7 @@ export const testDeviceConnection = createServerFn({ method: "POST" })
         status: res.status === 200 ? "active" : "disconnected",
       })
       .eq("id", data.id);
-    return { status: res.status, message: res.message, data: res.data };
+    return { status: res.status, message: res.message };
   });
 
 // ============ Send single SMS ============
