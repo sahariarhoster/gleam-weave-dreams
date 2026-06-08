@@ -20,7 +20,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
-  ssr: false,
   head: () => ({ meta: [{ title: "Sign in — WA Suite" }] }),
   component: AuthPage,
 });
