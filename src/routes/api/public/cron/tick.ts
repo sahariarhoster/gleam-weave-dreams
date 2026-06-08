@@ -5,7 +5,12 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/api/public/cron/tick")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const expected = process.env.CRON_SECRET;
+        const provided = request.headers.get("x-cron-secret");
+        if (!expected || provided !== expected) {
+          return new Response("Forbidden", { status: 403 });
+        }
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
         const nowIso = new Date().toISOString();

@@ -73,10 +73,21 @@ export const generateLicense = createServerFn({ method: "POST" })
     return row;
   });
 
+async function assertLicenseManager(supabase: any, userId: string, licenseId: string) {
+  const { data: lic } = await supabase
+    .from("plugin_licenses").select("brand_id").eq("id", licenseId).maybeSingle();
+  if (!lic) throw new Error("License not found");
+  if (await isOwner(supabase, userId)) return;
+  const { data: brand } = await supabase
+    .from("brands").select("created_by").eq("id", lic.brand_id).maybeSingle();
+  if (brand?.created_by !== userId) throw new Error("Forbidden: not your license");
+}
+
 export const revokeLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
+    await assertLicenseManager(context.supabase, context.userId, data.id);
     const { error } = await context.supabase
       .from("plugin_licenses").update({ status: "revoked" }).eq("id", data.id);
     if (error) throw new Error(error.message);
@@ -87,6 +98,7 @@ export const deleteLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
+    await assertLicenseManager(context.supabase, context.userId, data.id);
     const { error } = await context.supabase
       .from("plugin_licenses").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
