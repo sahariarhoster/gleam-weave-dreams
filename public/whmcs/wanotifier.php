@@ -56,6 +56,7 @@ function wanotifier_apiCall($params, $path, $body) {
     if ($err) return ["ok" => false, "error" => $err];
     $json = json_decode($res, true);
     if ($code >= 400) return ["ok" => false, "error" => $json["error"] ?? $res, "code" => $code];
+    if (!is_array($json)) return ["ok" => false, "error" => "Invalid API response from WA Suite", "code" => $code];
     return ["ok" => true, "data" => $json];
 }
 
@@ -139,6 +140,8 @@ function wanotifier_TestConnection(array $params) {
     $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
     if ($code === 401) return ["success" => false, "error" => "Invalid API token"];
+    if ($code === 404) return ["success" => false, "error" => "WA Suite API endpoint not found. Use the published app URL or stable dev URL, not the module download URL."];
     if ($code === 0)   return ["success" => false, "error" => "Cannot reach server"];
+    if ($code >= 400)  return ["success" => false, "error" => "WA Suite API returned HTTP " . $code];
     return ["success" => true, "error" => ""];
 }
