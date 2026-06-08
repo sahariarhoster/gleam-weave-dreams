@@ -124,7 +124,7 @@ export const setCampaignStatus = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const patch: Record<string, unknown> = { status: data.status };
+    const patch: Record<string, any> = { status: data.status };
     if (data.status === "running") patch.started_at = new Date().toISOString();
     if (data.status === "completed") patch.completed_at = new Date().toISOString();
     const { error } = await context.supabase.from("campaigns").update(patch).eq("id", data.id);
@@ -259,7 +259,7 @@ export const runCampaignChunk = createServerFn({ method: "POST" })
     const newFailed = (camp.failed_count ?? 0) + failed;
     const total = newSent + newFailed;
     const failRate = total > 0 ? newFailed / total : 0;
-    const patch: Record<string, unknown> = { sent_count: newSent, failed_count: newFailed };
+    const patch: Record<string, any> = { sent_count: newSent, failed_count: newFailed };
     if (total >= 20 && failRate > 0.2) patch.status = "paused";
     await context.supabase.from("campaigns").update(patch).eq("id", camp.id);
 
