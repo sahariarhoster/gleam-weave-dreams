@@ -33,7 +33,8 @@ const items = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Devices", url: "/devices", icon: Smartphone },
   { title: "Brands", url: "/brands", icon: Building2, ownerOnly: true },
-  { title: "Users", url: "/users", icon: Users },
+  { title: "Users", url: "/users", icon: Users, ownerOnly: true },
+  { title: "Members", url: "/members", icon: Users, brandOwnerOnly: true },
   { title: "Contacts", url: "/contacts", icon: Contact },
   { title: "Groups", url: "/groups", icon: FolderOpen },
   { title: "All Campaigns", url: "/campaigns", icon: Megaphone },
@@ -50,7 +51,14 @@ export function AppSidebar() {
   const fnRoles = useServerFn(getMyRoles);
   const roles = useQuery({ queryKey: ["my-roles"], queryFn: () => fnRoles() });
   const isOwner = (roles.data ?? []).includes("owner");
-  const visibleItems = items.filter((i) => isOwner || !("ownerOnly" in i && i.ownerOnly));
+  const isBrandOwner = (roles.data ?? []).includes("brand_owner");
+  const visibleItems = items.filter((i) => {
+    const o = "ownerOnly" in i && (i as any).ownerOnly;
+    const b = "brandOwnerOnly" in i && (i as any).brandOwnerOnly;
+    if (o) return isOwner;
+    if (b) return isBrandOwner;
+    return true;
+  });
 
   return (
     <Sidebar collapsible="icon">
