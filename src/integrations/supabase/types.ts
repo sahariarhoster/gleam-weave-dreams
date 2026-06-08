@@ -423,6 +423,53 @@ export type Database = {
           },
         ]
       }
+      device_requests: {
+        Row: {
+          admin_reply: string | null
+          assigned_to: string | null
+          brand_id: string
+          created_at: string
+          device_name: string
+          id: string
+          notes: string | null
+          requested_by: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_reply?: string | null
+          assigned_to?: string | null
+          brand_id: string
+          created_at?: string
+          device_name: string
+          id?: string
+          notes?: string | null
+          requested_by: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_reply?: string | null
+          assigned_to?: string | null
+          brand_id?: string
+          created_at?: string
+          device_name?: string
+          id?: string
+          notes?: string | null
+          requested_by?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_requests_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devices: {
         Row: {
           api_secret: string
@@ -561,6 +608,8 @@ export type Database = {
         Row: {
           id: boolean
           licenses_per_brand: number
+          notify_device_id: string | null
+          notify_phone: string | null
           plugin_changelog: string | null
           plugin_download_url: string | null
           plugin_requires_php: string | null
@@ -573,6 +622,8 @@ export type Database = {
         Insert: {
           id?: boolean
           licenses_per_brand?: number
+          notify_device_id?: string | null
+          notify_phone?: string | null
           plugin_changelog?: string | null
           plugin_download_url?: string | null
           plugin_requires_php?: string | null
@@ -585,6 +636,8 @@ export type Database = {
         Update: {
           id?: boolean
           licenses_per_brand?: number
+          notify_device_id?: string | null
+          notify_phone?: string | null
           plugin_changelog?: string | null
           plugin_download_url?: string | null
           plugin_requires_php?: string | null
@@ -594,7 +647,15 @@ export type Database = {
           updated_at?: string
           whmcs_api_token?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "system_settings_notify_device_id_fkey"
+            columns: ["notify_device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
