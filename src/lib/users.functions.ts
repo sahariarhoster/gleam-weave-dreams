@@ -251,18 +251,31 @@ export const listMyBrandMembers = createServerFn({ method: "GET" })
       context.supabase.from("brands").select("id, name").in("id", ids),
       context.supabase
         .from("brand_members")
-        .select("user_id, role, brand_id, brands(name), profiles:user_id(email, full_name)")
+        .select("user_id, role, brand_id, brands(name)")
         .in("brand_id", ids),
     ]);
+    const memberRows = membersRes.data ?? [];
+    const userIds = Array.from(new Set(memberRows.map((m: any) => m.user_id)));
+    let profileMap: Record<string, { email?: string; full_name?: string }> = {};
+    if (userIds.length > 0) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: profiles } = await supabaseAdmin
+        .from("profiles")
+        .select("id, email, full_name")
+        .in("id", userIds);
+      (profiles ?? []).forEach((p: any) => {
+        profileMap[p.id] = { email: p.email, full_name: p.full_name };
+      });
+    }
     return {
       brands: brandsRes.data ?? [],
-      members: (membersRes.data ?? []).map((m: any) => ({
+      members: memberRows.map((m: any) => ({
         user_id: m.user_id,
         brand_id: m.brand_id,
         brand_name: m.brands?.name,
         role: m.role,
-        email: m.profiles?.email,
-        full_name: m.profiles?.full_name,
+        email: profileMap[m.user_id]?.email,
+        full_name: profileMap[m.user_id]?.full_name,
       })),
     };
   });
