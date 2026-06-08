@@ -5,10 +5,12 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 // ============ CRUD ============
 
 export const SEND_MODE_PRESETS = {
-  direct:       { min_delay_seconds: 0,  max_delay_seconds: 2,  daily_limit: 5000, send_window_start: "00:00", send_window_end: "23:59" },
-  safety_basic: { min_delay_seconds: 5,  max_delay_seconds: 15, daily_limit: 500,  send_window_start: "09:00", send_window_end: "21:00" },
-  safety_max:   { min_delay_seconds: 20, max_delay_seconds: 60, daily_limit: 200,  send_window_start: "10:00", send_window_end: "20:00" },
+  direct:       { min_delay_seconds: 0,  max_delay_seconds: 2 },
+  safety_basic: { min_delay_seconds: 5,  max_delay_seconds: 15 },
+  safety_max:   { min_delay_seconds: 20, max_delay_seconds: 60 },
 } as const;
+
+const timeStr = z.string().regex(/^\d{2}:\d{2}$/);
 
 const campaignInput = z.object({
   brand_id: z.string().uuid(),
@@ -18,8 +20,21 @@ const campaignInput = z.object({
   media_url: z.string().url().nullable().optional().or(z.literal("")),
   scheduled_at: z.string().nullable().optional(),
   send_mode: z.enum(["direct", "safety_basic", "safety_max"]).default("safety_basic"),
+  min_delay_seconds: z.number().int().min(0).max(600).optional(),
+  max_delay_seconds: z.number().int().min(0).max(600).optional(),
+  send_window_start: timeStr.default("00:00"),
+  send_window_end: timeStr.default("23:59"),
   group_ids: z.array(z.string().uuid()).min(1),
 });
+
+function windowSeconds(start: string, end: string): number {
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  const s = sh * 3600 + sm * 60;
+  const e = eh * 3600 + em * 60;
+  const diff = e >= s ? e - s : 24 * 3600 - s + e;
+  return Math.max(diff, 60);
+}
 
 export const listCampaigns = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -49,8 +64,13 @@ export const createCampaign = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => campaignInput.parse(d))
   .handler(async ({ data, context }) => {
-    const { group_ids, media_url, send_mode, ...rest } = data;
+    const { group_ids, media_url, send_mode, min_delay_seconds, max_delay_seconds, send_window_start, send_window_end, ...rest } = data;
     const preset = SEND_MODE_PRESETS[send_mode];
+    const minD = min_delay_seconds ?? preset.min_delay_seconds;
+    const maxD = Math.max(max_delay_seconds ?? preset.max_delay_seconds, minD);
+    const avg = Math.max((minD + maxD) / 2, 0.5);
+    const daily_limit = Math.max(1, Math.floor(windowSeconds(send_window_start, send_window_end) / avg));
+
 
 
     // pull contacts from groups, de-dupe phone numbers
@@ -82,8 +102,12 @@ export const createCampaign = createServerFn({ method: "POST" })
       .from("campaigns")
       .insert({
         ...rest,
-        ...preset,
         send_mode,
+        min_delay_seconds: minD,
+        max_delay_seconds: maxD,
+        send_window_start,
+        send_window_end,
+        daily_limit,
         media_url: media_url || null,
         status,
         total_recipients: filtered.length,
