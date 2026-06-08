@@ -1,0 +1,1 @@
+UPDATE public.system_settings SET plugin_version = '1.0.6', plugin_changelog = 'v1.0.6 — Faster dashboard (cached API calls + shorter timeouts), full-width layout, polished templates/admin/license/test pages, removed duplicate version info.', updated_at = now();
