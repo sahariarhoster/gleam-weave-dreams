@@ -97,58 +97,8 @@ function Hero() {
 
       <div className="relative mx-auto max-w-7xl px-6 py-20 text-center sm:py-24 lg:py-28">
         {/* Floating dashboard cards (desktop) */}
-        <div aria-hidden className="pointer-events-none hidden lg:block">
-          <div className="absolute left-6 top-[22%] w-52 -rotate-6 rounded-2xl border border-border bg-card/85 p-4 shadow-xl backdrop-blur-md animate-float">
-            <div className="mb-2 flex items-center gap-2">
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-primary/15 text-primary">
-                <Mail className="h-4 w-4" />
-              </span>
-              <span className="text-xs font-bold text-foreground">সফল ডেলিভারি</span>
-            </div>
-            <div className="font-display text-2xl font-bold tracking-tight text-primary">৯৯.৯%</div>
-          </div>
-          <div
-            className="absolute right-6 top-[28%] w-56 rotate-3 rounded-2xl border border-border bg-card/85 p-4 shadow-xl backdrop-blur-md animate-float"
-            style={{ animationDelay: "-2.5s" }}
-          >
-            <div className="mb-2 flex items-center gap-2">
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-[color:var(--color-gold)]/20 text-[color:var(--color-emerald-deep)]">
-                <Wallet className="h-4 w-4" />
-              </span>
-              <span className="text-xs font-bold text-foreground">খরচ বাঁচান</span>
-            </div>
-            <div className="font-display text-lg font-bold uppercase tracking-tight text-foreground">
-              ১০ গুন সাশ্রয়ী
-            </div>
-          </div>
-          <div
-            className="absolute bottom-[12%] left-12 w-48 rotate-2 rounded-2xl border border-border bg-card/85 p-4 shadow-xl backdrop-blur-md animate-float"
-            style={{ animationDelay: "-5s" }}
-          >
-            <div className="mb-2 flex items-center gap-2">
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-primary/15 text-primary">
-                <Shield className="h-4 w-4" />
-              </span>
-              <span className="text-xs font-bold text-foreground">ব্যান প্রোটেকশন</span>
-            </div>
-            <div className="font-display text-sm font-bold text-foreground">৬ লেয়ার অ্যাক্টিভ</div>
-          </div>
-          <div
-            className="absolute -right-2 bottom-[18%] w-52 -rotate-3 rounded-2xl border border-border bg-card/85 p-4 shadow-xl backdrop-blur-md animate-float"
-            style={{ animationDelay: "-3.5s" }}
-          >
-            <div className="mb-2 flex items-center gap-2">
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-[color:var(--color-gold)]/20 text-[color:var(--color-emerald-deep)]">
-                <TrendingUp className="h-4 w-4" />
-              </span>
-              <span className="text-xs font-bold text-foreground">আজকের পাঠানো</span>
-            </div>
-            <div className="font-display text-lg font-bold text-foreground">১২,৫০০+</div>
-          </div>
-        </div>
-
         {/* Centered content */}
-        <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center">
+        <div className="relative z-10 mx-auto flex max-w-3xl flex-col items-center">
           {/* Badge */}
           <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 shadow-sm">
             <span className="relative flex h-2 w-2">
@@ -161,11 +111,9 @@ function Hero() {
           </div>
 
           {/* Headline */}
-          <h1 className="font-display text-5xl font-extrabold leading-[1.15] tracking-tight text-[color:var(--color-emerald-deep)] sm:text-6xl md:text-7xl">
+          <h1 className="text-balance font-display text-4xl font-extrabold leading-[1.15] tracking-tight text-[color:var(--color-emerald-deep)] sm:text-5xl md:text-6xl">
             হাজারো কাস্টমারের কাছে{" "}
-            <span className="text-primary">
-              এক ক্লিকেই
-            </span>{" "}
+            <span className="text-primary">এক ক্লিকেই</span>{" "}
             হোয়াটসঅ্যাপ মেসেজ
           </h1>
 
