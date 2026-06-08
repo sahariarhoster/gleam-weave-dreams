@@ -217,14 +217,18 @@ function DeviceDialog({
   const mut = useMutation({
     mutationFn: async () => {
       const payload = {
+      const base = {
         name: form.name,
         device_unique_id: form.device_unique_id,
         sim_info: form.sim_info || null,
-        api_secret: form.api_secret,
         brand_id: form.brand_id || null,
       };
-      if (editing) return fnUpdate({ data: { id: editing.id, ...payload } });
-      return fnCreate({ data: payload });
+      if (editing) {
+        const data: typeof base & { id: string; api_secret?: string } = { id: editing.id, ...base };
+        if (form.api_secret) data.api_secret = form.api_secret;
+        return fnUpdate({ data });
+      }
+      return fnCreate({ data: { ...base, api_secret: form.api_secret } });
     },
     onSuccess: () => { toast.success(editing ? "Device updated" : "Device added"); onDone(); },
     onError: (e) => toast.error((e as Error).message),
