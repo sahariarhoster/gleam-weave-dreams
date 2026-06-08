@@ -54,10 +54,12 @@ function ContactsPage() {
 
   return (
     <div className="mx-auto max-w-7xl">
-      <Card className="border-border/60 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between gap-2">
-          <CardTitle className="flex items-center gap-2 text-base"><Contact className="h-4 w-4" /> Contacts</CardTitle>
-          <div className="flex items-center gap-2">
+      <PageHeader
+        icon={Contact}
+        title="Contacts"
+        description="Your address book of phone numbers, grouped per brand."
+        actions={
+          <>
             <Select value={brandFilter} onValueChange={setBrandFilter}>
               <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -73,9 +75,11 @@ function ContactsPage() {
               <DialogTrigger asChild><Button size="sm" className="gap-1"><Plus className="h-4 w-4" /> Add Contact</Button></DialogTrigger>
               <ContactDialog editing={editing} brands={brands.data ?? []} onDone={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["contacts"] }); }} />
             </Dialog>
-          </div>
-        </CardHeader>
-        <CardContent>
+          </>
+        }
+      />
+      <Card className="border-border/60 shadow-sm">
+        <CardContent className="pt-6">
           <Table>
             <TableHeader>
               <TableRow>
