@@ -24,6 +24,7 @@ import { Route as AuthenticatedCampaignsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedBrandsRouteImport } from './routes/_authenticated/brands'
 import { Route as AuthenticatedBlockedRouteImport } from './routes/_authenticated/blocked'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
+import { Route as ApiPublicPluginDevicesRouteImport } from './routes/api/public/plugin/devices'
 import { Route as ApiPublicPluginActivateRouteImport } from './routes/api/public/plugin/activate'
 import { Route as ApiPublicCronTickRouteImport } from './routes/api/public/cron/tick'
 
@@ -101,6 +102,11 @@ const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
   path: '/activity',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicPluginDevicesRoute = ApiPublicPluginDevicesRouteImport.update({
+  id: '/api/public/plugin/devices',
+  path: '/api/public/plugin/devices',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPluginActivateRoute = ApiPublicPluginActivateRouteImport.update({
   id: '/api/public/plugin/activate',
   path: '/api/public/plugin/activate',
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/users': typeof AuthenticatedUsersRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
   '/api/public/plugin/activate': typeof ApiPublicPluginActivateRoute
+  '/api/public/plugin/devices': typeof ApiPublicPluginDevicesRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -147,6 +154,7 @@ export interface FileRoutesByTo {
   '/users': typeof AuthenticatedUsersRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
   '/api/public/plugin/activate': typeof ApiPublicPluginActivateRoute
+  '/api/public/plugin/devices': typeof ApiPublicPluginDevicesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -167,6 +175,7 @@ export interface FileRoutesById {
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
   '/api/public/plugin/activate': typeof ApiPublicPluginActivateRoute
+  '/api/public/plugin/devices': typeof ApiPublicPluginDevicesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -187,6 +196,7 @@ export interface FileRouteTypes {
     | '/users'
     | '/api/public/cron/tick'
     | '/api/public/plugin/activate'
+    | '/api/public/plugin/devices'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -205,6 +215,7 @@ export interface FileRouteTypes {
     | '/users'
     | '/api/public/cron/tick'
     | '/api/public/plugin/activate'
+    | '/api/public/plugin/devices'
   id:
     | '__root__'
     | '/'
@@ -224,6 +235,7 @@ export interface FileRouteTypes {
     | '/_authenticated/users'
     | '/api/public/cron/tick'
     | '/api/public/plugin/activate'
+    | '/api/public/plugin/devices'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -232,6 +244,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ApiPublicCronTickRoute: typeof ApiPublicCronTickRoute
   ApiPublicPluginActivateRoute: typeof ApiPublicPluginActivateRoute
+  ApiPublicPluginDevicesRoute: typeof ApiPublicPluginDevicesRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -341,6 +354,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedActivityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/plugin/devices': {
+      id: '/api/public/plugin/devices'
+      path: '/api/public/plugin/devices'
+      fullPath: '/api/public/plugin/devices'
+      preLoaderRoute: typeof ApiPublicPluginDevicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/plugin/activate': {
       id: '/api/public/plugin/activate'
       path: '/api/public/plugin/activate'
@@ -397,6 +417,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ApiPublicCronTickRoute: ApiPublicCronTickRoute,
   ApiPublicPluginActivateRoute: ApiPublicPluginActivateRoute,
+  ApiPublicPluginDevicesRoute: ApiPublicPluginDevicesRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
