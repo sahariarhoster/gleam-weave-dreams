@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { listMessageLogs } from "@/lib/logs.functions";
 import { listBrandsLite } from "@/lib/brands.functions";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/logs")({
   head: () => ({ meta: [{ title: "Message Logs — WA Notifier" }] }),
