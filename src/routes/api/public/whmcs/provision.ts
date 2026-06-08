@@ -106,12 +106,17 @@ export const Route = createFileRoute("/api/public/whmcs/provision")({
           return json({ error: "brand_create_failed", detail: bErr?.message }, 500);
         }
 
-        const { error: memberErr } = await supabaseAdmin.from("brand_members").upsert({
-          brand_id: brand.id,
-          user_id: userId,
-          role: "brand_admin",
-        }, { onConflict: "brand_id,user_id" });
-        if (memberErr) return json({ error: "brand_member_create_failed", detail: memberErr.message }, 500);
+        const { error: memberErr } = await supabaseAdmin.from("brand_members").upsert(
+          {
+            brand_id: brand.id,
+            user_id: userId,
+            role: "brand_admin",
+          },
+          { onConflict: "brand_id,user_id" },
+        );
+        if (memberErr) {
+          return json({ error: "brand_member_create_failed", detail: memberErr.message }, 500);
+        }
 
         await supabaseAdmin.from("activity_log").insert({
           user_id: userId,
