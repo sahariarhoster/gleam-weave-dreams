@@ -342,3 +342,43 @@ export const removeMyBrandMember = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const setMyBrandMemberActive = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      user_id: z.string().uuid(),
+      brand_id: z.string().uuid(),
+      inactive: z.boolean(),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const ids = await getMyBrandIds(context.supabase, context.userId);
+    if (!ids.includes(data.brand_id)) throw new Error("Forbidden: not your brand");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.user_id, {
+      ban_duration: data.inactive ? "876000h" : "none",
+    } as any);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const deleteMyBrandMember = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ user_id: z.string().uuid(), brand_id: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const ids = await getMyBrandIds(context.supabase, context.userId);
+    if (!ids.includes(data.brand_id)) throw new Error("Forbidden: not your brand");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Safety: don't delete an owner-role user
+    const { data: roles } = await supabaseAdmin
+      .from("user_roles").select("role").eq("user_id", data.user_id);
+    if ((roles ?? []).some((r: any) => r.role === "owner")) {
+      throw new Error("Cannot delete an owner account");
+    }
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.user_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
