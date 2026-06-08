@@ -59,8 +59,10 @@ export function AppSidebar() {
   const visibleItems = items.filter((i) => {
     const o = "ownerOnly" in i && (i as any).ownerOnly;
     const b = "brandOwnerOnly" in i && (i as any).brandOwnerOnly;
+    const bo = "brandOwnerOrOwner" in i && (i as any).brandOwnerOrOwner;
     if (o) return isOwner;
     if (b) return isBrandOwner;
+    if (bo) return isOwner || isBrandOwner;
     return true;
   });
 
