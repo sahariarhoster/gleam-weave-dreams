@@ -267,6 +267,18 @@ export const listMyBrandMembers = createServerFn({ method: "GET" })
         profileMap[p.id] = { email: p.email, full_name: p.full_name };
       });
     }
+    // Fetch banned status from auth admin
+    const { supabaseAdmin: admin2 } = await import("@/integrations/supabase/client.server");
+    const bannedMap: Record<string, boolean> = {};
+    await Promise.all(
+      userIds.map(async (uid) => {
+        try {
+          const { data } = await admin2.auth.admin.getUserById(uid);
+          const bu = (data?.user as any)?.banned_until;
+          bannedMap[uid] = !!bu && new Date(bu).getTime() > Date.now();
+        } catch { bannedMap[uid] = false; }
+      }),
+    );
     return {
       brands: brandsRes.data ?? [],
       members: memberRows.map((m: any) => ({
@@ -276,6 +288,7 @@ export const listMyBrandMembers = createServerFn({ method: "GET" })
         role: m.role,
         email: profileMap[m.user_id]?.email,
         full_name: profileMap[m.user_id]?.full_name,
+        inactive: bannedMap[m.user_id] ?? false,
       })),
     };
   });
