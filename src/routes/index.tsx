@@ -725,7 +725,7 @@ function FinalCta() {
             </span>
             <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-5xl">
               ৬০০ টাকা থেকে শুরু।{" "}
-              <span className="text-primary">
+              <span className="text-[color:var(--color-gold)]">
                 আনলিমিটেড মেসেজ
               </span>
               ।
