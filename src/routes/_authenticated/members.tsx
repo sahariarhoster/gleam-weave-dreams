@@ -54,6 +54,19 @@ function MembersPage() {
     onError: (e) => toast.error((e as Error).message),
   });
 
+  const fnSetActive = useServerFn(setMyBrandMemberActive);
+  const fnDelete = useServerFn(deleteMyBrandMember);
+  const activeMut = useMutation({
+    mutationFn: (v: { user_id: string; brand_id: string; inactive: boolean }) => fnSetActive({ data: v }),
+    onSuccess: (_d, v) => { toast.success(v.inactive ? "Member set inactive" : "Member activated"); qc.invalidateQueries({ queryKey: ["my-brand-members"] }); },
+    onError: (e) => toast.error((e as Error).message),
+  });
+  const deleteMut = useMutation({
+    mutationFn: (v: { user_id: string; brand_id: string }) => fnDelete({ data: v }),
+    onSuccess: () => { toast.success("User deleted"); qc.invalidateQueries({ queryKey: ["my-brand-members"] }); },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
   const brands = data.data?.brands ?? [];
   const members = data.data?.members ?? [];
 
