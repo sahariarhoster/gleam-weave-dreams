@@ -4,6 +4,8 @@ $brand = WANW_Settings::brand();
 $lic = WANW_Settings::license();
 $hb = $lic ? WANW_Api::heartbeat($lic) : null;
 $stats = $lic ? WANW_Api::stats($lic) : null;
+$remote = $lic ? WANW_Updater::fetch_remote(!empty($_GET['wanw_update_checked'])) : null;
+$has_update = is_array($remote) && !empty($remote['version']) && version_compare(WANW_VERSION, $remote['version'], '<');
 $totals = !empty($stats['ok']) ? $stats['totals'] : ['sent'=>0,'failed'=>0,'today'=>0,'contacts'=>0];
 $series = !empty($stats['ok']) ? $stats['series'] : [];
 $max = 1;
@@ -30,9 +32,23 @@ foreach ($series as $d) { $max = max($max, intval($d['sent']) + intval($d['faile
                 </p>
             </div>
             <div class="wanw-actions">
+                <a class="wanw-btn" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=wanw_check_update'), 'wanw_check_update')); ?>">Check Update</a>
                 <a class="wanw-btn" href="<?php echo esc_url(admin_url('admin.php?page=wanw-test')); ?>">Send Test</a>
                 <a class="wanw-btn wanw-btn-primary" href="<?php echo esc_url(admin_url('admin.php?page=wanw-woo')); ?>">Templates</a>
             </div>
+        </div>
+
+        <div class="wanw-update-card <?php echo $has_update ? 'wanw-update-ready' : ''; ?>">
+            <div>
+                <div class="wanw-stat-label">Plugin Update</div>
+                <strong><?php echo $has_update ? 'Version ' . esc_html($remote['version']) . ' is ready' : 'WA Notifier is up to date'; ?></strong>
+                <p><?php echo $has_update ? 'Install the newest dashboard, updater, and automation improvements.' : 'Current version ' . esc_html(WANW_VERSION) . ' is installed.'; ?></p>
+            </div>
+            <?php if ($has_update): ?>
+                <a class="wanw-btn wanw-btn-primary" href="<?php echo esc_url(WANW_Updater::update_url()); ?>">Update Now</a>
+            <?php else: ?>
+                <a class="wanw-btn" href="<?php echo esc_url(wp_nonce_url(admin_url('admin-post.php?action=wanw_check_update'), 'wanw_check_update')); ?>">Refresh</a>
+            <?php endif; ?>
         </div>
 
         <div class="wanw-stat-grid">
@@ -67,7 +83,7 @@ foreach ($series as $d) { $max = max($max, intval($d['sent']) + intval($d['faile
                     <tr><th>License</th><td><code><?php echo esc_html($lic); ?></code></td></tr>
                     <tr><th>Brand</th><td><?php echo esc_html($brand['name'] ?? '—'); ?></td></tr>
                     <tr><th>Device</th><td><?php echo esc_html(WANW_Settings::device() ?: '— not selected —'); ?></td></tr>
-                    <tr><th>API</th><td><code><?php echo esc_html(WANW_Settings::api_base()); ?></code></td></tr>
+                    <tr><th>Version</th><td><?php echo esc_html(WANW_VERSION); ?></td></tr>
                 </table>
                 <p>
                     <a class="wanw-btn" href="<?php echo esc_url(admin_url('admin.php?page=wanw-license')); ?>">Change License</a>
@@ -80,7 +96,7 @@ foreach ($series as $d) { $max = max($max, intval($d['sent']) + intval($d['faile
                     <li><a href="<?php echo esc_url(admin_url('admin.php?page=wanw-woo')); ?>">📦 Customer notification templates</a></li>
                     <li><a href="<?php echo esc_url(admin_url('admin.php?page=wanw-admin')); ?>">🔔 Admin alerts</a></li>
                     <li><a href="<?php echo esc_url(admin_url('admin.php?page=wanw-test')); ?>">✉️ Send a test message</a></li>
-                    <li><a href="<?php echo esc_url(admin_url('admin.php?page=wanw-license')); ?>">🔑 License & API base</a></li>
+                    <li><a href="<?php echo esc_url(admin_url('admin.php?page=wanw-license')); ?>">🔑 License settings</a></li>
                 </ul>
             </div>
         </div>
