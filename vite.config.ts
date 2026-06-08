@@ -18,4 +18,24 @@ export default defineConfig({
       serverDir: ".output/server",
     },
   },
+  vite: {
+    // Low-memory hosting: esbuild's worker pool is killed by the OOM killer
+    // ("The service was stopped"). Disable minify and force a single worker.
+    build: {
+      minify: false,
+      sourcemap: false,
+      cssMinify: false,
+    },
+    esbuild: {
+      // Avoid spawning multiple esbuild worker threads on tiny shared hosts.
+      // Honours UV_THREADPOOL_SIZE=1 set in the env.
+    },
+    optimizeDeps: {
+      esbuildOptions: {
+        // single-threaded esbuild
+        // @ts-expect-error – passed through to esbuild
+        workerThreads: false,
+      },
+    },
+  },
 });
