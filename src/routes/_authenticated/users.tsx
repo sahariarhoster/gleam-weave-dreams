@@ -100,6 +100,7 @@ function UsersPage() {
                         <SelectItem value="owner">Owner</SelectItem>
                         <SelectItem value="admin">Admin</SelectItem>
                         <SelectItem value="manager">Manager</SelectItem>
+                        <SelectItem value="brand_owner">Brand Owner</SelectItem>
                         <SelectItem value="support_agent">Support Agent</SelectItem>
                         <SelectItem value="member">Member</SelectItem>
                       </SelectContent>
