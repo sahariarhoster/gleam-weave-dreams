@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WA Notifier for WooCommerce
  * Description: Send WhatsApp notifications to customers and admins on WooCommerce order events using the WA Notifier panel.
- * Version: 1.0.4
+ * Version: 1.0.5
  * Author: WA Notifier
  * Requires Plugins: woocommerce
  * Text Domain: wa-notifier-woo
@@ -10,7 +10,7 @@
 
 if (!defined('ABSPATH')) exit;
 
-define('WANW_VERSION', '1.0.4');
+define('WANW_VERSION', '1.0.5');
 define('WANW_PATH', plugin_dir_path(__FILE__));
 define('WANW_URL', plugin_dir_url(__FILE__));
 define('WANW_DEFAULT_API_BASE', 'https://project--a0a9916d-cf1e-4153-b116-96114e96c2cc.lovable.app');
