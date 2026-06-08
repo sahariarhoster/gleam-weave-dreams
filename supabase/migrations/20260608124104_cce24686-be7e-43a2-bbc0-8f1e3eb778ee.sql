@@ -1,0 +1,1 @@
+UPDATE public.system_settings SET plugin_download_url = 'https://gleam-weave-dreams.lovable.app/wa-notifier-woocommerce.zip', updated_at = now();
