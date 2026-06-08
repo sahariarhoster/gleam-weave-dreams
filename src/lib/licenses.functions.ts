@@ -6,7 +6,7 @@ function genKey(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const group = () =>
     Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-  return `WAN-${group()}-${group()}-${group()}-${group()}`;
+  return `HS-${group()}-${group()}-${group()}-${group()}`;
 }
 
 async function isOwner(supabase: any, userId: string) {

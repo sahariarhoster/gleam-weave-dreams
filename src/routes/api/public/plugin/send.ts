@@ -6,7 +6,58 @@ const Body = z.object({
   license_key: licenseKeySchema,
   recipient: z.string().min(5).max(20),
   message: z.string().min(1).max(4000),
+  customer_name: z.string().min(1).max(200).optional(),
 });
+
+const GROUP_NAME = "WordPress";
+
+async function ensureContactInWordpressGroup(
+  supabaseAdmin: any,
+  brand_id: string,
+  phone: string,
+  name: string | undefined,
+) {
+  // Find/create group
+  let { data: group } = await supabaseAdmin
+    .from("contact_groups")
+    .select("id")
+    .eq("brand_id", brand_id)
+    .eq("name", GROUP_NAME)
+    .maybeSingle();
+  if (!group) {
+    const ins = await supabaseAdmin
+      .from("contact_groups")
+      .insert({ brand_id, name: GROUP_NAME, description: "Auto-created from WordPress plugin" })
+      .select("id")
+      .single();
+    group = ins.data;
+  }
+  if (!group) return;
+
+  // Find/create contact by phone
+  let { data: contact } = await supabaseAdmin
+    .from("contacts")
+    .select("id, name")
+    .eq("brand_id", brand_id)
+    .eq("phone", phone)
+    .maybeSingle();
+  if (!contact) {
+    const ins = await supabaseAdmin
+      .from("contacts")
+      .insert({ brand_id, phone, name: name ?? null })
+      .select("id")
+      .single();
+    contact = ins.data;
+  } else if (name && !contact.name) {
+    await supabaseAdmin.from("contacts").update({ name }).eq("id", contact.id);
+  }
+  if (!contact) return;
+
+  // Link in group_members (idempotent)
+  await supabaseAdmin
+    .from("contact_group_members")
+    .upsert({ group_id: group.id, contact_id: contact.id }, { onConflict: "group_id,contact_id" });
+}
 
 export const Route = createFileRoute("/api/public/plugin/send")({
   server: {
@@ -39,6 +90,20 @@ export const Route = createFileRoute("/api/public/plugin/send")({
           recipient,
           message: parsed.data.message,
         });
+
+        // Auto-add contact to WordPress group (best-effort, never blocks send)
+        try {
+          if (device.brand_id) {
+            await ensureContactInWordpressGroup(
+              supabaseAdmin,
+              device.brand_id,
+              recipient,
+              parsed.data.customer_name,
+            );
+          }
+        } catch (e) {
+          // swallow — don't fail the send because of contact bookkeeping
+        }
 
         await supabaseAdmin.from("activity_log").insert({
           brand_id: device.brand_id ?? null,
