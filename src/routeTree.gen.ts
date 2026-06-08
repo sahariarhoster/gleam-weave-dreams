@@ -16,6 +16,7 @@ import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/send'
 import { Route as AuthenticatedMembersRouteImport } from './routes/_authenticated/members'
 import { Route as AuthenticatedLogsRouteImport } from './routes/_authenticated/logs'
+import { Route as AuthenticatedLicensesRouteImport } from './routes/_authenticated/licenses'
 import { Route as AuthenticatedGroupsRouteImport } from './routes/_authenticated/groups'
 import { Route as AuthenticatedDevicesRouteImport } from './routes/_authenticated/devices'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -23,6 +24,7 @@ import { Route as AuthenticatedContactsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCampaignsRouteImport } from './routes/_authenticated/campaigns'
 import { Route as AuthenticatedBrandsRouteImport } from './routes/_authenticated/brands'
 import { Route as AuthenticatedBlockedRouteImport } from './routes/_authenticated/blocked'
+import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin-settings'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as ApiPublicPluginSendRouteImport } from './routes/api/public/plugin/send'
 import { Route as ApiPublicPluginSelectDeviceRouteImport } from './routes/api/public/plugin/select-device'
@@ -65,6 +67,11 @@ const AuthenticatedLogsRoute = AuthenticatedLogsRouteImport.update({
   path: '/logs',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedLicensesRoute = AuthenticatedLicensesRouteImport.update({
+  id: '/licenses',
+  path: '/licenses',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedGroupsRoute = AuthenticatedGroupsRouteImport.update({
   id: '/groups',
   path: '/groups',
@@ -100,6 +107,12 @@ const AuthenticatedBlockedRoute = AuthenticatedBlockedRouteImport.update({
   path: '/blocked',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminSettingsRoute =
+  AuthenticatedAdminSettingsRouteImport.update({
+    id: '/admin-settings',
+    path: '/admin-settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
   id: '/activity',
   path: '/activity',
@@ -142,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/activity': typeof AuthenticatedActivityRoute
+  '/admin-settings': typeof AuthenticatedAdminSettingsRoute
   '/blocked': typeof AuthenticatedBlockedRoute
   '/brands': typeof AuthenticatedBrandsRoute
   '/campaigns': typeof AuthenticatedCampaignsRoute
@@ -149,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/devices': typeof AuthenticatedDevicesRoute
   '/groups': typeof AuthenticatedGroupsRoute
+  '/licenses': typeof AuthenticatedLicensesRoute
   '/logs': typeof AuthenticatedLogsRoute
   '/members': typeof AuthenticatedMembersRoute
   '/send': typeof AuthenticatedSendRoute
@@ -164,6 +179,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/activity': typeof AuthenticatedActivityRoute
+  '/admin-settings': typeof AuthenticatedAdminSettingsRoute
   '/blocked': typeof AuthenticatedBlockedRoute
   '/brands': typeof AuthenticatedBrandsRoute
   '/campaigns': typeof AuthenticatedCampaignsRoute
@@ -171,6 +187,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/devices': typeof AuthenticatedDevicesRoute
   '/groups': typeof AuthenticatedGroupsRoute
+  '/licenses': typeof AuthenticatedLicensesRoute
   '/logs': typeof AuthenticatedLogsRoute
   '/members': typeof AuthenticatedMembersRoute
   '/send': typeof AuthenticatedSendRoute
@@ -188,6 +205,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
+  '/_authenticated/admin-settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/blocked': typeof AuthenticatedBlockedRoute
   '/_authenticated/brands': typeof AuthenticatedBrandsRoute
   '/_authenticated/campaigns': typeof AuthenticatedCampaignsRoute
@@ -195,6 +213,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/devices': typeof AuthenticatedDevicesRoute
   '/_authenticated/groups': typeof AuthenticatedGroupsRoute
+  '/_authenticated/licenses': typeof AuthenticatedLicensesRoute
   '/_authenticated/logs': typeof AuthenticatedLogsRoute
   '/_authenticated/members': typeof AuthenticatedMembersRoute
   '/_authenticated/send': typeof AuthenticatedSendRoute
@@ -212,6 +231,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/activity'
+    | '/admin-settings'
     | '/blocked'
     | '/brands'
     | '/campaigns'
@@ -219,6 +239,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/devices'
     | '/groups'
+    | '/licenses'
     | '/logs'
     | '/members'
     | '/send'
@@ -234,6 +255,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/activity'
+    | '/admin-settings'
     | '/blocked'
     | '/brands'
     | '/campaigns'
@@ -241,6 +263,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/devices'
     | '/groups'
+    | '/licenses'
     | '/logs'
     | '/members'
     | '/send'
@@ -257,6 +280,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/activity'
+    | '/_authenticated/admin-settings'
     | '/_authenticated/blocked'
     | '/_authenticated/brands'
     | '/_authenticated/campaigns'
@@ -264,6 +288,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/devices'
     | '/_authenticated/groups'
+    | '/_authenticated/licenses'
     | '/_authenticated/logs'
     | '/_authenticated/members'
     | '/_authenticated/send'
@@ -339,6 +364,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLogsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/licenses': {
+      id: '/_authenticated/licenses'
+      path: '/licenses'
+      fullPath: '/licenses'
+      preLoaderRoute: typeof AuthenticatedLicensesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/groups': {
       id: '/_authenticated/groups'
       path: '/groups'
@@ -386,6 +418,13 @@ declare module '@tanstack/react-router' {
       path: '/blocked'
       fullPath: '/blocked'
       preLoaderRoute: typeof AuthenticatedBlockedRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin-settings': {
+      id: '/_authenticated/admin-settings'
+      path: '/admin-settings'
+      fullPath: '/admin-settings'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/activity': {
@@ -442,6 +481,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
+  AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedBlockedRoute: typeof AuthenticatedBlockedRoute
   AuthenticatedBrandsRoute: typeof AuthenticatedBrandsRoute
   AuthenticatedCampaignsRoute: typeof AuthenticatedCampaignsRoute
@@ -449,6 +489,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDevicesRoute: typeof AuthenticatedDevicesRoute
   AuthenticatedGroupsRoute: typeof AuthenticatedGroupsRoute
+  AuthenticatedLicensesRoute: typeof AuthenticatedLicensesRoute
   AuthenticatedLogsRoute: typeof AuthenticatedLogsRoute
   AuthenticatedMembersRoute: typeof AuthenticatedMembersRoute
   AuthenticatedSendRoute: typeof AuthenticatedSendRoute
@@ -457,6 +498,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActivityRoute: AuthenticatedActivityRoute,
+  AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedBlockedRoute: AuthenticatedBlockedRoute,
   AuthenticatedBrandsRoute: AuthenticatedBrandsRoute,
   AuthenticatedCampaignsRoute: AuthenticatedCampaignsRoute,
@@ -464,6 +506,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDevicesRoute: AuthenticatedDevicesRoute,
   AuthenticatedGroupsRoute: AuthenticatedGroupsRoute,
+  AuthenticatedLicensesRoute: AuthenticatedLicensesRoute,
   AuthenticatedLogsRoute: AuthenticatedLogsRoute,
   AuthenticatedMembersRoute: AuthenticatedMembersRoute,
   AuthenticatedSendRoute: AuthenticatedSendRoute,
@@ -487,3 +530,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
