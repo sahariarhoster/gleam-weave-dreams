@@ -531,7 +531,13 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "owner" | "member" | "admin" | "support_agent" | "manager"
+      app_role:
+        | "owner"
+        | "member"
+        | "admin"
+        | "support_agent"
+        | "manager"
+        | "brand_owner"
       brand_role: "brand_admin" | "sender"
       brand_status: "active" | "suspended" | "expired"
       device_status: "active" | "inactive" | "disconnected"
@@ -662,7 +668,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["owner", "member", "admin", "support_agent", "manager"],
+      app_role: [
+        "owner",
+        "member",
+        "admin",
+        "support_agent",
+        "manager",
+        "brand_owner",
+      ],
       brand_role: ["brand_admin", "sender"],
       brand_status: ["active", "suspended", "expired"],
       device_status: ["active", "inactive", "disconnected"],
