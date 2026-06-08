@@ -154,7 +154,7 @@ function UsersPage() {
 function AddBrandDialog({ userId, brands, onDone }: { userId: string; brands: { id: string; name: string }[]; onDone: () => void }) {
   const fn = useServerFn(addBrandMember);
   const [brandId, setBrandId] = useState("");
-  const [role, setRole] = useState<"brand_admin" | "sender">("sender");
+  const [role, setRole] = useState<"brand_admin" | "brand_member" | "sender">("brand_member");
   const mut = useMutation({
     mutationFn: () => fn({ data: { user_id: userId, brand_id: brandId, role } }),
     onSuccess: () => { toast.success("Added"); onDone(); },
