@@ -105,15 +105,17 @@ function DashboardPage() {
           </CardHeader>
           <CardContent className="pb-4">
             <div className="relative h-44">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadialBarChart
-                  innerRadius="70%" outerRadius="100%"
-                  data={[{ name: "rate", value: rate, fill: "hsl(var(--primary))" }]}
-                  startAngle={90} endAngle={-270}
-                >
-                  <RadialBar background={{ fill: "hsl(var(--muted))" }} dataKey="value" cornerRadius={10} />
-                </RadialBarChart>
-              </ResponsiveContainer>
+              <ClientOnly fallback={<div className="h-full w-full" />}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadialBarChart
+                    innerRadius="70%" outerRadius="100%"
+                    data={[{ name: "rate", value: rate, fill: "hsl(var(--primary))" }]}
+                    startAngle={90} endAngle={-270}
+                  >
+                    <RadialBar background={{ fill: "hsl(var(--muted))" }} dataKey="value" cornerRadius={10} />
+                  </RadialBarChart>
+                </ResponsiveContainer>
+              </ClientOnly>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <div className="text-3xl font-bold">{isLoading ? "—" : `${rate.toFixed(1)}%`}</div>
                 <div className="text-xs text-muted-foreground">{stats.totalMessages} total</div>
