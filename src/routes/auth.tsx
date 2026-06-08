@@ -1,11 +1,22 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { MessageCircle } from "lucide-react";
+import {
+  MessageCircle,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  Loader2,
+  ShieldCheck,
+  Zap,
+  BarChart3,
+  ArrowRight,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
@@ -18,6 +29,7 @@ function AuthPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -32,68 +44,185 @@ function AuthPage() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) return toast.error(error.message);
+    toast.success("Welcome back!");
     navigate({ to: "/dashboard" });
   }
 
+  async function forgot() {
+    if (!email) return toast.error("Enter your email above first");
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) return toast.error(error.message);
+    toast.success("Password reset email sent");
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/40 p-4 sm:p-6">
-      <div className="mx-auto grid min-h-[calc(100vh-2rem)] w-full max-w-5xl overflow-hidden rounded-2xl border border-border/60 bg-card shadow-xl sm:min-h-[calc(100vh-3rem)] lg:grid-cols-[1.05fr_0.95fr]">
-        <section className="hidden bg-primary p-8 text-primary-foreground lg:flex lg:flex-col lg:justify-between">
+    <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
+      {/* Decorative background */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-40 -left-40 h-[480px] w-[480px] rounded-full bg-emerald-500/20 blur-3xl" />
+        <div className="absolute -bottom-40 -right-40 h-[520px] w-[520px] rounded-full bg-indigo-500/20 blur-3xl" />
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
+            backgroundSize: "44px 44px",
+          }}
+        />
+      </div>
+
+      <div className="relative mx-auto grid min-h-screen w-full max-w-6xl items-center gap-10 px-4 py-10 lg:grid-cols-2 lg:px-8">
+        {/* Brand / pitch panel */}
+        <section className="hidden flex-col justify-between lg:flex">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-foreground/15 shadow-md">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/30">
               <MessageCircle className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold tracking-tight">WA Suite</h1>
-              <p className="text-xs text-primary-foreground/75">WhatsApp campaigns at scale</p>
+              <h1 className="text-lg font-bold tracking-tight">WA Suite</h1>
+              <p className="text-[11px] uppercase tracking-widest text-slate-400">By Hoster Camp</p>
             </div>
           </div>
-          <div className="max-w-md space-y-4">
-            <div className="text-4xl font-bold tracking-tight">Manage campaigns without the clutter.</div>
-            <p className="text-sm leading-6 text-primary-foreground/80">Devices, brands, members, campaigns, and delivery logs stay organized in one focused workspace.</p>
+
+          <div className="space-y-7">
+            <div>
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-300">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                </span>
+                All systems operational
+              </div>
+              <h2 className="text-4xl font-bold leading-tight tracking-tight text-white xl:text-5xl">
+                Run WhatsApp campaigns <span className="bg-gradient-to-r from-emerald-300 to-teal-200 bg-clip-text text-transparent">at scale</span>.
+              </h2>
+              <p className="mt-4 max-w-md text-base leading-7 text-slate-300">
+                Devices, brands, members, campaigns and delivery logs — one focused workspace for your whole team.
+              </p>
+            </div>
+
+            <ul className="space-y-3">
+              {[
+                { icon: Zap, text: "Lightning-fast bulk sending across devices" },
+                { icon: ShieldCheck, text: "Role-based access for brands & members" },
+                { icon: BarChart3, text: "Real-time delivery analytics & logs" },
+              ].map((f) => (
+                <li key={f.text} className="flex items-center gap-3 text-sm text-slate-300">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 ring-1 ring-white/10">
+                    <f.icon className="h-4 w-4 text-emerald-300" />
+                  </span>
+                  {f.text}
+                </li>
+              ))}
+            </ul>
           </div>
-          <div className="grid grid-cols-3 gap-3 text-sm">
-            <div className="rounded-lg bg-primary-foreground/12 p-3"><div className="text-lg font-bold">Live</div><div className="text-primary-foreground/70">devices</div></div>
-            <div className="rounded-lg bg-primary-foreground/12 p-3"><div className="text-lg font-bold">Fast</div><div className="text-primary-foreground/70">sending</div></div>
-            <div className="rounded-lg bg-primary-foreground/12 p-3"><div className="text-lg font-bold">Clear</div><div className="text-primary-foreground/70">logs</div></div>
-          </div>
+
+          <p className="text-xs text-slate-500">© {new Date().getFullYear()} Hoster Camp · WA Suite</p>
         </section>
 
-        <section className="flex flex-col justify-center p-5 sm:p-8">
+        {/* Sign-in card */}
+        <section className="mx-auto w-full max-w-md">
           <div className="mb-6 flex items-center justify-center gap-3 lg:hidden">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-md shadow-primary/25">
+            <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white shadow-lg shadow-emerald-500/30">
               <MessageCircle className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold tracking-tight">WA Suite</h1>
-              <p className="text-xs text-muted-foreground">WhatsApp campaigns at scale</p>
+              <h1 className="text-lg font-bold tracking-tight">WA Suite</h1>
+              <p className="text-[11px] uppercase tracking-widest text-slate-400">By Hoster Camp</p>
             </div>
           </div>
 
-          <Card className="border-border/60 shadow-none">
-          <CardHeader className="pb-3">
-            <CardTitle>Welcome</CardTitle>
-            <CardDescription>Sign in to manage your devices and campaigns.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={signIn} className="space-y-3.5">
-              <div className="space-y-2">
-                <Label htmlFor="si-email">Email</Label>
-                <Input id="si-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+            <div className="mb-6">
+              <h3 className="text-2xl font-bold tracking-tight text-white">Welcome back</h3>
+              <p className="mt-1 text-sm text-slate-400">Sign in to continue to your workspace.</p>
+            </div>
+
+            <form onSubmit={signIn} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="si-email" className="text-slate-300">Email</Label>
+                <div className="relative">
+                  <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                  <Input
+                    id="si-email"
+                    type="email"
+                    autoComplete="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@company.com"
+                    className="h-11 border-white/10 bg-white/[0.04] pl-10 text-white placeholder:text-slate-500 focus-visible:border-emerald-400/60 focus-visible:ring-emerald-400/30"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="si-pass">Password</Label>
-                <Input id="si-pass" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="si-pass" className="text-slate-300">Password</Label>
+                  <button
+                    type="button"
+                    onClick={forgot}
+                    className="text-xs font-medium text-emerald-300 hover:text-emerald-200"
+                  >
+                    Forgot?
+                  </button>
+                </div>
+                <div className="relative">
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                  <Input
+                    id="si-pass"
+                    type={showPass ? "text" : "password"}
+                    autoComplete="current-password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="h-11 border-white/10 bg-white/[0.04] px-10 text-white placeholder:text-slate-500 focus-visible:border-emerald-400/60 focus-visible:ring-emerald-400/30"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPass((s) => !s)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                    aria-label={showPass ? "Hide password" : "Show password"}
+                  >
+                    {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Signing in…" : "Sign in"}
+
+              <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-400">
+                <Checkbox className="border-white/20 data-[state=checked]:border-emerald-500 data-[state=checked]:bg-emerald-500" />
+                Keep me signed in on this device
+              </label>
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="group h-11 w-full bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-600/20 hover:from-emerald-400 hover:to-emerald-500"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing in…
+                  </>
+                ) : (
+                  <>
+                    Sign in
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                  </>
+                )}
               </Button>
-              <p className="text-center text-xs text-muted-foreground">
+
+              <p className="pt-1 text-center text-xs text-slate-500">
                 New accounts are created by your workspace owner.
               </p>
             </form>
-          </CardContent>
-          </Card>
+          </div>
+
+          <p className="mt-6 text-center text-xs text-slate-500">
+            Need help? Contact your administrator.
+          </p>
         </section>
       </div>
     </div>
