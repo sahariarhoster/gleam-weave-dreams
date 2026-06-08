@@ -69,18 +69,6 @@ function MembersPage() {
                 <UserPlus className="h-4 w-4" /> Add Member
               </Button>
             </DialogTrigger>
-            <MemberDialogShell brands={brands} form={form} setForm={setForm} createMut={createMut} />
-          </Dialog>
-        }
-      />
-      <Card>
-        <CardContent className="pt-6">
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="gap-1" disabled={brands.length === 0}>
-                <UserPlus className="h-4 w-4" /> Add Member
-              </Button>
-            </DialogTrigger>
             <DialogContent>
               <DialogHeader><DialogTitle>Add Brand Member</DialogTitle></DialogHeader>
               <form onSubmit={(e) => { e.preventDefault(); createMut.mutate(); }} className="space-y-3">
@@ -119,8 +107,10 @@ function MembersPage() {
               </form>
             </DialogContent>
           </Dialog>
-        </CardHeader>
-        <CardContent>
+        }
+      />
+      <Card>
+        <CardContent className="pt-6">
           <Table>
             <TableHeader>
               <TableRow>
