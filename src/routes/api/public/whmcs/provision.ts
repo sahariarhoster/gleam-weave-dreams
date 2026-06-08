@@ -64,31 +64,47 @@ export const Route = createFileRoute("/api/public/whmcs/provision")({
 
         // The auth trigger may be disabled/missing in imported projects, so make
         // the records used by the app UI explicit and idempotent here too.
-        const { error: profileErr } = await supabaseAdmin.from("profiles").upsert({
-          id: userId,
-          email: input.owner_email,
-          full_name: input.owner_name,
-        }, { onConflict: "id" });
-        if (profileErr) return json({ error: "profile_create_failed", detail: profileErr.message }, 500);
+        const { error: profileErr } = await supabaseAdmin.from("profiles").upsert(
+          {
+            id: userId,
+            email: input.owner_email,
+            full_name: input.owner_name,
+          },
+          { onConflict: "id" },
+        );
+        if (profileErr) {
+          return json({ error: "profile_create_failed", detail: profileErr.message }, 500);
+        }
 
-        const { error: roleErr } = await supabaseAdmin.from("user_roles").upsert({
-          user_id: userId,
-          role: "brand_owner",
-        }, { onConflict: "user_id,role" });
-        if (roleErr) return json({ error: "role_create_failed", detail: roleErr.message }, 500);
+        const { error: roleErr } = await supabaseAdmin.from("user_roles").upsert(
+          {
+            user_id: userId,
+            role: "brand_owner",
+          },
+          { onConflict: "user_id,role" },
+        );
+        if (roleErr) {
+          return json({ error: "role_create_failed", detail: roleErr.message }, 500);
+        }
 
         // Create brand
-        const { data: brand, error: bErr } = await supabaseAdmin.from("brands").insert({
-          name: input.brand_name,
-          status: "active",
-          message_limit: input.message_limit ?? null,
-          device_limit: input.device_limit ?? 1,
-          expires_at: input.expires_at ?? null,
-          whmcs_service_id: input.service_id,
-          whmcs_product_id: input.product_id ?? null,
-          created_by: userId,
-        }).select("id").single();
-        if (bErr || !brand) return json({ error: "brand_create_failed", detail: bErr?.message }, 500);
+        const { data: brand, error: bErr } = await supabaseAdmin
+          .from("brands")
+          .insert({
+            name: input.brand_name,
+            status: "active",
+            message_limit: input.message_limit ?? null,
+            device_limit: input.device_limit ?? 1,
+            expires_at: input.expires_at ?? null,
+            whmcs_service_id: input.service_id,
+            whmcs_product_id: input.product_id ?? null,
+            created_by: userId,
+          })
+          .select("id")
+          .single();
+        if (bErr || !brand) {
+          return json({ error: "brand_create_failed", detail: bErr?.message }, 500);
+        }
 
         const { error: memberErr } = await supabaseAdmin.from("brand_members").upsert({
           brand_id: brand.id,
