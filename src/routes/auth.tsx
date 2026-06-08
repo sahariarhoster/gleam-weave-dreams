@@ -72,22 +72,7 @@ function AuthPage() {
             maskImage: "radial-gradient(ellipse at center, black 40%, transparent 75%)",
           }}
         />
-        {/* Meteors */}
-        {Array.from({ length: 14 }).map((_, i) => (
-          <span
-            key={i}
-            className="animate-auth-meteor absolute top-0 h-0.5 w-0.5 rounded-full bg-emerald-300 shadow-[0_0_0_1px_#ffffff10]"
-            style={{
-              top: `${Math.random() * 40 - 20}%`,
-              left: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${4 + Math.random() * 6}s`,
-              boxShadow: "0 0 8px 1px rgba(110, 231, 183, 0.6)",
-            }}
-          >
-            <span className="absolute top-1/2 -z-10 h-px w-[60px] -translate-y-1/2 bg-gradient-to-r from-emerald-300/80 to-transparent" />
-          </span>
-        ))}
+        {/* meteors removed */}
       </div>
 
 
