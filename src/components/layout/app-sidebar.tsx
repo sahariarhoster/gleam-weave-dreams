@@ -44,6 +44,8 @@ const items = [
   { title: "Message Logs", url: "/logs", icon: ListChecks },
   { title: "Blocked Numbers", url: "/blocked", icon: Ban },
   { title: "Activity Log", url: "/activity", icon: ScrollText },
+  { title: "Plugin Licenses", url: "/licenses", icon: KeyRound, brandOwnerOrOwner: true },
+  { title: "Admin Settings", url: "/admin-settings", icon: Settings, ownerOnly: true },
 ] as const;
 
 export function AppSidebar() {
