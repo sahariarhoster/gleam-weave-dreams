@@ -4,6 +4,15 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  --font-sans: "Manrope", "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Sora", "Hind Siliguri", ui-sans-serif, system-ui, sans-serif;
+  --font-bangla: "Hind Siliguri", "Manrope", ui-sans-serif, sans-serif;
+  --color-gold: oklch(0.78 0.13 85);
+  --color-gold-soft: oklch(0.88 0.08 85);
+  --color-emerald-deep: oklch(0.32 0.08 152);
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -148,6 +157,10 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: var(--font-sans);
+  }
+  :lang(bn), .font-bangla {
+    font-family: var(--font-bangla);
   }
 }
 
