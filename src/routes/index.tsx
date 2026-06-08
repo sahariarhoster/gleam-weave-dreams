@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Send, Shield, Zap, DollarSign, ShoppingCart, CheckCircle2, ArrowRight,
-  MessageSquare, Sparkles, Users, BarChart3, Lock, Globe, Star, Phone,
-  Wifi, Battery, Signal, TrendingUp, Quote,
+  MessageSquare, Sparkles, Users, BarChart3, Lock, Globe, Star,
+  TrendingUp, Quote, Mail, Wallet,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -87,190 +87,164 @@ function Header() {
 /* ---------------- Hero ---------------- */
 function Hero() {
   return (
-    <section className="relative overflow-hidden">
-      {/* Aurora glow */}
-      <div aria-hidden className="absolute inset-0 -z-10">
-        <div className="absolute left-1/2 top-[-10%] h-[640px] w-[1100px] -translate-x-1/2 rounded-full bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--primary)_28%,transparent)_0%,transparent_75%)] animate-aurora blur-2xl" />
-        <div className="absolute right-[-10%] top-[8%] h-[420px] w-[520px] rounded-full bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--color-gold)_32%,transparent)_0%,transparent_70%)] animate-aurora blur-3xl" style={{ animationDelay: "-7s" }} />
-        <div className="absolute left-[-8%] top-[30%] h-[380px] w-[480px] rounded-full bg-[radial-gradient(closest-side,color-mix(in_oklab,var(--color-emerald-deep)_28%,transparent)_0%,transparent_70%)] animate-aurora blur-3xl" style={{ animationDelay: "-3s" }} />
+    <section className="relative overflow-hidden bg-background">
+      {/* Soft mesh background */}
+      <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[560px] w-[900px] -translate-x-1/2 -translate-y-1/2 opacity-[0.18] blur-[120px]">
+        <div className="absolute inset-0 rounded-full bg-primary" />
+        <div className="absolute right-0 top-0 h-1/2 w-1/2 rounded-full bg-[color:var(--color-gold)]" />
       </div>
-      {/* Grid */}
-      <div aria-hidden className="absolute inset-0 -z-10 bg-grid-soft opacity-70" />
+      <div aria-hidden className="absolute inset-x-0 top-0 -z-10 h-[600px] bg-grid-soft opacity-60" />
 
-      <div className="mx-auto max-w-7xl px-4 pt-16 pb-24 sm:px-6 sm:pt-24 lg:pt-28">
-        <div className="grid items-center gap-14 lg:grid-cols-[1.05fr_0.95fr]">
-          {/* Copy */}
-          <div className="text-center lg:text-left">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-[color:var(--color-gold)]/50 bg-gradient-to-r from-[color:var(--color-gold-soft)]/40 to-[color:var(--color-gold-soft)]/10 px-3 py-1 text-xs font-semibold text-[color:var(--color-emerald-deep)] shadow-sm backdrop-blur">
-              <Sparkles className="h-3.5 w-3.5" />
-              বাংলাদেশের #১ হোয়াটসঅ্যাপ মেসেজিং প্ল্যাটফর্ম
+      <div className="relative mx-auto max-w-7xl px-6 py-20 text-center sm:py-24 lg:py-28">
+        {/* Floating dashboard cards (desktop) */}
+        <div aria-hidden className="pointer-events-none hidden lg:block">
+          <div className="absolute left-6 top-[22%] w-52 -rotate-6 rounded-2xl border border-border bg-card/85 p-4 shadow-xl backdrop-blur-md animate-float">
+            <div className="mb-2 flex items-center gap-2">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-primary/15 text-primary">
+                <Mail className="h-4 w-4" />
+              </span>
+              <span className="text-xs font-bold text-foreground">সফল ডেলিভারি</span>
+            </div>
+            <div className="font-display text-2xl font-bold tracking-tight text-primary">৯৯.৯%</div>
+          </div>
+          <div
+            className="absolute right-6 top-[28%] w-56 rotate-3 rounded-2xl border border-border bg-card/85 p-4 shadow-xl backdrop-blur-md animate-float"
+            style={{ animationDelay: "-2.5s" }}
+          >
+            <div className="mb-2 flex items-center gap-2">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-[color:var(--color-gold)]/20 text-[color:var(--color-emerald-deep)]">
+                <Wallet className="h-4 w-4" />
+              </span>
+              <span className="text-xs font-bold text-foreground">খরচ বাঁচান</span>
+            </div>
+            <div className="font-display text-lg font-bold uppercase tracking-tight text-foreground">
+              ১০ গুন সাশ্রয়ী
+            </div>
+          </div>
+          <div
+            className="absolute bottom-[12%] left-12 w-48 rotate-2 rounded-2xl border border-border bg-card/85 p-4 shadow-xl backdrop-blur-md animate-float"
+            style={{ animationDelay: "-5s" }}
+          >
+            <div className="mb-2 flex items-center gap-2">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-primary/15 text-primary">
+                <Shield className="h-4 w-4" />
+              </span>
+              <span className="text-xs font-bold text-foreground">ব্যান প্রোটেকশন</span>
+            </div>
+            <div className="font-display text-sm font-bold text-foreground">৬ লেয়ার অ্যাক্টিভ</div>
+          </div>
+          <div
+            className="absolute -right-2 bottom-[18%] w-52 -rotate-3 rounded-2xl border border-border bg-card/85 p-4 shadow-xl backdrop-blur-md animate-float"
+            style={{ animationDelay: "-3.5s" }}
+          >
+            <div className="mb-2 flex items-center gap-2">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-[color:var(--color-gold)]/20 text-[color:var(--color-emerald-deep)]">
+                <TrendingUp className="h-4 w-4" />
+              </span>
+              <span className="text-xs font-bold text-foreground">আজকের পাঠানো</span>
+            </div>
+            <div className="font-display text-lg font-bold text-foreground">১২,৫০০+</div>
+          </div>
+        </div>
+
+        {/* Centered content */}
+        <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center">
+          {/* Badge */}
+          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 shadow-sm">
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
             </span>
-            <h1 className="mt-5 font-display text-4xl font-extrabold leading-[1.05] tracking-tight sm:text-6xl lg:text-[4.2rem]">
-              হাজারো কাস্টমারের কাছে{" "}
-              <span className="text-shimmer">এক ক্লিকেই</span>{" "}
-              হোয়াটসঅ্যাপ মেসেজ
-            </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg lg:mx-0">
-              বাল্ক প্রমোশন, WooCommerce অর্ডার নোটিফিকেশন, এবং এক্সট্রিম ব্যান প্রোটেকশন —
-              অফিসিয়াল API-এর তুলনায় <strong className="text-foreground">১০x কম খরচে</strong>।
-              ছোট থেকে বড়, প্রতিটি বিজনেসের জন্য।
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[color:var(--color-emerald-deep)] sm:text-xs">
+              বাংলাদেশের #১ হোয়াটসঅ্যাপ মার্কেটিং প্ল্যাটফর্ম
             </p>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-3 lg:justify-start">
-              <Link
-                to="/auth"
-                className="group relative inline-flex items-center gap-2 overflow-hidden rounded-lg bg-gradient-to-br from-primary to-[color:var(--color-emerald-deep)] px-5 py-3 text-sm font-semibold text-primary-foreground shadow-[0_20px_50px_-15px_var(--primary)] transition hover:shadow-[0_25px_60px_-15px_var(--primary)]"
-              >
-                <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition duration-700 group-hover:translate-x-full" />
-                <span className="relative">ফ্রি ট্রায়াল শুরু করুন</span>
-                <ArrowRight className="relative h-4 w-4 transition group-hover:translate-x-0.5" />
-              </Link>
-              <a
-                href="#pricing"
-                className="inline-flex items-center gap-2 rounded-lg border border-border bg-background/60 px-5 py-3 text-sm font-semibold text-foreground backdrop-blur transition hover:bg-accent"
-              >
-                প্রাইসিং দেখুন
-              </a>
-            </div>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground lg:justify-start">
-              <span className="inline-flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> ক্রেডিট কার্ড ছাড়াই
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> ৫ মিনিটে সেটআপ
-              </span>
-              <span className="inline-flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-primary" /> বাংলায় ২৪/৭ সাপোর্ট
-              </span>
-            </div>
+          </div>
 
-            {/* Trust rating */}
-            <div className="mt-7 inline-flex items-center gap-3 rounded-xl border border-border/60 bg-card/70 px-4 py-2.5 shadow-sm backdrop-blur">
-              <div className="flex -space-x-2">
-                {["#10b981", "#f59e0b", "#3b82f6", "#ef4444"].map((c, i) => (
-                  <span key={i} className="h-7 w-7 rounded-full ring-2 ring-card" style={{ background: c }} />
-                ))}
+          {/* Headline */}
+          <h1 className="font-display text-5xl font-extrabold leading-[1.15] tracking-tight text-[color:var(--color-emerald-deep)] sm:text-6xl md:text-7xl">
+            হাজারো কাস্টমারের কাছে{" "}
+            <span className="bg-gradient-to-r from-primary to-[color:var(--color-gold)] bg-clip-text text-transparent">
+              এক ক্লিকেই
+            </span>{" "}
+            হোয়াটসঅ্যাপ মেসেজ
+          </h1>
+
+          {/* Description */}
+          <p className="mx-auto mt-8 max-w-2xl text-lg leading-relaxed text-foreground/70 md:text-xl">
+            বাল্ক প্রোমোশন, WooCommerce অর্ডার নোটিফিকেশন, এবং এক্সট্রিম ব্যান প্রোটেকশন —
+            অফিসিয়াল API-এর তুলনায়{" "}
+            <span className="font-bold text-primary underline decoration-[color:var(--color-gold)] decoration-2 underline-offset-4">
+              ১০x কম খরচে
+            </span>
+            । ছোট থেকে বড়, প্রতিটি বিজনেসের জন্য।
+          </p>
+
+          {/* CTAs */}
+          <div className="mt-10 flex flex-col items-center gap-4 sm:flex-row">
+            <Link
+              to="/auth"
+              className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl bg-primary px-8 py-4 text-base font-bold text-primary-foreground shadow-xl shadow-primary/25 transition-all hover:scale-[1.03] hover:bg-[color:var(--color-emerald-deep)] active:scale-95"
+            >
+              <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition duration-700 group-hover:translate-x-full" />
+              <span className="relative">ফ্রি ট্রায়াল শুরু করুন</span>
+              <ArrowRight className="relative h-5 w-5 transition group-hover:translate-x-0.5" />
+            </Link>
+            <a
+              href="#pricing"
+              className="inline-flex items-center gap-2 rounded-xl border-2 border-border bg-background px-8 py-4 text-base font-bold text-foreground transition hover:border-primary hover:text-primary"
+            >
+              প্রাইসিং দেখুন
+            </a>
+          </div>
+
+          {/* Trust signals */}
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-sm text-foreground/70 md:gap-10">
+            {[
+              "ক্রেডিট কার্ড ছাড়াই",
+              "৫ মিনিটে সেটআপ",
+              "বাংলায় ২৪/৭ সাপোর্ট",
+            ].map((t) => (
+              <div key={t} className="flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5 text-primary" />
+                <span className="font-medium">{t}</span>
               </div>
-              <div className="flex flex-col items-start">
-                <div className="flex items-center gap-0.5 text-[color:var(--color-gold)]">
+            ))}
+          </div>
+
+          {/* Social proof bar */}
+          <div className="mt-12 w-full max-w-xl bg-gradient-to-r from-transparent via-primary/15 to-transparent p-px">
+            <div className="flex flex-col items-center gap-4 bg-background px-8 py-4 sm:flex-row">
+              <div className="flex -space-x-2">
+                {["#0d7a5f", "#064e3b", "#c9a84c", "#f5f0e0"].map((c, i) => (
+                  <span
+                    key={i}
+                    className="h-10 w-10 rounded-full border-2 border-background"
+                    style={{ background: c }}
+                  />
+                ))}
+                <span className="grid h-10 w-10 place-items-center rounded-full border-2 border-background bg-[color:var(--color-gold-soft)] text-xs font-bold text-[color:var(--color-emerald-deep)]">
+                  +2k
+                </span>
+              </div>
+              <div className="text-center sm:text-left">
+                <div className="flex justify-center gap-0.5 text-[color:var(--color-gold)] sm:justify-start">
                   {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className="h-3.5 w-3.5 fill-current" />
+                    <Star key={i} className="h-4 w-4 fill-current" />
                   ))}
                 </div>
-                <span className="text-[11px] text-muted-foreground">২,৫০০+ ব্যবসার বিশ্বস্ত</span>
+                <p className="text-sm font-medium text-foreground/60">
+                  ২,৫০০+ ব্যবসায়ীর বিশ্বস্ত সঙ্গী
+                </p>
               </div>
             </div>
           </div>
-
-          {/* Phone mockup */}
-          <PhoneMockup />
         </div>
       </div>
     </section>
   );
 }
 
-function PhoneMockup() {
-  const messages = [
-    { from: "biz", text: "আসসালামু আলাইকুম রহিম ভাই! আপনার অর্ডার #১২৩৪ আমরা পেয়েছি ✅", time: "১০:২১" },
-    { from: "user", text: "ধন্যবাদ। কখন পাবো?", time: "১০:২১" },
-    { from: "biz", text: "আজ সন্ধ্যা ৬টার মধ্যে ডেলিভারি হবে। ট্র্যাকিং: BD‑৮৮৪২", time: "১০:২২" },
-    { from: "biz", text: "🎁 ঈদ অফার: পরবর্তী অর্ডারে ৫০% ছাড়! কোড: EID50", time: "১০:২২" },
-  ];
-  return (
-    <div className="relative mx-auto w-full max-w-[420px]">
-      {/* Floating side cards */}
-      <div className="absolute -left-6 top-8 hidden rounded-xl border border-border/60 bg-card/90 p-3 shadow-xl backdrop-blur animate-float sm:block">
-        <div className="flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary/15 text-primary">
-            <TrendingUp className="h-4 w-4" />
-          </span>
-          <div>
-            <div className="text-xs text-muted-foreground">আজকের ডেলিভারি</div>
-            <div className="font-display text-sm font-bold">৯৯.৭%</div>
-          </div>
-        </div>
-      </div>
-      <div className="absolute -right-4 bottom-12 hidden rounded-xl border border-border/60 bg-card/90 p-3 shadow-xl backdrop-blur animate-float sm:block" style={{ animationDelay: "-2s" }}>
-        <div className="flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-[color:var(--color-gold)]/20 text-[color:var(--color-emerald-deep)]">
-            <Shield className="h-4 w-4" />
-          </span>
-          <div>
-            <div className="text-xs text-muted-foreground">ব্যান প্রোটেকশন</div>
-            <div className="font-display text-sm font-bold">৬ লেয়ার অ্যাক্টিভ</div>
-          </div>
-        </div>
-      </div>
 
-      {/* Phone body */}
-      <div className="relative mx-auto h-[600px] w-[300px] rounded-[2.6rem] border border-foreground/15 bg-foreground p-2.5 shadow-[0_50px_120px_-30px_color-mix(in_oklab,var(--primary)_50%,transparent)]">
-        <div className="absolute left-1/2 top-2.5 z-10 h-5 w-24 -translate-x-1/2 rounded-b-2xl bg-foreground" />
-        <div className="relative h-full w-full overflow-hidden rounded-[2.1rem] bg-[#e7ddd3]">
-          {/* Status bar */}
-          <div className="flex items-center justify-between px-5 pt-2 text-[10px] font-semibold text-white/95">
-            <span>১০:২২</span>
-            <div className="flex items-center gap-1">
-              <Signal className="h-2.5 w-2.5" />
-              <Wifi className="h-2.5 w-2.5" />
-              <Battery className="h-3 w-3" />
-            </div>
-          </div>
-          {/* WhatsApp header */}
-          <div className="mt-1 flex items-center gap-2.5 bg-[#075e54] px-3 py-2.5 text-white">
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-white/15 text-xs font-bold">RA</span>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-xs font-semibold">রহমান এন্টারপ্রাইজ</div>
-              <div className="text-[10px] text-white/70">online · typing…</div>
-            </div>
-            <Phone className="h-4 w-4" />
-          </div>
-          {/* Chat */}
-          <div
-            className="space-y-2 px-3 py-3"
-            style={{
-              backgroundImage:
-                "radial-gradient(circle at 20% 30%, rgba(255,255,255,0.5) 0, transparent 40%), radial-gradient(circle at 80% 70%, rgba(255,255,255,0.4) 0, transparent 40%)",
-            }}
-          >
-            {messages.map((m, i) => (
-              <div
-                key={i}
-                className={`max-w-[80%] animate-auth-bubble rounded-lg px-2.5 py-1.5 text-[11px] leading-snug shadow-sm ${
-                  m.from === "biz"
-                    ? "ml-auto bg-[#dcf8c6] text-slate-800"
-                    : "mr-auto bg-white text-slate-800"
-                }`}
-                style={{ animationDelay: `${i * 250}ms` }}
-              >
-                <p>{m.text}</p>
-                <div className="mt-0.5 text-right text-[9px] text-slate-500">
-                  {m.time} {m.from === "biz" && <span className="text-[#34b7f1]">✓✓</span>}
-                </div>
-              </div>
-            ))}
-            {/* typing indicator */}
-            <div className="mr-auto inline-flex items-center gap-1 rounded-lg bg-white px-2.5 py-2 shadow-sm">
-              {[0, 1, 2].map((i) => (
-                <span
-                  key={i}
-                  className="h-1.5 w-1.5 rounded-full bg-slate-400"
-                  style={{ animation: `auth-bubble-in 0.9s ${i * 0.15}s infinite alternate` }}
-                />
-              ))}
-            </div>
-          </div>
-          {/* Input */}
-          <div className="absolute inset-x-0 bottom-0 flex items-center gap-2 border-t border-black/5 bg-[#f0f0f0] px-3 py-2">
-            <div className="flex-1 rounded-full bg-white px-3 py-1.5 text-[10px] text-slate-400">Message</div>
-            <span className="grid h-7 w-7 place-items-center rounded-full bg-[#075e54] text-white animate-glow">
-              <Send className="h-3 w-3" />
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /* ---------------- Logo marquee ---------------- */
 function LogoMarquee() {
