@@ -14,16 +14,233 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activity_log: {
+        Row: {
+          action: string
+          brand_id: string | null
+          created_at: string
+          details: Json | null
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          brand_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          brand_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_log_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brand_members: {
+        Row: {
+          brand_id: string
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["brand_role"]
+          user_id: string
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["brand_role"]
+          user_id: string
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["brand_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_members_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brands: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          device_limit: number
+          expires_at: string | null
+          id: string
+          message_limit: number | null
+          name: string
+          status: Database["public"]["Enums"]["brand_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          device_limit?: number
+          expires_at?: string | null
+          id?: string
+          message_limit?: number | null
+          name: string
+          status?: Database["public"]["Enums"]["brand_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          device_limit?: number
+          expires_at?: string | null
+          id?: string
+          message_limit?: number | null
+          name?: string
+          status?: Database["public"]["Enums"]["brand_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      devices: {
+        Row: {
+          api_secret: string
+          brand_id: string | null
+          created_at: string
+          created_by: string | null
+          device_unique_id: string
+          id: string
+          last_checked_at: string | null
+          name: string
+          sim_info: string | null
+          status: Database["public"]["Enums"]["device_status"]
+          updated_at: string
+        }
+        Insert: {
+          api_secret: string
+          brand_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          device_unique_id: string
+          id?: string
+          last_checked_at?: string | null
+          name: string
+          sim_info?: string | null
+          status?: Database["public"]["Enums"]["device_status"]
+          updated_at?: string
+        }
+        Update: {
+          api_secret?: string
+          brand_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          device_unique_id?: string
+          id?: string
+          last_checked_at?: string | null
+          name?: string
+          sim_info?: string | null
+          status?: Database["public"]["Enums"]["device_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "devices_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_brand_admin: {
+        Args: { _brand_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_brand_member: {
+        Args: { _brand_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "owner" | "member"
+      brand_role: "brand_admin" | "sender"
+      brand_status: "active" | "suspended" | "expired"
+      device_status: "active" | "inactive" | "disconnected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +367,11 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["owner", "member"],
+      brand_role: ["brand_admin", "sender"],
+      brand_status: ["active", "suspended", "expired"],
+      device_status: ["active", "inactive", "disconnected"],
+    },
   },
 } as const
