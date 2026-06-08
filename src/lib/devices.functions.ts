@@ -123,7 +123,7 @@ export const testDeviceConnection = createServerFn({ method: "POST" })
         status: res.status === 200 ? "active" : "disconnected",
       })
       .eq("id", data.id);
-    return { status: res.status, message: res.message, data: res.data };
+    return { status: res.status, message: res.message };
   });
 
 // ============ Send single SMS ============
