@@ -142,30 +142,66 @@ function MembersPage() {
                   {brands.length === 0 ? "You don't own any brands yet." : "No members yet."}
                 </TableCell></TableRow>
               )}
-              {members.map((m) => (
+              {members.map((m: any) => (
                 <TableRow key={`${m.brand_id}-${m.user_id}`}>
-                  <TableCell className="font-medium">{m.full_name ?? "—"}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      {m.full_name ?? "—"}
+                      {m.inactive && <Badge className="bg-amber-100 text-amber-700 hover:bg-amber-100">Inactive</Badge>}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-sm">{m.email ?? "—"}</TableCell>
                   <TableCell><Badge variant="secondary">{m.brand_name}</Badge></TableCell>
                   <TableCell><Badge variant="outline">{m.role}</Badge></TableCell>
                   <TableCell className="text-right">
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button size="icon" variant="ghost" className="text-rose-600">
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Remove member?</AlertDialogTitle>
-                          <AlertDialogDescription>This removes them from the brand. Their account is not deleted.</AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => removeMut.mutate({ user_id: m.user_id, brand_id: m.brand_id })} className="bg-rose-600 hover:bg-rose-700">Remove</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        title={m.inactive ? "Activate" : "Make inactive"}
+                        className={m.inactive ? "text-emerald-600" : "text-amber-600"}
+                        disabled={activeMut.isPending}
+                        onClick={() => activeMut.mutate({ user_id: m.user_id, brand_id: m.brand_id, inactive: !m.inactive })}
+                      >
+                        <Power className="h-4 w-4" />
+                      </Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="icon" variant="ghost" className="text-rose-600" title="Remove from brand">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Remove member?</AlertDialogTitle>
+                            <AlertDialogDescription>This removes them from the brand. Their account is not deleted.</AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => removeMut.mutate({ user_id: m.user_id, brand_id: m.brand_id })} className="bg-rose-600 hover:bg-rose-700">Remove</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="icon" variant="ghost" className="text-rose-700" title="Delete user account">
+                            <UserX className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete user account?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This permanently deletes <span className="font-medium">{m.email ?? m.full_name}</span>'s account and all their brand memberships. This cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => deleteMut.mutate({ user_id: m.user_id, brand_id: m.brand_id })} className="bg-rose-700 hover:bg-rose-800">Delete</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
