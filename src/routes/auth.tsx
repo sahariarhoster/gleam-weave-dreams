@@ -161,18 +161,9 @@ function AuthPage() {
                 </div>
 
                 <div className="animate-auth-bubble ml-auto max-w-[80%] rounded-lg rounded-tr-sm bg-[#005c4b] px-3 py-2 text-[12px] leading-relaxed text-slate-50 shadow" style={{ animationDelay: "0.7s" }}>
-                  Got it, thanks! 🙌 When will it ship?
+                  Got it, thanks! 🙌
                   <div className="mt-1 flex items-center justify-end gap-1 text-[9px] text-emerald-200/70">
                     10:25 AM <span>✓✓</span>
-                  </div>
-                </div>
-
-                <div className="animate-auth-bubble max-w-[85%] rounded-lg rounded-tl-sm bg-[#202c33] px-3 py-2 text-[12px] leading-relaxed text-slate-100 shadow" style={{ animationDelay: "1.4s" }}>
-                  <div className="mb-1 text-[11px] font-semibold text-amber-300">📦 Shipped</div>
-                  Your order is on the way! Track it here:
-                  <div className="mt-1.5 rounded-md bg-black/30 px-2 py-1 font-mono text-[11px] text-emerald-300">HC-1042-IN</div>
-                  <div className="mt-1 flex items-center justify-end gap-1 text-[9px] text-slate-400">
-                    10:26 AM <span className="text-sky-400">✓✓</span>
                   </div>
                 </div>
               </div>
