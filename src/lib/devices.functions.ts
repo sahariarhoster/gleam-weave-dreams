@@ -73,6 +73,7 @@ export const createDevice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => deviceInput.parse(d))
   .handler(async ({ data, context }) => {
+    await assertOwner(context.supabase, context.userId);
     const { data: row, error } = await context.supabase
       .from("devices")
       .insert({ ...data, created_by: context.userId })
@@ -86,6 +87,7 @@ export const updateDevice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => deviceInput.extend({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
+    await assertOwner(context.supabase, context.userId);
     const { id, ...rest } = data;
     const { error } = await context.supabase.from("devices").update(rest).eq("id", id);
     if (error) throw new Error(error.message);
@@ -96,6 +98,7 @@ export const deleteDevice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
+    await assertOwner(context.supabase, context.userId);
     const { error } = await context.supabase.from("devices").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
