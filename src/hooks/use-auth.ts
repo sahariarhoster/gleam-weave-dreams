@@ -12,9 +12,21 @@ export function useAuth() {
       setSession(s);
       setUser(s?.user ?? null);
     });
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
+    supabase.auth.getUser().then(({ data, error }) => {
+      if (error || !data.user) {
+        setSession(null);
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      supabase.auth.getSession().then(({ data: sessionData }) => {
+        setSession(sessionData.session);
+        setUser(data.user);
+        setLoading(false);
+      });
+    }).catch(() => {
+      setSession(null);
+      setUser(null);
       setLoading(false);
     });
     return () => sub.subscription.unsubscribe();
