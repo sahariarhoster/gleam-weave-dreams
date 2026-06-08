@@ -227,6 +227,8 @@ function AddUserButton({ onDone }: { onDone: () => void }) {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="member">Member</SelectItem>
+                <SelectItem value="support_agent">Support Agent</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="owner">Owner</SelectItem>
               </SelectContent>
             </Select>
