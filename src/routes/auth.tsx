@@ -121,33 +121,60 @@ function AuthPage() {
               ))}
             </ul>
 
-            {/* Animated chat preview */}
-            <div className="relative mt-2 max-w-md rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm">
-              <div className="mb-3 flex items-center justify-between text-[11px] text-slate-400">
-                <div className="flex items-center gap-2">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-300">
-                    <MessageCircle className="h-3 w-3" />
-                  </span>
-                  Campaign · Black Friday
+            {/* WhatsApp-style chat preview */}
+            <div className="relative mt-2 w-full max-w-sm overflow-hidden rounded-[28px] border border-white/10 bg-[#0b141a] shadow-2xl shadow-emerald-900/30">
+              {/* Header */}
+              <div className="flex items-center gap-3 bg-[#202c33] px-4 py-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-sm font-semibold text-white">
+                  HC
                 </div>
-                <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-emerald-300">Sending</span>
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-semibold text-white">Hoster Camp Store</div>
+                  <div className="flex items-center gap-1 text-[11px] text-emerald-300">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> online
+                  </div>
+                </div>
+                <div className="text-[10px] text-slate-400">business</div>
               </div>
-              <div className="space-y-2">
-                <div className="animate-auth-bubble max-w-[80%] rounded-2xl rounded-bl-sm bg-white/10 px-3 py-2 text-xs text-slate-100" style={{ animationDelay: "0.1s" }}>
-                  Hi Sarah 👋 your order #2841 is confirmed.
+
+              {/* Messages */}
+              <div
+                className="space-y-2 px-3 py-4"
+                style={{
+                  backgroundImage:
+                    "radial-gradient(circle at 20% 10%, rgba(16,185,129,0.05), transparent 40%), radial-gradient(circle at 80% 90%, rgba(99,102,241,0.05), transparent 40%)",
+                }}
+              >
+                <div className="text-center">
+                  <span className="rounded-md bg-[#182229] px-2 py-0.5 text-[10px] text-slate-400">Today</span>
                 </div>
-                <div className="animate-auth-bubble ml-auto max-w-[70%] rounded-2xl rounded-br-sm bg-emerald-500/90 px-3 py-2 text-xs text-white shadow-lg shadow-emerald-500/20" style={{ animationDelay: "0.6s" }}>
-                  Thanks! When will it ship? ✨
+
+                <div className="animate-auth-bubble max-w-[85%] rounded-lg rounded-tl-sm bg-[#202c33] px-3 py-2 text-[12px] leading-relaxed text-slate-100 shadow" style={{ animationDelay: "0.1s" }}>
+                  <div className="mb-1 text-[11px] font-semibold text-emerald-300">✅ Order Placed</div>
+                  Hi Sarah! Your order <span className="font-semibold text-white">#HC-2841</span> has been received.
+                  <div className="mt-1.5 text-[11px] text-slate-300">
+                    1× Wireless Earbuds — <span className="text-white">$49.00</span>
+                  </div>
+                  <div className="mt-1 flex items-center justify-end gap-1 text-[9px] text-slate-400">
+                    10:24 AM <span className="text-sky-400">✓✓</span>
+                  </div>
                 </div>
-                <div className="animate-auth-bubble max-w-[85%] rounded-2xl rounded-bl-sm bg-white/10 px-3 py-2 text-xs text-slate-100" style={{ animationDelay: "1.1s" }}>
-                  Tomorrow by 5 PM. Tracking: HC-1042
+
+                <div className="animate-auth-bubble ml-auto max-w-[80%] rounded-lg rounded-tr-sm bg-[#005c4b] px-3 py-2 text-[12px] leading-relaxed text-slate-50 shadow" style={{ animationDelay: "0.7s" }}>
+                  Got it, thanks! 🙌 When will it ship?
+                  <div className="mt-1 flex items-center justify-end gap-1 text-[9px] text-emerald-200/70">
+                    10:25 AM <span>✓✓</span>
+                  </div>
                 </div>
-              </div>
-              <div className="mt-3 flex items-center justify-between text-[10px] text-slate-500">
-                <span>Delivered to 12,408 contacts</span>
-                <span className="flex items-center gap-1 text-emerald-300">
-                  <span className="h-1 w-1 animate-pulse rounded-full bg-emerald-300" /> Live
-                </span>
+
+                <div className="animate-auth-bubble max-w-[85%] rounded-lg rounded-tl-sm bg-[#202c33] px-3 py-2 text-[12px] leading-relaxed text-slate-100 shadow" style={{ animationDelay: "1.4s" }}>
+                  <div className="mb-1 text-[11px] font-semibold text-amber-300">📦 Shipped</div>
+                  Your order is on the way! Track it here:
+                  <div className="mt-1.5 rounded-md bg-black/30 px-2 py-1 font-mono text-[11px] text-emerald-300">HC-1042-IN</div>
+                  <div className="mt-1 flex items-center justify-end gap-1 text-[9px] text-slate-400">
+                    10:26 AM <span className="text-sky-400">✓✓</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
