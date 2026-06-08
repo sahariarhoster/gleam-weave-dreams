@@ -25,14 +25,14 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex min-h-screen w-full bg-muted/30">
         <AppSidebar />
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="sticky top-0 z-10 flex h-14 items-center justify-between gap-3 border-b border-border/60 bg-background px-4">
+          <header className="sticky top-0 z-10 flex h-12 items-center justify-between gap-3 border-b border-border/60 bg-background px-3 md:px-4">
             <div className="flex items-center gap-2">
               <SidebarTrigger />
               <h1 className="text-base font-semibold tracking-tight">{title}</h1>
             </div>
             <UserMenu />
           </header>
-          <main className="flex-1 p-4 md:p-6">{children}</main>
+          <main className="flex-1 p-3 md:p-4">{children}</main>
         </div>
       </div>
     </SidebarProvider>

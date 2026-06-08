@@ -62,13 +62,13 @@ function DashboardPage() {
   ] as const;
 
   return (
-    <div className="mx-auto max-w-7xl space-y-5">
+    <div className="mx-auto max-w-7xl space-y-3">
       {/* Hero */}
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-3 lg:grid-cols-3">
         <Card className="lg:col-span-2 overflow-hidden border-border/60 bg-gradient-to-br from-primary/90 via-primary to-primary/70 text-primary-foreground shadow-lg">
-          <CardContent className="relative p-5">
-            <div className="pointer-events-none absolute -right-10 -top-10 h-36 w-36 rounded-full bg-white/10 opacity-70" />
-            <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <CardContent className="relative p-4">
+            <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-white/10 opacity-60" />
+            <div className="relative flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="space-y-1.5 min-w-0">
                 <Badge className="bg-white/20 text-primary-foreground hover:bg-white/30">
                   <Zap className="mr-1 h-3 w-3" /> Live overview
@@ -125,14 +125,14 @@ function DashboardPage() {
       </div>
 
       {/* KPI tiles */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2.5 md:grid-cols-4">
         {kpis.map(({ key, ...k }) => (
           <KpiCard key={key} {...k} loading={isLoading} />
         ))}
       </div>
 
       {/* Charts row */}
-      <div className="grid gap-4 lg:grid-cols-3">
+      <div className="grid gap-3 lg:grid-cols-3">
         <Card className="lg:col-span-2 border-border/60 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="flex items-center gap-2 text-base">

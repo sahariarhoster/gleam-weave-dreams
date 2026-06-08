@@ -36,25 +36,47 @@ function AuthPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-accent/40 p-4">
-      <div className="w-full max-w-md">
-        <div className="mb-8 flex items-center justify-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
-            <MessageCircle className="h-6 w-6" />
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/40 p-4 sm:p-6">
+      <div className="mx-auto grid min-h-[calc(100vh-2rem)] w-full max-w-5xl overflow-hidden rounded-2xl border border-border/60 bg-card shadow-xl sm:min-h-[calc(100vh-3rem)] lg:grid-cols-[1.05fr_0.95fr]">
+        <section className="hidden bg-primary p-8 text-primary-foreground lg:flex lg:flex-col lg:justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-foreground/15 shadow-md">
+              <MessageCircle className="h-5 w-5" />
+            </div>
+            <div>
+              <h1 className="text-xl font-semibold tracking-tight">WA Notifier</h1>
+              <p className="text-xs text-primary-foreground/75">WhatsApp campaigns at scale</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-xl font-semibold tracking-tight">WA Notifier</h1>
-            <p className="text-xs text-muted-foreground">WhatsApp campaigns at scale</p>
+          <div className="max-w-md space-y-4">
+            <div className="text-4xl font-bold tracking-tight">Manage campaigns without the clutter.</div>
+            <p className="text-sm leading-6 text-primary-foreground/80">Devices, brands, members, campaigns, and delivery logs stay organized in one focused workspace.</p>
           </div>
-        </div>
+          <div className="grid grid-cols-3 gap-3 text-sm">
+            <div className="rounded-lg bg-primary-foreground/12 p-3"><div className="text-lg font-bold">Live</div><div className="text-primary-foreground/70">devices</div></div>
+            <div className="rounded-lg bg-primary-foreground/12 p-3"><div className="text-lg font-bold">Fast</div><div className="text-primary-foreground/70">sending</div></div>
+            <div className="rounded-lg bg-primary-foreground/12 p-3"><div className="text-lg font-bold">Clear</div><div className="text-primary-foreground/70">logs</div></div>
+          </div>
+        </section>
 
-        <Card className="border-border/60 shadow-xl">
-          <CardHeader>
+        <section className="flex flex-col justify-center p-5 sm:p-8">
+          <div className="mb-6 flex items-center justify-center gap-3 lg:hidden">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-md shadow-primary/25">
+              <MessageCircle className="h-5 w-5" />
+            </div>
+            <div>
+              <h1 className="text-xl font-semibold tracking-tight">WA Notifier</h1>
+              <p className="text-xs text-muted-foreground">WhatsApp campaigns at scale</p>
+            </div>
+          </div>
+
+          <Card className="border-border/60 shadow-none">
+          <CardHeader className="pb-3">
             <CardTitle>Welcome</CardTitle>
             <CardDescription>Sign in to manage your devices and campaigns.</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={signIn} className="space-y-4">
+            <form onSubmit={signIn} className="space-y-3.5">
               <div className="space-y-2">
                 <Label htmlFor="si-email">Email</Label>
                 <Input id="si-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
@@ -71,7 +93,8 @@ function AuthPage() {
               </p>
             </form>
           </CardContent>
-        </Card>
+          </Card>
+        </section>
       </div>
     </div>
   );
