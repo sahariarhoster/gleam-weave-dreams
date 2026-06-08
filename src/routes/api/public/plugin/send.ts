@@ -93,7 +93,7 @@ export const Route = createFileRoute("/api/public/plugin/send")({
           .eq("id", lic.device_id)
           .maybeSingle();
         if (error || !device) return jsonResponse({ error: "Device not found" }, 404);
-        if (device.status === "banned" || device.status === "disconnected") {
+        if (device.status === "disconnected" || device.status === "inactive") {
           return jsonResponse({ error: "Device is not available" }, 503);
         }
 
