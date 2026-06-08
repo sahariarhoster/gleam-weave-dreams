@@ -84,24 +84,24 @@ function AuthPage() {
               <MessageCircle className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-lg font-bold tracking-tight">WA Suite</h1>
-              <p className="text-[11px] uppercase tracking-widest text-slate-400">By Hoster Camp</p>
+              <h1 className="text-lg font-bold tracking-tight text-slate-900">WA Suite</h1>
+              <p className="text-[11px] uppercase tracking-widest text-slate-500">By Hoster Camp</p>
             </div>
           </div>
 
           <div className="space-y-7">
             <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-300">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-700">
                 <span className="relative flex h-1.5 w-1.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 </span>
                 All systems operational
               </div>
-              <h2 className="text-4xl font-bold leading-tight tracking-tight text-white xl:text-5xl">
-                Run WhatsApp campaigns <span className="bg-gradient-to-r from-emerald-300 to-teal-200 bg-clip-text text-transparent">at scale</span>.
+              <h2 className="text-4xl font-bold leading-tight tracking-tight text-slate-900 xl:text-5xl">
+                Run WhatsApp campaigns <span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">at scale</span>.
               </h2>
-              <p className="mt-4 max-w-md text-base leading-7 text-slate-300">
+              <p className="mt-4 max-w-md text-base leading-7 text-slate-600">
                 Devices, brands, members, campaigns and delivery logs — one focused workspace for your whole team.
               </p>
             </div>
@@ -112,14 +112,15 @@ function AuthPage() {
                 { icon: ShieldCheck, text: "Role-based access for brands & members" },
                 { icon: BarChart3, text: "Real-time delivery analytics & logs" },
               ].map((f) => (
-                <li key={f.text} className="flex items-center gap-3 text-sm text-slate-300">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 ring-1 ring-white/10">
-                    <f.icon className="h-4 w-4 text-emerald-300" />
+                <li key={f.text} className="flex items-center gap-3 text-sm text-slate-700">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white ring-1 ring-slate-200 shadow-sm">
+                    <f.icon className="h-4 w-4 text-emerald-600" />
                   </span>
                   {f.text}
                 </li>
               ))}
             </ul>
+
 
             {/* WhatsApp-style chat preview */}
             <div className="relative mt-2 w-full max-w-sm overflow-hidden rounded-[28px] border border-slate-200 bg-[#efeae2] shadow-2xl shadow-emerald-900/30">
