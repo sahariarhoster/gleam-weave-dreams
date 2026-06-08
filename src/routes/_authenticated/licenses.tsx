@@ -38,15 +38,33 @@ function LicensesPage() {
   const fnDel = useServerFn(deleteLicense);
   const fnSetLimit = useServerFn(setBrandLicenseLimit);
   const fnRoles = useServerFn(getMyRoles);
+  const fnGetRelease = useServerFn(getPluginRelease);
+  const fnSetRelease = useServerFn(setPluginRelease);
 
   const licenses = useQuery({ queryKey: ["licenses"], queryFn: () => fnList() });
   const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => fnBrands() });
   const roles = useQuery({ queryKey: ["my-roles"], queryFn: () => fnRoles() });
+  const release = useQuery({ queryKey: ["plugin-release"], queryFn: () => fnGetRelease() });
   const isOwner = (roles.data ?? []).includes("owner");
 
   const [brandId, setBrandId] = useState<string>("");
   const [editing, setEditing] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<number>(1);
+  const [rel, setRel] = useState<{ version: string; url: string; changelog: string; tested: string; requires: string; requires_php: string }>({
+    version: "", url: "", changelog: "", tested: "", requires: "", requires_php: "",
+  });
+  const [relLoaded, setRelLoaded] = useState(false);
+  if (!relLoaded && release.data) {
+    setRel({
+      version: release.data.plugin_version ?? "",
+      url: release.data.plugin_download_url ?? "",
+      changelog: release.data.plugin_changelog ?? "",
+      tested: release.data.plugin_tested_wp ?? "",
+      requires: release.data.plugin_requires_wp ?? "",
+      requires_php: release.data.plugin_requires_php ?? "",
+    });
+    setRelLoaded(true);
+  }
 
   const genMut = useMutation({
     mutationFn: (b: string) => fnGen({ data: { brand_id: b } }),
