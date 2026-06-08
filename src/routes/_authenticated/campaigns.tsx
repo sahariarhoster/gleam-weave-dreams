@@ -21,6 +21,7 @@ import { listCampaigns, createCampaign, deleteCampaign, setCampaignStatus, runCa
 import { listBrandsLite } from "@/lib/brands.functions";
 import { listGroups } from "@/lib/contacts.functions";
 import { listDevices } from "@/lib/devices.functions";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/campaigns")({
   head: () => ({ meta: [{ title: "Campaigns — WA Notifier" }] }),
@@ -71,15 +72,19 @@ function CampaignsPage() {
 
   return (
     <div className="mx-auto max-w-7xl">
-      <Card className="border-border/60 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base"><Megaphone className="h-4 w-4" /> All Campaigns</CardTitle>
+      <PageHeader
+        icon={Megaphone}
+        title="Campaigns"
+        description="Schedule bulk WhatsApp campaigns with throttling and delivery windows."
+        actions={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild><Button size="sm" className="gap-1"><Plus className="h-4 w-4" /> New Campaign</Button></DialogTrigger>
             <NewCampaignDialog onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["campaigns"] }); }} />
           </Dialog>
-        </CardHeader>
-        <CardContent>
+        }
+      />
+      <Card className="border-border/60 shadow-sm">
+        <CardContent className="pt-6">
           <Table>
             <TableHeader>
               <TableRow>

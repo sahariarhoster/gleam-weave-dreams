@@ -17,6 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { listBlocked, addBlocked, removeBlocked } from "@/lib/logs.functions";
 import { listBrandsLite } from "@/lib/brands.functions";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/blocked")({
   head: () => ({ meta: [{ title: "Blocked Numbers — WA Notifier" }] }),
@@ -45,12 +46,12 @@ function BlockedPage() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <Card className="border-border/60 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between gap-2">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Ban className="h-4 w-4" /> Blocked Numbers
-          </CardTitle>
-          <div className="flex items-center gap-2">
+      <PageHeader
+        icon={Ban}
+        title="Blocked Numbers"
+        description="Numbers in this list are skipped by every outgoing campaign."
+        actions={
+          <>
             <Select value={brand} onValueChange={setBrand}>
               <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
               <SelectContent>
@@ -66,9 +67,11 @@ function BlockedPage() {
               </DialogTrigger>
               <BlockDialog brands={brands.data ?? []} onDone={() => { setOpen(false); qc.invalidateQueries({ queryKey: ["blocked"] }); }} />
             </Dialog>
-          </div>
-        </CardHeader>
-        <CardContent>
+          </>
+        }
+      />
+      <Card className="border-border/60 shadow-sm">
+        <CardContent className="pt-6">
           <Table>
             <TableHeader>
               <TableRow>

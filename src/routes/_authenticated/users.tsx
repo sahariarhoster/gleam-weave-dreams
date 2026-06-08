@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { listUsers, setUserRole, addBrandMember, removeBrandMember, impersonateUser, createUser, resetUserPassword } from "@/lib/users.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { listBrandsLite } from "@/lib/brands.functions";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/users")({
   head: () => ({ meta: [{ title: "Users — WA Notifier" }] }),
@@ -68,12 +69,14 @@ function UsersPage() {
 
   return (
     <div className="mx-auto max-w-7xl">
+      <PageHeader
+        icon={Users}
+        title="Users"
+        description="All accounts on the platform — assign roles and brand access."
+        actions={<AddUserButton onDone={() => qc.invalidateQueries({ queryKey: ["users"] })} />}
+      />
       <Card className="border-border/60 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base"><Users className="h-4 w-4" /> All Users</CardTitle>
-          <AddUserButton onDone={() => qc.invalidateQueries({ queryKey: ["users"] })} />
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <Table>
             <TableHeader>
               <TableRow>

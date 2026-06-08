@@ -17,6 +17,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { listMyBrandMembers, createBrandMemberUser, removeMyBrandMember } from "@/lib/users.functions";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/members")({
   head: () => ({ meta: [{ title: "Members — WA Notifier" }] }),
@@ -57,11 +58,11 @@ function MembersPage() {
 
   return (
     <div className="mx-auto max-w-5xl">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Users className="h-4 w-4" /> Brand Members
-          </CardTitle>
+      <PageHeader
+        icon={Users}
+        title="Brand Members"
+        description="Manage who can access and operate your brands."
+        actions={
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button size="sm" className="gap-1" disabled={brands.length === 0}>
@@ -106,8 +107,10 @@ function MembersPage() {
               </form>
             </DialogContent>
           </Dialog>
-        </CardHeader>
-        <CardContent>
+        }
+      />
+      <Card>
+        <CardContent className="pt-6">
           <Table>
             <TableHeader>
               <TableRow>
