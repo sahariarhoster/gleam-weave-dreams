@@ -202,7 +202,21 @@ export const resetUserPassword = createServerFn({ method: "POST" })
 
 // ============ Brand-owner: manage members of own brands ============
 
+async function isOwner(supabase: any, userId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "owner")
+    .maybeSingle();
+  return !!data;
+}
+
 async function getMyBrandIds(supabase: any, userId: string): Promise<string[]> {
+  if (await isOwner(supabase, userId)) {
+    const { data } = await supabase.from("brands").select("id");
+    return (data ?? []).map((b: any) => b.id as string);
+  }
   const { data } = await supabase.from("brands").select("id").eq("created_by", userId);
   return (data ?? []).map((b: any) => b.id as string);
 }
