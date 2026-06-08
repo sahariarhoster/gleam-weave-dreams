@@ -167,12 +167,7 @@ function AuthPage() {
             </div>
           </div>
 
-          <div className="relative">
-            {/* Animated beam glow around card */}
-            <div className="pointer-events-none absolute -inset-px overflow-hidden rounded-2xl">
-              <div className="animate-auth-beam absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent blur-md" />
-            </div>
-            <div className="relative rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-2xl backdrop-blur-xl sm:p-8">
             <div className="mb-6">
               <h3 className="text-2xl font-bold tracking-tight text-white">Welcome back</h3>
               <p className="mt-1 text-sm text-slate-400">Sign in to continue to your workspace.</p>
