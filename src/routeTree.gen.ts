@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/send'
+import { Route as AuthenticatedMembersRouteImport } from './routes/_authenticated/members'
 import { Route as AuthenticatedLogsRouteImport } from './routes/_authenticated/logs'
 import { Route as AuthenticatedGroupsRouteImport } from './routes/_authenticated/groups'
 import { Route as AuthenticatedDevicesRouteImport } from './routes/_authenticated/devices'
@@ -47,6 +48,11 @@ const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
 const AuthenticatedSendRoute = AuthenticatedSendRouteImport.update({
   id: '/send',
   path: '/send',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMembersRoute = AuthenticatedMembersRouteImport.update({
+  id: '/members',
+  path: '/members',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedLogsRoute = AuthenticatedLogsRouteImport.update({
@@ -112,6 +118,7 @@ export interface FileRoutesByFullPath {
   '/devices': typeof AuthenticatedDevicesRoute
   '/groups': typeof AuthenticatedGroupsRoute
   '/logs': typeof AuthenticatedLogsRoute
+  '/members': typeof AuthenticatedMembersRoute
   '/send': typeof AuthenticatedSendRoute
   '/users': typeof AuthenticatedUsersRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
@@ -128,6 +135,7 @@ export interface FileRoutesByTo {
   '/devices': typeof AuthenticatedDevicesRoute
   '/groups': typeof AuthenticatedGroupsRoute
   '/logs': typeof AuthenticatedLogsRoute
+  '/members': typeof AuthenticatedMembersRoute
   '/send': typeof AuthenticatedSendRoute
   '/users': typeof AuthenticatedUsersRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
@@ -146,6 +154,7 @@ export interface FileRoutesById {
   '/_authenticated/devices': typeof AuthenticatedDevicesRoute
   '/_authenticated/groups': typeof AuthenticatedGroupsRoute
   '/_authenticated/logs': typeof AuthenticatedLogsRoute
+  '/_authenticated/members': typeof AuthenticatedMembersRoute
   '/_authenticated/send': typeof AuthenticatedSendRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
@@ -164,6 +173,7 @@ export interface FileRouteTypes {
     | '/devices'
     | '/groups'
     | '/logs'
+    | '/members'
     | '/send'
     | '/users'
     | '/api/public/cron/tick'
@@ -180,6 +190,7 @@ export interface FileRouteTypes {
     | '/devices'
     | '/groups'
     | '/logs'
+    | '/members'
     | '/send'
     | '/users'
     | '/api/public/cron/tick'
@@ -197,6 +208,7 @@ export interface FileRouteTypes {
     | '/_authenticated/devices'
     | '/_authenticated/groups'
     | '/_authenticated/logs'
+    | '/_authenticated/members'
     | '/_authenticated/send'
     | '/_authenticated/users'
     | '/api/public/cron/tick'
@@ -244,6 +256,13 @@ declare module '@tanstack/react-router' {
       path: '/send'
       fullPath: '/send'
       preLoaderRoute: typeof AuthenticatedSendRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/members': {
+      id: '/_authenticated/members'
+      path: '/members'
+      fullPath: '/members'
+      preLoaderRoute: typeof AuthenticatedMembersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/logs': {
@@ -329,6 +348,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDevicesRoute: typeof AuthenticatedDevicesRoute
   AuthenticatedGroupsRoute: typeof AuthenticatedGroupsRoute
   AuthenticatedLogsRoute: typeof AuthenticatedLogsRoute
+  AuthenticatedMembersRoute: typeof AuthenticatedMembersRoute
   AuthenticatedSendRoute: typeof AuthenticatedSendRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
 }
@@ -343,6 +363,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDevicesRoute: AuthenticatedDevicesRoute,
   AuthenticatedGroupsRoute: AuthenticatedGroupsRoute,
   AuthenticatedLogsRoute: AuthenticatedLogsRoute,
+  AuthenticatedMembersRoute: AuthenticatedMembersRoute,
   AuthenticatedSendRoute: AuthenticatedSendRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
 }
