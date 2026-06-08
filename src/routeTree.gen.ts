@@ -26,6 +26,7 @@ import { Route as AuthenticatedBlockedRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as ApiPublicPluginSendRouteImport } from './routes/api/public/plugin/send'
 import { Route as ApiPublicPluginSelectDeviceRouteImport } from './routes/api/public/plugin/select-device'
+import { Route as ApiPublicPluginHeartbeatRouteImport } from './routes/api/public/plugin/heartbeat'
 import { Route as ApiPublicPluginDevicesRouteImport } from './routes/api/public/plugin/devices'
 import { Route as ApiPublicPluginActivateRouteImport } from './routes/api/public/plugin/activate'
 import { Route as ApiPublicCronTickRouteImport } from './routes/api/public/cron/tick'
@@ -115,6 +116,12 @@ const ApiPublicPluginSelectDeviceRoute =
     path: '/api/public/plugin/select-device',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicPluginHeartbeatRoute =
+  ApiPublicPluginHeartbeatRouteImport.update({
+    id: '/api/public/plugin/heartbeat',
+    path: '/api/public/plugin/heartbeat',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPluginDevicesRoute = ApiPublicPluginDevicesRouteImport.update({
   id: '/api/public/plugin/devices',
   path: '/api/public/plugin/devices',
@@ -149,6 +156,7 @@ export interface FileRoutesByFullPath {
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
   '/api/public/plugin/activate': typeof ApiPublicPluginActivateRoute
   '/api/public/plugin/devices': typeof ApiPublicPluginDevicesRoute
+  '/api/public/plugin/heartbeat': typeof ApiPublicPluginHeartbeatRoute
   '/api/public/plugin/select-device': typeof ApiPublicPluginSelectDeviceRoute
   '/api/public/plugin/send': typeof ApiPublicPluginSendRoute
 }
@@ -170,6 +178,7 @@ export interface FileRoutesByTo {
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
   '/api/public/plugin/activate': typeof ApiPublicPluginActivateRoute
   '/api/public/plugin/devices': typeof ApiPublicPluginDevicesRoute
+  '/api/public/plugin/heartbeat': typeof ApiPublicPluginHeartbeatRoute
   '/api/public/plugin/select-device': typeof ApiPublicPluginSelectDeviceRoute
   '/api/public/plugin/send': typeof ApiPublicPluginSendRoute
 }
@@ -193,6 +202,7 @@ export interface FileRoutesById {
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
   '/api/public/plugin/activate': typeof ApiPublicPluginActivateRoute
   '/api/public/plugin/devices': typeof ApiPublicPluginDevicesRoute
+  '/api/public/plugin/heartbeat': typeof ApiPublicPluginHeartbeatRoute
   '/api/public/plugin/select-device': typeof ApiPublicPluginSelectDeviceRoute
   '/api/public/plugin/send': typeof ApiPublicPluginSendRoute
 }
@@ -216,6 +226,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/tick'
     | '/api/public/plugin/activate'
     | '/api/public/plugin/devices'
+    | '/api/public/plugin/heartbeat'
     | '/api/public/plugin/select-device'
     | '/api/public/plugin/send'
   fileRoutesByTo: FileRoutesByTo
@@ -237,6 +248,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/tick'
     | '/api/public/plugin/activate'
     | '/api/public/plugin/devices'
+    | '/api/public/plugin/heartbeat'
     | '/api/public/plugin/select-device'
     | '/api/public/plugin/send'
   id:
@@ -259,6 +271,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/tick'
     | '/api/public/plugin/activate'
     | '/api/public/plugin/devices'
+    | '/api/public/plugin/heartbeat'
     | '/api/public/plugin/select-device'
     | '/api/public/plugin/send'
   fileRoutesById: FileRoutesById
@@ -270,6 +283,7 @@ export interface RootRouteChildren {
   ApiPublicCronTickRoute: typeof ApiPublicCronTickRoute
   ApiPublicPluginActivateRoute: typeof ApiPublicPluginActivateRoute
   ApiPublicPluginDevicesRoute: typeof ApiPublicPluginDevicesRoute
+  ApiPublicPluginHeartbeatRoute: typeof ApiPublicPluginHeartbeatRoute
   ApiPublicPluginSelectDeviceRoute: typeof ApiPublicPluginSelectDeviceRoute
   ApiPublicPluginSendRoute: typeof ApiPublicPluginSendRoute
 }
@@ -395,6 +409,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPluginSelectDeviceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/plugin/heartbeat': {
+      id: '/api/public/plugin/heartbeat'
+      path: '/api/public/plugin/heartbeat'
+      fullPath: '/api/public/plugin/heartbeat'
+      preLoaderRoute: typeof ApiPublicPluginHeartbeatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/plugin/devices': {
       id: '/api/public/plugin/devices'
       path: '/api/public/plugin/devices'
@@ -459,6 +480,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCronTickRoute: ApiPublicCronTickRoute,
   ApiPublicPluginActivateRoute: ApiPublicPluginActivateRoute,
   ApiPublicPluginDevicesRoute: ApiPublicPluginDevicesRoute,
+  ApiPublicPluginHeartbeatRoute: ApiPublicPluginHeartbeatRoute,
   ApiPublicPluginSelectDeviceRoute: ApiPublicPluginSelectDeviceRoute,
   ApiPublicPluginSendRoute: ApiPublicPluginSendRoute,
 }
