@@ -136,10 +136,34 @@ export const createCampaign = createServerFn({ method: "POST" })
     return { ...camp, total_recipients: filtered.length };
   });
 
+async function assertCampaignManager(supabase: any, userId: string, campaignId: string) {
+  const { data: camp, error } = await supabase
+    .from("campaigns")
+    .select("id, brand_id, created_by")
+    .eq("id", campaignId)
+    .maybeSingle();
+  if (error || !camp) throw new Error("Campaign not found");
+  if (camp.created_by === userId) return camp;
+  const { data: roles } = await supabase
+    .from("user_roles").select("role").eq("user_id", userId).eq("role", "owner").maybeSingle();
+  if (roles) return camp;
+  const { data: mem } = await supabase
+    .from("brand_members")
+    .select("role")
+    .eq("brand_id", camp.brand_id)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!mem || (mem.role !== "brand_admin" && mem.role !== "brand_owner")) {
+    throw new Error("Not authorized for this campaign");
+  }
+  return camp;
+}
+
 export const deleteCampaign = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
+    await assertCampaignManager(context.supabase, context.userId, data.id);
     const { error } = await context.supabase.from("campaigns").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -154,6 +178,7 @@ export const setCampaignStatus = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
+    await assertCampaignManager(context.supabase, context.userId, data.id);
     const patch: Record<string, any> = { status: data.status };
     if (data.status === "running") patch.started_at = new Date().toISOString();
     if (data.status === "completed") patch.completed_at = new Date().toISOString();
@@ -191,6 +216,7 @@ export const runCampaignChunk = createServerFn({ method: "POST" })
       .select("id, status, device_id, min_delay_seconds, max_delay_seconds, daily_limit, send_window_start, send_window_end, sent_count, failed_count")
       .eq("id", data.id)
       .single();
+    await assertCampaignManager(context.supabase, context.userId, data.id);
     if (cErr || !camp) throw new Error("Campaign not found");
     if (camp.status === "paused") return { ran: 0, reason: "paused" };
     if (camp.status === "completed" || camp.status === "failed") return { ran: 0, reason: camp.status };
