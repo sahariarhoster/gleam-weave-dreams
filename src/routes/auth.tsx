@@ -36,11 +36,11 @@ function AuthPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background via-background to-accent/40 p-4">
-      <div className="w-full max-w-md">
-        <div className="mb-8 flex items-center justify-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
-            <MessageCircle className="h-6 w-6" />
+    <div className="flex min-h-screen justify-center bg-gradient-to-br from-background via-background to-accent/40 px-4 py-10 sm:py-14">
+      <div className="w-full max-w-sm">
+        <div className="mb-5 flex items-center justify-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-md shadow-primary/25">
+            <MessageCircle className="h-5 w-5" />
           </div>
           <div>
             <h1 className="text-xl font-semibold tracking-tight">WA Notifier</h1>
@@ -48,13 +48,13 @@ function AuthPage() {
           </div>
         </div>
 
-        <Card className="border-border/60 shadow-xl">
-          <CardHeader>
+        <Card className="border-border/60 shadow-lg">
+          <CardHeader className="pb-3">
             <CardTitle>Welcome</CardTitle>
             <CardDescription>Sign in to manage your devices and campaigns.</CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={signIn} className="space-y-4">
+            <form onSubmit={signIn} className="space-y-3.5">
               <div className="space-y-2">
                 <Label htmlFor="si-email">Email</Label>
                 <Input id="si-email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
