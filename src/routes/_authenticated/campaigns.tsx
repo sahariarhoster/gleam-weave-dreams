@@ -279,30 +279,53 @@ function NewCampaignDialog({ onDone }: { onDone: () => void }) {
         <div className="space-y-2 rounded-md border p-3">
           <Label>Sending Mode</Label>
           <div className="grid grid-cols-2 gap-2">
-            <button type="button" onClick={() => setForm({ ...form, send_mode: "direct" })}
+            <button type="button" onClick={() => pickMode("direct")}
               className={`rounded-md border p-3 text-left text-sm ${form.send_mode === "direct" ? "border-primary bg-primary/5" : "border-border"}`}>
               <div className="font-medium">Direct Mode</div>
               <div className="text-xs text-muted-foreground">Fastest — no delays. Higher ban risk.</div>
             </button>
-            <button type="button" onClick={() => setForm({ ...form, send_mode: "safety_basic" })}
+            <button type="button" onClick={() => pickMode("safety_basic")}
               className={`rounded-md border p-3 text-left text-sm ${form.send_mode !== "direct" ? "border-primary bg-primary/5" : "border-border"}`}>
               <div className="font-medium">Safety Mode</div>
-              <div className="text-xs text-muted-foreground">Adds delays + daily limit to protect your account.</div>
+              <div className="text-xs text-muted-foreground">Adds delays to protect your account.</div>
             </button>
           </div>
           {form.send_mode !== "direct" && (
-            <div className="grid grid-cols-2 gap-2 pt-1">
-              <button type="button" onClick={() => setForm({ ...form, send_mode: "safety_basic" })}
-                className={`rounded-md border p-2.5 text-left text-xs ${form.send_mode === "safety_basic" ? "border-emerald-500 bg-emerald-50" : "border-border"}`}>
-                <div className="font-medium">Basic Protection</div>
-                <div className="text-muted-foreground">5–15s delay · 500/day · 9am–9pm</div>
-              </button>
-              <button type="button" onClick={() => setForm({ ...form, send_mode: "safety_max" })}
-                className={`rounded-md border p-2.5 text-left text-xs ${form.send_mode === "safety_max" ? "border-emerald-500 bg-emerald-50" : "border-border"}`}>
-                <div className="font-medium">Max Protection</div>
-                <div className="text-muted-foreground">20–60s delay · 200/day · 10am–8pm</div>
-              </button>
-            </div>
+            <>
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <button type="button" onClick={() => pickMode("safety_basic")}
+                  className={`rounded-md border p-2.5 text-left text-xs ${form.send_mode === "safety_basic" ? "border-emerald-500 bg-emerald-50" : "border-border"}`}>
+                  <div className="font-medium">Basic Protection</div>
+                  <div className="text-muted-foreground">5–15s delay</div>
+                </button>
+                <button type="button" onClick={() => pickMode("safety_max")}
+                  className={`rounded-md border p-2.5 text-left text-xs ${form.send_mode === "safety_max" ? "border-emerald-500 bg-emerald-50" : "border-border"}`}>
+                  <div className="font-medium">Max Protection</div>
+                  <div className="text-muted-foreground">20–60s delay</div>
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-2 pt-2">
+                <div className="space-y-1"><Label className="text-xs">Min Delay (s)</Label>
+                  <Input type="number" min={0} value={form.min_delay_seconds}
+                    onChange={(e) => setForm({ ...form, min_delay_seconds: Number(e.target.value) })} />
+                </div>
+                <div className="space-y-1"><Label className="text-xs">Max Delay (s)</Label>
+                  <Input type="number" min={0} value={form.max_delay_seconds}
+                    onChange={(e) => setForm({ ...form, max_delay_seconds: Number(e.target.value) })} />
+                </div>
+                <div className="space-y-1"><Label className="text-xs">Window Start</Label>
+                  <Input type="time" value={form.send_window_start}
+                    onChange={(e) => setForm({ ...form, send_window_start: e.target.value })} />
+                </div>
+                <div className="space-y-1"><Label className="text-xs">Window End</Label>
+                  <Input type="time" value={form.send_window_end}
+                    onChange={(e) => setForm({ ...form, send_window_end: e.target.value })} />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                ≈ {estimatedDaily.toLocaleString()} messages/day (auto-calculated from delay × time window)
+              </p>
+            </>
           )}
         </div>
         <div className="space-y-1.5"><Label>Schedule At (optional)</Label>
