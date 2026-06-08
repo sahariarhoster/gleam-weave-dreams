@@ -1,7 +1,161 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Soon } from "./brands";
+import { useServerFn } from "@tanstack/react-start";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { Users, ShieldCheck, UserPlus, X } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { listUsers, setUserRole, addBrandMember, removeBrandMember } from "@/lib/users.functions";
+import { listBrandsLite } from "@/lib/brands.functions";
 
 export const Route = createFileRoute("/_authenticated/users")({
   head: () => ({ meta: [{ title: "Users — WA Notifier" }] }),
-  component: () => <Soon title="Users" description="Invite users and scope them to brands as brand admin or sender." />,
+  component: UsersPage,
 });
+
+function UsersPage() {
+  const qc = useQueryClient();
+  const fnList = useServerFn(listUsers);
+  const fnBrands = useServerFn(listBrandsLite);
+  const fnSetRole = useServerFn(setUserRole);
+  const fnRemove = useServerFn(removeBrandMember);
+  const users = useQuery({ queryKey: ["users"], queryFn: () => fnList() });
+  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => fnBrands() });
+
+  const roleMut = useMutation({
+    mutationFn: (v: { user_id: string; role: "owner" | "member" }) => fnSetRole({ data: v }),
+    onSuccess: () => { toast.success("Role updated"); qc.invalidateQueries({ queryKey: ["users"] }); },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const removeMut = useMutation({
+    mutationFn: (v: { user_id: string; brand_id: string }) => fnRemove({ data: v }),
+    onSuccess: () => { toast.success("Removed from brand"); qc.invalidateQueries({ queryKey: ["users"] }); },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const [openFor, setOpenFor] = useState<string | null>(null);
+
+  if (users.isError) {
+    return (
+      <div className="mx-auto max-w-3xl">
+        <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">
+          <ShieldCheck className="mx-auto mb-2 h-8 w-8" />
+          Owners only. {(users.error as Error)?.message}
+        </CardContent></Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-7xl">
+      <Card className="border-border/60 shadow-sm">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base"><Users className="h-4 w-4" /> All Users</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>User</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Brand Access</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {users.isLoading && <TableRow><TableCell colSpan={5} className="py-10 text-center text-sm text-muted-foreground">Loading…</TableCell></TableRow>}
+              {(users.data ?? []).map((u: any) => (
+                <TableRow key={u.id}>
+                  <TableCell className="font-medium">{u.full_name || "—"}</TableCell>
+                  <TableCell className="text-sm">{u.email}</TableCell>
+                  <TableCell>
+                    <Select
+                      value={u.roles?.[0] ?? "member"}
+                      onValueChange={(v) => roleMut.mutate({ user_id: u.id, role: v as "owner" | "member" })}
+                    >
+                      <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="owner">Owner</SelectItem>
+                        <SelectItem value="member">Member</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1">
+                      {u.memberships.length === 0 && <span className="text-xs text-muted-foreground">No brand access</span>}
+                      {u.memberships.map((m: any) => (
+                        <Badge key={m.brand_id} variant="secondary" className="gap-1 pr-1">
+                          {m.brand_name} <span className="text-[10px] opacity-70">· {m.role}</span>
+                          <button
+                            onClick={() => removeMut.mutate({ user_id: u.id, brand_id: m.brand_id })}
+                            className="ml-0.5 rounded p-0.5 hover:bg-muted-foreground/20"
+                          ><X className="h-3 w-3" /></button>
+                        </Badge>
+                      ))}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Dialog open={openFor === u.id} onOpenChange={(v) => setOpenFor(v ? u.id : null)}>
+                      <DialogTrigger asChild>
+                        <Button size="sm" variant="outline" className="gap-1"><UserPlus className="h-4 w-4" /> Add to Brand</Button>
+                      </DialogTrigger>
+                      <AddBrandDialog userId={u.id} brands={brands.data ?? []} onDone={() => { setOpenFor(null); qc.invalidateQueries({ queryKey: ["users"] }); }} />
+                    </Dialog>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function AddBrandDialog({ userId, brands, onDone }: { userId: string; brands: { id: string; name: string }[]; onDone: () => void }) {
+  const fn = useServerFn(addBrandMember);
+  const [brandId, setBrandId] = useState("");
+  const [role, setRole] = useState<"brand_admin" | "sender">("sender");
+  const mut = useMutation({
+    mutationFn: () => fn({ data: { user_id: userId, brand_id: brandId, role } }),
+    onSuccess: () => { toast.success("Added"); onDone(); },
+    onError: (e) => toast.error((e as Error).message),
+  });
+  return (
+    <DialogContent>
+      <DialogHeader><DialogTitle>Add to Brand</DialogTitle></DialogHeader>
+      <div className="space-y-3">
+        <div className="space-y-1.5"><Label>Brand</Label>
+          <Select value={brandId} onValueChange={setBrandId}>
+            <SelectTrigger><SelectValue placeholder="Pick a brand" /></SelectTrigger>
+            <SelectContent>
+              {brands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5"><Label>Brand Role</Label>
+          <Select value={role} onValueChange={(v) => setRole(v as "brand_admin" | "sender")}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="brand_admin">Brand Admin</SelectItem>
+              <SelectItem value="sender">Sender</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      <DialogFooter>
+        <Button disabled={!brandId || mut.isPending} onClick={() => mut.mutate()} className="w-full">
+          {mut.isPending ? "Adding…" : "Add"}
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  );
+}
