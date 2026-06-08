@@ -23,6 +23,7 @@ import { Route as AuthenticatedCampaignsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedBrandsRouteImport } from './routes/_authenticated/brands'
 import { Route as AuthenticatedBlockedRouteImport } from './routes/_authenticated/blocked'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
+import { Route as ApiPublicCronTickRouteImport } from './routes/api/public/cron/tick'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -93,6 +94,11 @@ const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
   path: '/activity',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicCronTickRoute = ApiPublicCronTickRouteImport.update({
+  id: '/api/public/cron/tick',
+  path: '/api/public/cron/tick',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/logs': typeof AuthenticatedLogsRoute
   '/send': typeof AuthenticatedSendRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/api/public/cron/tick': typeof ApiPublicCronTickRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/logs': typeof AuthenticatedLogsRoute
   '/send': typeof AuthenticatedSendRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/api/public/cron/tick': typeof ApiPublicCronTickRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -140,6 +148,7 @@ export interface FileRoutesById {
   '/_authenticated/logs': typeof AuthenticatedLogsRoute
   '/_authenticated/send': typeof AuthenticatedSendRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
+  '/api/public/cron/tick': typeof ApiPublicCronTickRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
     | '/logs'
     | '/send'
     | '/users'
+    | '/api/public/cron/tick'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/logs'
     | '/send'
     | '/users'
+    | '/api/public/cron/tick'
   id:
     | '__root__'
     | '/'
@@ -188,12 +199,14 @@ export interface FileRouteTypes {
     | '/_authenticated/logs'
     | '/_authenticated/send'
     | '/_authenticated/users'
+    | '/api/public/cron/tick'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicCronTickRoute: typeof ApiPublicCronTickRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -296,6 +309,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedActivityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/cron/tick': {
+      id: '/api/public/cron/tick'
+      path: '/api/public/cron/tick'
+      fullPath: '/api/public/cron/tick'
+      preLoaderRoute: typeof ApiPublicCronTickRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -334,6 +354,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicCronTickRoute: ApiPublicCronTickRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
