@@ -37,6 +37,7 @@ function LandingPage() {
         <ProtectionSection />
         <Testimonials />
         <PricingSection />
+        <CompareSection />
         <FinalCta />
       </main>
       <Footer />
