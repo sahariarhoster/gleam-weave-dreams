@@ -47,9 +47,12 @@ function DevicesPage() {
   const fnBrands = useServerFn(listBrandsLite);
   const fnTest = useServerFn(testDeviceConnection);
   const fnDelete = useServerFn(deleteDevice);
+  const fnRoles = useServerFn(getMyRoles);
 
   const devices = useQuery({ queryKey: ["devices"], queryFn: () => fnList() });
   const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => fnBrands() });
+  const roles = useQuery({ queryKey: ["my-roles"], queryFn: () => fnRoles() });
+  const isOwner = (roles.data ?? []).includes("owner");
 
   const [editing, setEditing] = useState<Device | null>(null);
   const [open, setOpen] = useState(false);
