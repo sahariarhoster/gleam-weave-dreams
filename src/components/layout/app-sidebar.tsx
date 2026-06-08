@@ -13,7 +13,7 @@ import {
   Contact,
   FolderOpen,
   KeyRound,
-  
+  CreditCard,
 } from "lucide-react";
 import {
   Sidebar,
@@ -45,6 +45,7 @@ const items = [
   { title: "Blocked Numbers", url: "/blocked", icon: Ban },
   { title: "Activity Log", url: "/activity", icon: ScrollText },
   { title: "Plugin Licenses", url: "/licenses", icon: KeyRound, brandOwnerOrOwner: true },
+  { title: "Billing (WHMCS)", url: "/billing", icon: CreditCard, ownerOnly: true },
 
 ] as const;
 

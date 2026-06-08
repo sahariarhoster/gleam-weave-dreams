@@ -24,7 +24,13 @@ import { Route as AuthenticatedContactsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCampaignsRouteImport } from './routes/_authenticated/campaigns'
 import { Route as AuthenticatedBrandsRouteImport } from './routes/_authenticated/brands'
 import { Route as AuthenticatedBlockedRouteImport } from './routes/_authenticated/blocked'
+import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
+import { Route as ApiPublicWhmcsUpdateRouteImport } from './routes/api/public/whmcs/update'
+import { Route as ApiPublicWhmcsUnsuspendRouteImport } from './routes/api/public/whmcs/unsuspend'
+import { Route as ApiPublicWhmcsTerminateRouteImport } from './routes/api/public/whmcs/terminate'
+import { Route as ApiPublicWhmcsSuspendRouteImport } from './routes/api/public/whmcs/suspend'
+import { Route as ApiPublicWhmcsProvisionRouteImport } from './routes/api/public/whmcs/provision'
 import { Route as ApiPublicPluginUpdateCheckRouteImport } from './routes/api/public/plugin/update-check'
 import { Route as ApiPublicPluginStatsRouteImport } from './routes/api/public/plugin/stats'
 import { Route as ApiPublicPluginSendRouteImport } from './routes/api/public/plugin/send'
@@ -108,10 +114,40 @@ const AuthenticatedBlockedRoute = AuthenticatedBlockedRouteImport.update({
   path: '/blocked',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedBillingRoute = AuthenticatedBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
   id: '/activity',
   path: '/activity',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiPublicWhmcsUpdateRoute = ApiPublicWhmcsUpdateRouteImport.update({
+  id: '/api/public/whmcs/update',
+  path: '/api/public/whmcs/update',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicWhmcsUnsuspendRoute = ApiPublicWhmcsUnsuspendRouteImport.update({
+  id: '/api/public/whmcs/unsuspend',
+  path: '/api/public/whmcs/unsuspend',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicWhmcsTerminateRoute = ApiPublicWhmcsTerminateRouteImport.update({
+  id: '/api/public/whmcs/terminate',
+  path: '/api/public/whmcs/terminate',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicWhmcsSuspendRoute = ApiPublicWhmcsSuspendRouteImport.update({
+  id: '/api/public/whmcs/suspend',
+  path: '/api/public/whmcs/suspend',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicWhmcsProvisionRoute = ApiPublicWhmcsProvisionRouteImport.update({
+  id: '/api/public/whmcs/provision',
+  path: '/api/public/whmcs/provision',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicPluginUpdateCheckRoute =
   ApiPublicPluginUpdateCheckRouteImport.update({
@@ -161,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/activity': typeof AuthenticatedActivityRoute
+  '/billing': typeof AuthenticatedBillingRoute
   '/blocked': typeof AuthenticatedBlockedRoute
   '/brands': typeof AuthenticatedBrandsRoute
   '/campaigns': typeof AuthenticatedCampaignsRoute
@@ -181,11 +218,17 @@ export interface FileRoutesByFullPath {
   '/api/public/plugin/send': typeof ApiPublicPluginSendRoute
   '/api/public/plugin/stats': typeof ApiPublicPluginStatsRoute
   '/api/public/plugin/update-check': typeof ApiPublicPluginUpdateCheckRoute
+  '/api/public/whmcs/provision': typeof ApiPublicWhmcsProvisionRoute
+  '/api/public/whmcs/suspend': typeof ApiPublicWhmcsSuspendRoute
+  '/api/public/whmcs/terminate': typeof ApiPublicWhmcsTerminateRoute
+  '/api/public/whmcs/unsuspend': typeof ApiPublicWhmcsUnsuspendRoute
+  '/api/public/whmcs/update': typeof ApiPublicWhmcsUpdateRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/activity': typeof AuthenticatedActivityRoute
+  '/billing': typeof AuthenticatedBillingRoute
   '/blocked': typeof AuthenticatedBlockedRoute
   '/brands': typeof AuthenticatedBrandsRoute
   '/campaigns': typeof AuthenticatedCampaignsRoute
@@ -206,6 +249,11 @@ export interface FileRoutesByTo {
   '/api/public/plugin/send': typeof ApiPublicPluginSendRoute
   '/api/public/plugin/stats': typeof ApiPublicPluginStatsRoute
   '/api/public/plugin/update-check': typeof ApiPublicPluginUpdateCheckRoute
+  '/api/public/whmcs/provision': typeof ApiPublicWhmcsProvisionRoute
+  '/api/public/whmcs/suspend': typeof ApiPublicWhmcsSuspendRoute
+  '/api/public/whmcs/terminate': typeof ApiPublicWhmcsTerminateRoute
+  '/api/public/whmcs/unsuspend': typeof ApiPublicWhmcsUnsuspendRoute
+  '/api/public/whmcs/update': typeof ApiPublicWhmcsUpdateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -213,6 +261,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
+  '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/blocked': typeof AuthenticatedBlockedRoute
   '/_authenticated/brands': typeof AuthenticatedBrandsRoute
   '/_authenticated/campaigns': typeof AuthenticatedCampaignsRoute
@@ -233,6 +282,11 @@ export interface FileRoutesById {
   '/api/public/plugin/send': typeof ApiPublicPluginSendRoute
   '/api/public/plugin/stats': typeof ApiPublicPluginStatsRoute
   '/api/public/plugin/update-check': typeof ApiPublicPluginUpdateCheckRoute
+  '/api/public/whmcs/provision': typeof ApiPublicWhmcsProvisionRoute
+  '/api/public/whmcs/suspend': typeof ApiPublicWhmcsSuspendRoute
+  '/api/public/whmcs/terminate': typeof ApiPublicWhmcsTerminateRoute
+  '/api/public/whmcs/unsuspend': typeof ApiPublicWhmcsUnsuspendRoute
+  '/api/public/whmcs/update': typeof ApiPublicWhmcsUpdateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -240,6 +294,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/activity'
+    | '/billing'
     | '/blocked'
     | '/brands'
     | '/campaigns'
@@ -260,11 +315,17 @@ export interface FileRouteTypes {
     | '/api/public/plugin/send'
     | '/api/public/plugin/stats'
     | '/api/public/plugin/update-check'
+    | '/api/public/whmcs/provision'
+    | '/api/public/whmcs/suspend'
+    | '/api/public/whmcs/terminate'
+    | '/api/public/whmcs/unsuspend'
+    | '/api/public/whmcs/update'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/activity'
+    | '/billing'
     | '/blocked'
     | '/brands'
     | '/campaigns'
@@ -285,12 +346,18 @@ export interface FileRouteTypes {
     | '/api/public/plugin/send'
     | '/api/public/plugin/stats'
     | '/api/public/plugin/update-check'
+    | '/api/public/whmcs/provision'
+    | '/api/public/whmcs/suspend'
+    | '/api/public/whmcs/terminate'
+    | '/api/public/whmcs/unsuspend'
+    | '/api/public/whmcs/update'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/activity'
+    | '/_authenticated/billing'
     | '/_authenticated/blocked'
     | '/_authenticated/brands'
     | '/_authenticated/campaigns'
@@ -311,6 +378,11 @@ export interface FileRouteTypes {
     | '/api/public/plugin/send'
     | '/api/public/plugin/stats'
     | '/api/public/plugin/update-check'
+    | '/api/public/whmcs/provision'
+    | '/api/public/whmcs/suspend'
+    | '/api/public/whmcs/terminate'
+    | '/api/public/whmcs/unsuspend'
+    | '/api/public/whmcs/update'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -325,6 +397,11 @@ export interface RootRouteChildren {
   ApiPublicPluginSendRoute: typeof ApiPublicPluginSendRoute
   ApiPublicPluginStatsRoute: typeof ApiPublicPluginStatsRoute
   ApiPublicPluginUpdateCheckRoute: typeof ApiPublicPluginUpdateCheckRoute
+  ApiPublicWhmcsProvisionRoute: typeof ApiPublicWhmcsProvisionRoute
+  ApiPublicWhmcsSuspendRoute: typeof ApiPublicWhmcsSuspendRoute
+  ApiPublicWhmcsTerminateRoute: typeof ApiPublicWhmcsTerminateRoute
+  ApiPublicWhmcsUnsuspendRoute: typeof ApiPublicWhmcsUnsuspendRoute
+  ApiPublicWhmcsUpdateRoute: typeof ApiPublicWhmcsUpdateRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -434,12 +511,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBlockedRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/billing': {
+      id: '/_authenticated/billing'
+      path: '/billing'
+      fullPath: '/billing'
+      preLoaderRoute: typeof AuthenticatedBillingRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/activity': {
       id: '/_authenticated/activity'
       path: '/activity'
       fullPath: '/activity'
       preLoaderRoute: typeof AuthenticatedActivityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/whmcs/update': {
+      id: '/api/public/whmcs/update'
+      path: '/api/public/whmcs/update'
+      fullPath: '/api/public/whmcs/update'
+      preLoaderRoute: typeof ApiPublicWhmcsUpdateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/whmcs/unsuspend': {
+      id: '/api/public/whmcs/unsuspend'
+      path: '/api/public/whmcs/unsuspend'
+      fullPath: '/api/public/whmcs/unsuspend'
+      preLoaderRoute: typeof ApiPublicWhmcsUnsuspendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/whmcs/terminate': {
+      id: '/api/public/whmcs/terminate'
+      path: '/api/public/whmcs/terminate'
+      fullPath: '/api/public/whmcs/terminate'
+      preLoaderRoute: typeof ApiPublicWhmcsTerminateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/whmcs/suspend': {
+      id: '/api/public/whmcs/suspend'
+      path: '/api/public/whmcs/suspend'
+      fullPath: '/api/public/whmcs/suspend'
+      preLoaderRoute: typeof ApiPublicWhmcsSuspendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/whmcs/provision': {
+      id: '/api/public/whmcs/provision'
+      path: '/api/public/whmcs/provision'
+      fullPath: '/api/public/whmcs/provision'
+      preLoaderRoute: typeof ApiPublicWhmcsProvisionRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/plugin/update-check': {
       id: '/api/public/plugin/update-check'
@@ -502,6 +621,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
+  AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedBlockedRoute: typeof AuthenticatedBlockedRoute
   AuthenticatedBrandsRoute: typeof AuthenticatedBrandsRoute
   AuthenticatedCampaignsRoute: typeof AuthenticatedCampaignsRoute
@@ -518,6 +638,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActivityRoute: AuthenticatedActivityRoute,
+  AuthenticatedBillingRoute: AuthenticatedBillingRoute,
   AuthenticatedBlockedRoute: AuthenticatedBlockedRoute,
   AuthenticatedBrandsRoute: AuthenticatedBrandsRoute,
   AuthenticatedCampaignsRoute: AuthenticatedCampaignsRoute,
@@ -547,6 +668,11 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPluginSendRoute: ApiPublicPluginSendRoute,
   ApiPublicPluginStatsRoute: ApiPublicPluginStatsRoute,
   ApiPublicPluginUpdateCheckRoute: ApiPublicPluginUpdateCheckRoute,
+  ApiPublicWhmcsProvisionRoute: ApiPublicWhmcsProvisionRoute,
+  ApiPublicWhmcsSuspendRoute: ApiPublicWhmcsSuspendRoute,
+  ApiPublicWhmcsTerminateRoute: ApiPublicWhmcsTerminateRoute,
+  ApiPublicWhmcsUnsuspendRoute: ApiPublicWhmcsUnsuspendRoute,
+  ApiPublicWhmcsUpdateRoute: ApiPublicWhmcsUpdateRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

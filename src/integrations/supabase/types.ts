@@ -568,6 +568,7 @@ export type Database = {
           plugin_tested_wp: string | null
           plugin_version: string
           updated_at: string
+          whmcs_api_token: string | null
         }
         Insert: {
           id?: boolean
@@ -579,6 +580,7 @@ export type Database = {
           plugin_tested_wp?: string | null
           plugin_version?: string
           updated_at?: string
+          whmcs_api_token?: string | null
         }
         Update: {
           id?: boolean
@@ -590,6 +592,7 @@ export type Database = {
           plugin_tested_wp?: string | null
           plugin_version?: string
           updated_at?: string
+          whmcs_api_token?: string | null
         }
         Relationships: []
       }
