@@ -59,6 +59,20 @@ async function ensureContactInWordpressGroup(
     .upsert({ group_id: group.id, contact_id: contact.id }, { onConflict: "group_id,contact_id" });
 }
 
+// ---- Ban-protection knobs (tuned conservatively) ----
+const PER_RECIPIENT_COOLDOWN_SEC = 60;     // min gap between sends to same number
+const DEDUPE_WINDOW_SEC = 600;             // identical message+recipient within 10min => block
+const PER_BRAND_PER_MINUTE = 20;           // soft cap, brand-wide
+const PER_BRAND_PER_HOUR = 400;            // soft cap, brand-wide
+const MIN_JITTER_MS = 250;
+const MAX_JITTER_MS = 1200;
+
+function hashMsg(s: string) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) - h + s.charCodeAt(i)) | 0;
+  return h.toString(36);
+}
+
 export const Route = createFileRoute("/api/public/plugin/send")({
   server: {
     handlers: {
@@ -75,13 +89,92 @@ export const Route = createFileRoute("/api/public/plugin/send")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data: device, error } = await supabaseAdmin
           .from("devices")
-          .select("api_secret, device_unique_id, brand_id")
+          .select("api_secret, device_unique_id, brand_id, status")
           .eq("id", lic.device_id)
           .maybeSingle();
         if (error || !device) return jsonResponse({ error: "Device not found" }, 404);
+        if (device.status === "disconnected" || device.status === "inactive") {
+          return jsonResponse({ error: "Device is not available" }, 503);
+        }
 
         let recipient = parsed.data.recipient.trim();
         if (!recipient.startsWith("+")) recipient = "+880" + recipient.replace(/^0+/, "");
+        // Strip everything but + and digits — defensive against junk that could be abused
+        recipient = "+" + recipient.replace(/[^\d]/g, "");
+        if (recipient.length < 8 || recipient.length > 18) {
+          return jsonResponse({ error: "Invalid recipient" }, 400);
+        }
+
+        const brandId = device.brand_id ?? null;
+
+        // 1) Blocked-number list (per brand)
+        if (brandId) {
+          const { data: blocked } = await supabaseAdmin
+            .from("blocked_numbers")
+            .select("id")
+            .eq("brand_id", brandId)
+            .eq("phone", recipient)
+            .maybeSingle();
+          if (blocked) return jsonResponse({ error: "Recipient is blocked" }, 403);
+        }
+
+        // 2) Pull recent plugin_send activity for rate-limit & dedupe checks
+        const hourAgo = new Date(Date.now() - 3600_000).toISOString();
+        const recentQ = supabaseAdmin
+          .from("activity_log")
+          .select("created_at, details")
+          .eq("action", "plugin_send")
+          .gte("created_at", hourAgo)
+          .order("created_at", { ascending: false })
+          .limit(1000);
+        if (brandId) recentQ.eq("brand_id", brandId);
+        const { data: recent } = await recentQ;
+        const rows = (recent ?? []) as Array<{ created_at: string; details: any }>;
+
+        const now = Date.now();
+        const msgHash = hashMsg(parsed.data.message);
+
+        let perMinute = 0;
+        let perHour = rows.length;
+        let lastToRecipient = 0;
+        let dedupeHit = false;
+        for (const r of rows) {
+          const t = new Date(r.created_at).getTime();
+          if (now - t <= 60_000) perMinute++;
+          if (r.details?.recipient === recipient) {
+            if (t > lastToRecipient) lastToRecipient = t;
+            if (
+              r.details?.msg_hash === msgHash &&
+              now - t <= DEDUPE_WINDOW_SEC * 1000
+            ) {
+              dedupeHit = true;
+            }
+          }
+        }
+
+        if (dedupeHit) {
+          return jsonResponse(
+            { error: "Duplicate message suppressed (ban protection)" },
+            429,
+          );
+        }
+        if (lastToRecipient && now - lastToRecipient < PER_RECIPIENT_COOLDOWN_SEC * 1000) {
+          const retry = Math.ceil((PER_RECIPIENT_COOLDOWN_SEC * 1000 - (now - lastToRecipient)) / 1000);
+          return jsonResponse(
+            { error: "Recipient cooldown active", retry_after: retry },
+            429,
+          );
+        }
+        if (perMinute >= PER_BRAND_PER_MINUTE) {
+          return jsonResponse({ error: "Per-minute send limit reached", retry_after: 60 }, 429);
+        }
+        if (perHour >= PER_BRAND_PER_HOUR) {
+          return jsonResponse({ error: "Hourly send limit reached", retry_after: 3600 }, 429);
+        }
+
+        // 3) Human-like jitter so bursts don't look bot-like
+        const jitter = MIN_JITTER_MS + Math.floor(Math.random() * (MAX_JITTER_MS - MIN_JITTER_MS));
+        await new Promise((r) => setTimeout(r, jitter));
 
         const { bdwebs } = await import("@/lib/bdwebs.server");
         const res = await bdwebs.sendWhatsApp({
@@ -91,24 +184,31 @@ export const Route = createFileRoute("/api/public/plugin/send")({
           message: parsed.data.message,
         });
 
-        // Auto-add contact to WordPress group (best-effort, never blocks send)
+        // Auto-add contact (best-effort)
         try {
-          if (device.brand_id) {
+          if (brandId) {
             await ensureContactInWordpressGroup(
               supabaseAdmin,
-              device.brand_id,
+              brandId,
               recipient,
               parsed.data.customer_name,
             );
           }
-        } catch (e) {
-          // swallow — don't fail the send because of contact bookkeeping
+        } catch {
+          // ignore bookkeeping errors
         }
 
         await supabaseAdmin.from("activity_log").insert({
-          brand_id: device.brand_id ?? null,
+          brand_id: brandId,
           action: "plugin_send",
-          details: { recipient, status: res.status, message: res.message, license_id: lic.id },
+          details: {
+            recipient,
+            status: res.status,
+            message: res.message,
+            license_id: lic.id,
+            msg_hash: msgHash,
+            jitter_ms: jitter,
+          },
         });
         await supabaseAdmin
           .from("plugin_licenses")
