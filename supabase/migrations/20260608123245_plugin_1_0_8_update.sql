@@ -1,0 +1,5 @@
+UPDATE public.system_settings
+SET
+  plugin_version = '1.0.8',
+  plugin_changelog = 'v1.0.8 — Fixed duplicate dashboard rendering and made the Update Now button prime WordPress update data before opening the updater.',
+  updated_at = now();
