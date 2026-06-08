@@ -123,6 +123,7 @@ export type Database = {
           device_limit: number
           expires_at: string | null
           id: string
+          license_limit: number
           message_limit: number | null
           name: string
           status: Database["public"]["Enums"]["brand_status"]
@@ -134,6 +135,7 @@ export type Database = {
           device_limit?: number
           expires_at?: string | null
           id?: string
+          license_limit?: number
           message_limit?: number | null
           name: string
           status?: Database["public"]["Enums"]["brand_status"]
@@ -145,6 +147,7 @@ export type Database = {
           device_limit?: number
           expires_at?: string | null
           id?: string
+          license_limit?: number
           message_limit?: number | null
           name?: string
           status?: Database["public"]["Enums"]["brand_status"]
