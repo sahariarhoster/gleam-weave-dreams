@@ -101,7 +101,7 @@ function DevicesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Name</TableHead>
-                <TableHead>Device ID</TableHead>
+                {isOwner && <TableHead>Device ID</TableHead>}
                 <TableHead>SIM</TableHead>
                 <TableHead>Linked Brand</TableHead>
                 <TableHead>Status</TableHead>
