@@ -108,10 +108,10 @@ function DashboardPage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <RadialBarChart
                     innerRadius="70%" outerRadius="100%"
-                    data={[{ name: "rate", value: rate, fill: "hsl(var(--primary))" }]}
+                    data={[{ name: "rate", value: rate, fill: "var(--primary)" }]}
                     startAngle={90} endAngle={-270}
                   >
-                    <RadialBar background={{ fill: "hsl(var(--muted))" }} dataKey="value" cornerRadius={10} />
+                    <RadialBar background={{ fill: "var(--muted)" }} dataKey="value" cornerRadius={10} />
                   </RadialBarChart>
                 </ResponsiveContainer>
               </ClientOnly>
