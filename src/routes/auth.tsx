@@ -32,8 +32,8 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard" });
+    supabase.auth.getUser().then(({ data, error }) => {
+      if (!error && data.user) navigate({ to: "/dashboard", replace: true });
     });
   }, [navigate]);
 
@@ -46,8 +46,7 @@ function AuthPage() {
       return toast.error(error.message);
     }
     toast.success("Welcome back!");
-    // Hard navigation avoids the extra SSR roundtrip on shared hosting
-    window.location.assign("/dashboard");
+    navigate({ to: "/dashboard", replace: true });
   }
 
   async function forgot() {
