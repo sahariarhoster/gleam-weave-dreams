@@ -212,14 +212,27 @@ async function isOwner(supabase: any, userId: string): Promise<boolean> {
   return !!data;
 }
 
+async function isBrandOwnerRole(supabase: any, userId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "brand_owner")
+    .maybeSingle();
+  return !!data;
+}
+
 async function getMyBrandIds(supabase: any, userId: string): Promise<string[]> {
   if (await isOwner(supabase, userId)) {
     const { data } = await supabase.from("brands").select("id");
     return (data ?? []).map((b: any) => b.id as string);
   }
+  const includeAssignedBrands = await isBrandOwnerRole(supabase, userId);
   const [ownedRes, memberRes] = await Promise.all([
     supabase.from("brands").select("id").eq("created_by", userId),
-    supabase.from("brand_members").select("brand_id").eq("user_id", userId),
+    includeAssignedBrands
+      ? supabase.from("brand_members").select("brand_id").eq("user_id", userId)
+      : Promise.resolve({ data: [] }),
   ]);
   return Array.from(
     new Set([
