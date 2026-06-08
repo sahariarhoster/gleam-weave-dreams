@@ -99,3 +99,30 @@ export const removeBrandMember = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const impersonateUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ user_id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertOwner(context.supabase, context.userId);
+    const { data: profile, error: pErr } = await context.supabase
+      .from("profiles")
+      .select("email")
+      .eq("id", data.user_id)
+      .single();
+    if (pErr || !profile?.email) throw new Error("User not found");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: link, error } = await supabaseAdmin.auth.admin.generateLink({
+      type: "magiclink",
+      email: profile.email,
+    });
+    if (error) throw new Error(error.message);
+    const action_link = (link as any)?.properties?.action_link ?? (link as any)?.action_link;
+    if (!action_link) throw new Error("Could not create login link");
+    await context.supabase.from("activity_log").insert({
+      user_id: context.userId,
+      action: "impersonate",
+      details: { target_user_id: data.user_id, target_email: profile.email },
+    });
+    return { url: action_link as string };
+  });

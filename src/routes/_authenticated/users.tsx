@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Users, ShieldCheck, UserPlus, X } from "lucide-react";
+import { Users, ShieldCheck, UserPlus, X, LogIn } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { listUsers, setUserRole, addBrandMember, removeBrandMember } from "@/lib/users.functions";
+import { listUsers, setUserRole, addBrandMember, removeBrandMember, impersonateUser } from "@/lib/users.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { listBrandsLite } from "@/lib/brands.functions";
 
 export const Route = createFileRoute("/_authenticated/users")({
@@ -25,6 +26,7 @@ function UsersPage() {
   const fnBrands = useServerFn(listBrandsLite);
   const fnSetRole = useServerFn(setUserRole);
   const fnRemove = useServerFn(removeBrandMember);
+  const fnImpersonate = useServerFn(impersonateUser);
   const users = useQuery({ queryKey: ["users"], queryFn: () => fnList() });
   const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => fnBrands() });
 
@@ -37,6 +39,16 @@ function UsersPage() {
   const removeMut = useMutation({
     mutationFn: (v: { user_id: string; brand_id: string }) => fnRemove({ data: v }),
     onSuccess: () => { toast.success("Removed from brand"); qc.invalidateQueries({ queryKey: ["users"] }); },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const impersonateMut = useMutation({
+    mutationFn: (user_id: string) => fnImpersonate({ data: { user_id } }),
+    onSuccess: async ({ url }) => {
+      toast.info("Signing in as user…");
+      await supabase.auth.signOut();
+      window.location.href = url;
+    },
     onError: (e) => toast.error((e as Error).message),
   });
 
@@ -103,12 +115,24 @@ function UsersPage() {
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <Dialog open={openFor === u.id} onOpenChange={(v) => setOpenFor(v ? u.id : null)}>
-                      <DialogTrigger asChild>
-                        <Button size="sm" variant="outline" className="gap-1"><UserPlus className="h-4 w-4" /> Add to Brand</Button>
-                      </DialogTrigger>
-                      <AddBrandDialog userId={u.id} brands={brands.data ?? []} onDone={() => { setOpenFor(null); qc.invalidateQueries({ queryKey: ["users"] }); }} />
-                    </Dialog>
+                    <div className="flex justify-end gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="gap-1"
+                        onClick={() => impersonateMut.mutate(u.id)}
+                        disabled={impersonateMut.isPending}
+                        title="Sign in as this user"
+                      >
+                        <LogIn className="h-4 w-4" /> Login as
+                      </Button>
+                      <Dialog open={openFor === u.id} onOpenChange={(v) => setOpenFor(v ? u.id : null)}>
+                        <DialogTrigger asChild>
+                          <Button size="sm" variant="outline" className="gap-1"><UserPlus className="h-4 w-4" /> Add to Brand</Button>
+                        </DialogTrigger>
+                        <AddBrandDialog userId={u.id} brands={brands.data ?? []} onDone={() => { setOpenFor(null); qc.invalidateQueries({ queryKey: ["users"] }); }} />
+                      </Dialog>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
