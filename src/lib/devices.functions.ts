@@ -36,7 +36,7 @@ export const getDashboardStats = createServerFn({ method: "GET" })
     since.setDate(since.getDate() - 6);
     since.setHours(0, 0, 0, 0);
 
-    const [devicesQ, brandsQ, membersQ, campaignsQ, activeQ, blockedQ, msgsQ, recentMsgsQ, devicesListQ] =
+    const [devicesQ, brandsQ, membersQ, campaignsQ, activeQ, blockedQ, msgsQ, recentMsgsQ, devicesListQ, pluginAllQ, pluginRecentQ] =
       await Promise.all([
         sb.from("devices").select("*", { count: "exact", head: true }),
         sb.from("brands").select("*", { count: "exact", head: true }),
@@ -50,6 +50,8 @@ export const getDashboardStats = createServerFn({ method: "GET" })
           .select("status, created_at")
           .gte("created_at", since.toISOString()),
         sb.from("devices").select("id, name, status").order("created_at", { ascending: false }).limit(5),
+        sb.from("activity_log").select("details").eq("action", "plugin_send"),
+        sb.from("activity_log").select("details, created_at").eq("action", "plugin_send").gte("created_at", since.toISOString()),
       ]);
 
     const totals = { delivered: 0, failed: 0, pending: 0 };
@@ -57,6 +59,12 @@ export const getDashboardStats = createServerFn({ method: "GET" })
       if (m.status === "sent" || m.status === "delivered") totals.delivered++;
       else if (m.status === "failed") totals.failed++;
       else totals.pending++;
+    });
+    const pluginStatus = (d: any) => (d?.status === 200 ? "sent" : "failed");
+    (pluginAllQ.data ?? []).forEach((r: any) => {
+      const s = pluginStatus(r.details);
+      if (s === "sent") totals.delivered++;
+      else totals.failed++;
     });
 
     const series: Stats["series"] = [];
@@ -76,6 +84,15 @@ export const getDashboardStats = createServerFn({ method: "GET" })
       else slot.pending++;
       if (day === todayStr) today++;
     });
+    (pluginRecentQ.data ?? []).forEach((r: any) => {
+      const day = new Date(r.created_at).toISOString().slice(0, 10);
+      const slot = series.find((x) => x.date === day);
+      if (!slot) return;
+      if (pluginStatus(r.details) === "sent") slot.delivered++;
+      else slot.failed++;
+      if (day === todayStr) today++;
+    });
+
 
     const devicesList = (devicesListQ.data ?? []) as any[];
     const devicesOnline = devicesList.filter((d) => d.status === "active" || d.status === "online").length;
