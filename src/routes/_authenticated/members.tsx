@@ -16,7 +16,8 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { listMyBrandMembers, createBrandMemberUser, removeMyBrandMember } from "@/lib/users.functions";
+import { listMyBrandMembers, createBrandMemberUser, removeMyBrandMember, setMyBrandMemberActive, deleteMyBrandMember } from "@/lib/users.functions";
+import { Power, UserX } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/members")({
