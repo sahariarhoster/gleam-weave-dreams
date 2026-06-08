@@ -69,9 +69,27 @@ function AuthPage() {
             backgroundImage:
               "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
             backgroundSize: "44px 44px",
+            maskImage: "radial-gradient(ellipse at center, black 40%, transparent 75%)",
           }}
         />
+        {/* Meteors */}
+        {Array.from({ length: 14 }).map((_, i) => (
+          <span
+            key={i}
+            className="animate-auth-meteor absolute top-0 h-0.5 w-0.5 rounded-full bg-emerald-300 shadow-[0_0_0_1px_#ffffff10]"
+            style={{
+              top: `${Math.random() * 40 - 20}%`,
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${4 + Math.random() * 6}s`,
+              boxShadow: "0 0 8px 1px rgba(110, 231, 183, 0.6)",
+            }}
+          >
+            <span className="absolute top-1/2 -z-10 h-px w-[60px] -translate-y-1/2 bg-gradient-to-r from-emerald-300/80 to-transparent" />
+          </span>
+        ))}
       </div>
+
 
       <div className="relative mx-auto grid min-h-screen w-full max-w-6xl items-center gap-10 px-4 py-10 lg:grid-cols-2 lg:px-8">
         {/* Brand / pitch panel */}
@@ -117,6 +135,36 @@ function AuthPage() {
                 </li>
               ))}
             </ul>
+
+            {/* Animated chat preview */}
+            <div className="relative mt-2 max-w-md rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm">
+              <div className="mb-3 flex items-center justify-between text-[11px] text-slate-400">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-300">
+                    <MessageCircle className="h-3 w-3" />
+                  </span>
+                  Campaign · Black Friday
+                </div>
+                <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-emerald-300">Sending</span>
+              </div>
+              <div className="space-y-2">
+                <div className="animate-auth-bubble max-w-[80%] rounded-2xl rounded-bl-sm bg-white/10 px-3 py-2 text-xs text-slate-100" style={{ animationDelay: "0.1s" }}>
+                  Hi Sarah 👋 your order #2841 is confirmed.
+                </div>
+                <div className="animate-auth-bubble ml-auto max-w-[70%] rounded-2xl rounded-br-sm bg-emerald-500/90 px-3 py-2 text-xs text-white shadow-lg shadow-emerald-500/20" style={{ animationDelay: "0.6s" }}>
+                  Thanks! When will it ship? ✨
+                </div>
+                <div className="animate-auth-bubble max-w-[85%] rounded-2xl rounded-bl-sm bg-white/10 px-3 py-2 text-xs text-slate-100" style={{ animationDelay: "1.1s" }}>
+                  Tomorrow by 5 PM. Tracking: HC-1042
+                </div>
+              </div>
+              <div className="mt-3 flex items-center justify-between text-[10px] text-slate-500">
+                <span>Delivered to 12,408 contacts</span>
+                <span className="flex items-center gap-1 text-emerald-300">
+                  <span className="h-1 w-1 animate-pulse rounded-full bg-emerald-300" /> Live
+                </span>
+              </div>
+            </div>
           </div>
 
           <p className="text-xs text-slate-500">© {new Date().getFullYear()} Hoster Camp · WA Suite</p>
@@ -134,7 +182,12 @@ function AuthPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+          <div className="relative">
+            {/* Animated beam glow around card */}
+            <div className="pointer-events-none absolute -inset-px overflow-hidden rounded-2xl">
+              <div className="animate-auth-beam absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-emerald-400/40 to-transparent blur-md" />
+            </div>
+            <div className="relative rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-2xl backdrop-blur-xl sm:p-8">
             <div className="mb-6">
               <h3 className="text-2xl font-bold tracking-tight text-white">Welcome back</h3>
               <p className="mt-1 text-sm text-slate-400">Sign in to continue to your workspace.</p>
@@ -219,6 +272,8 @@ function AuthPage() {
               </p>
             </form>
           </div>
+          </div>
+
 
           <p className="mt-6 text-center text-xs text-slate-500">
             Need help? Contact your administrator.
