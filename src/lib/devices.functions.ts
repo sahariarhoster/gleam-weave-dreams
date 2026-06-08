@@ -91,8 +91,7 @@ export const updateDevice = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertOwner(context.supabase, context.userId);
     const { id, api_secret, ...rest } = data;
-    const patch: Record<string, unknown> = { ...rest };
-    if (api_secret && api_secret.length > 0) patch.api_secret = api_secret;
+    const patch = { ...rest, ...(api_secret && api_secret.length > 0 ? { api_secret } : {}) };
     const { error } = await context.supabase.from("devices").update(patch).eq("id", id);
     if (error) throw new Error(error.message);
     return { ok: true };
