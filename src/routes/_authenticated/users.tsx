@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { listUsers, setUserRole, addBrandMember, removeBrandMember, impersonateUser, createUser, resetUserPassword } from "@/lib/users.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { listBrandsLite } from "@/lib/brands.functions";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/users")({
   head: () => ({ meta: [{ title: "Users — WA Notifier" }] }),
