@@ -127,6 +127,53 @@ function LicensesPage() {
         </CardContent>
       </Card>
 
+      {isOwner && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <Package className="h-4 w-4" /> Plugin Release (Auto-Update)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Sites with an active license will see this version on their WordPress Plugins screen and can update with one click.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1">
+                <Label>Version (x.y.z)</Label>
+                <Input value={rel.version} onChange={(e) => setRel({ ...rel, version: e.target.value })} placeholder="1.0.1" />
+              </div>
+              <div className="space-y-1">
+                <Label>Download URL (leave blank to use /wa-notifier-woocommerce.zip)</Label>
+                <Input value={rel.url} onChange={(e) => setRel({ ...rel, url: e.target.value })} placeholder="https://..." />
+              </div>
+              <div className="space-y-1">
+                <Label>Tested up to (WP)</Label>
+                <Input value={rel.tested} onChange={(e) => setRel({ ...rel, tested: e.target.value })} placeholder="6.6" />
+              </div>
+              <div className="space-y-1">
+                <Label>Requires WP</Label>
+                <Input value={rel.requires} onChange={(e) => setRel({ ...rel, requires: e.target.value })} placeholder="6.0" />
+              </div>
+              <div className="space-y-1">
+                <Label>Requires PHP</Label>
+                <Input value={rel.requires_php} onChange={(e) => setRel({ ...rel, requires_php: e.target.value })} placeholder="7.4" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Changelog</Label>
+              <Textarea rows={4} value={rel.changelog} onChange={(e) => setRel({ ...rel, changelog: e.target.value })} placeholder="- Fixed ..." />
+            </div>
+            <div className="flex justify-end">
+              <Button onClick={() => releaseMut.mutate()} disabled={releaseMut.isPending} className="gap-1">
+                <Save className="h-4 w-4" /> Save Release
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
