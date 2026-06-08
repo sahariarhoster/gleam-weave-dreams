@@ -160,7 +160,43 @@ function DevicesPage() {
           </Table>
         </CardContent>
       </Card>
+
+      <Dialog open={!!testing} onOpenChange={(v) => !v && setTesting(null)}>
+        <TestDialog
+          device={testing}
+          pending={testMut.isPending}
+          onSend={(recipient, message) => testing && testMut.mutate({ id: testing.id, recipient, message })}
+        />
+      </Dialog>
     </div>
+  );
+}
+
+function TestDialog({ device, pending, onSend }: { device: Device | null; pending: boolean; onSend: (recipient: string, message: string) => void }) {
+  const [recipient, setRecipient] = useState("");
+  const [message, setMessage] = useState("✅ Test message from WA Notifier");
+  return (
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Test {device?.name ?? "Device"}</DialogTitle>
+      </DialogHeader>
+      <form onSubmit={(e) => { e.preventDefault(); onSend(recipient, message); }} className="space-y-3">
+        <div className="space-y-1.5">
+          <Label>Recipient phone</Label>
+          <Input required value={recipient} onChange={(e) => setRecipient(e.target.value)} placeholder="+8801XXXXXXXXX" />
+          <p className="text-[11px] text-muted-foreground">Numbers without + get auto-prefixed with +880.</p>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Message</Label>
+          <Input value={message} onChange={(e) => setMessage(e.target.value)} />
+        </div>
+        <DialogFooter>
+          <Button type="submit" disabled={!recipient || pending} className="w-full">
+            {pending ? "Sending…" : "Send test message"}
+          </Button>
+        </DialogFooter>
+      </form>
+    </DialogContent>
   );
 }
 
