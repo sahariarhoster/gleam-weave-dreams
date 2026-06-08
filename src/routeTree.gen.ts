@@ -24,6 +24,7 @@ import { Route as AuthenticatedCampaignsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedBrandsRouteImport } from './routes/_authenticated/brands'
 import { Route as AuthenticatedBlockedRouteImport } from './routes/_authenticated/blocked'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
+import { Route as ApiPublicPluginActivateRouteImport } from './routes/api/public/plugin/activate'
 import { Route as ApiPublicCronTickRouteImport } from './routes/api/public/cron/tick'
 
 const AuthRoute = AuthRouteImport.update({
@@ -100,6 +101,11 @@ const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
   path: '/activity',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicPluginActivateRoute = ApiPublicPluginActivateRouteImport.update({
+  id: '/api/public/plugin/activate',
+  path: '/api/public/plugin/activate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicCronTickRoute = ApiPublicCronTickRouteImport.update({
   id: '/api/public/cron/tick',
   path: '/api/public/cron/tick',
@@ -122,6 +128,7 @@ export interface FileRoutesByFullPath {
   '/send': typeof AuthenticatedSendRoute
   '/users': typeof AuthenticatedUsersRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
+  '/api/public/plugin/activate': typeof ApiPublicPluginActivateRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/send': typeof AuthenticatedSendRoute
   '/users': typeof AuthenticatedUsersRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
+  '/api/public/plugin/activate': typeof ApiPublicPluginActivateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -158,6 +166,7 @@ export interface FileRoutesById {
   '/_authenticated/send': typeof AuthenticatedSendRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
+  '/api/public/plugin/activate': typeof ApiPublicPluginActivateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -177,6 +186,7 @@ export interface FileRouteTypes {
     | '/send'
     | '/users'
     | '/api/public/cron/tick'
+    | '/api/public/plugin/activate'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -194,6 +204,7 @@ export interface FileRouteTypes {
     | '/send'
     | '/users'
     | '/api/public/cron/tick'
+    | '/api/public/plugin/activate'
   id:
     | '__root__'
     | '/'
@@ -212,6 +223,7 @@ export interface FileRouteTypes {
     | '/_authenticated/send'
     | '/_authenticated/users'
     | '/api/public/cron/tick'
+    | '/api/public/plugin/activate'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -219,6 +231,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ApiPublicCronTickRoute: typeof ApiPublicCronTickRoute
+  ApiPublicPluginActivateRoute: typeof ApiPublicPluginActivateRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -328,6 +341,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedActivityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/plugin/activate': {
+      id: '/api/public/plugin/activate'
+      path: '/api/public/plugin/activate'
+      fullPath: '/api/public/plugin/activate'
+      preLoaderRoute: typeof ApiPublicPluginActivateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron/tick': {
       id: '/api/public/cron/tick'
       path: '/api/public/cron/tick'
@@ -376,7 +396,18 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ApiPublicCronTickRoute: ApiPublicCronTickRoute,
+  ApiPublicPluginActivateRoute: ApiPublicPluginActivateRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
