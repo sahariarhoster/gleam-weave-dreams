@@ -58,22 +58,22 @@ function AuthPage() {
   }
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
+    <div className="relative min-h-screen overflow-hidden bg-slate-50 text-slate-900">
       {/* Decorative background */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-40 -left-40 h-[480px] w-[480px] rounded-full bg-emerald-500/20 blur-3xl" />
-        <div className="absolute -bottom-40 -right-40 h-[520px] w-[520px] rounded-full bg-indigo-500/20 blur-3xl" />
+        <div className="absolute -top-40 -left-40 h-[480px] w-[480px] rounded-full bg-emerald-300/30 blur-3xl" />
+        <div className="absolute -bottom-40 -right-40 h-[520px] w-[520px] rounded-full bg-indigo-300/30 blur-3xl" />
         <div
-          className="absolute inset-0 opacity-[0.04]"
+          className="absolute inset-0 opacity-[0.06]"
           style={{
             backgroundImage:
-              "linear-gradient(to right, white 1px, transparent 1px), linear-gradient(to bottom, white 1px, transparent 1px)",
+              "linear-gradient(to right, #0f172a 1px, transparent 1px), linear-gradient(to bottom, #0f172a 1px, transparent 1px)",
             backgroundSize: "44px 44px",
             maskImage: "radial-gradient(ellipse at center, black 40%, transparent 75%)",
           }}
         />
-        {/* meteors removed */}
       </div>
+
 
 
       <div className="relative mx-auto grid min-h-screen w-full max-w-6xl items-center gap-10 px-4 py-10 lg:grid-cols-2 lg:px-8">
@@ -84,24 +84,24 @@ function AuthPage() {
               <MessageCircle className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-lg font-bold tracking-tight">WA Suite</h1>
-              <p className="text-[11px] uppercase tracking-widest text-slate-400">By Hoster Camp</p>
+              <h1 className="text-lg font-bold tracking-tight text-slate-900">WA Suite</h1>
+              <p className="text-[11px] uppercase tracking-widest text-slate-500">By Hoster Camp</p>
             </div>
           </div>
 
           <div className="space-y-7">
             <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-3 py-1 text-xs font-medium text-emerald-300">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-700">
                 <span className="relative flex h-1.5 w-1.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-500 opacity-75" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
                 </span>
                 All systems operational
               </div>
-              <h2 className="text-4xl font-bold leading-tight tracking-tight text-white xl:text-5xl">
-                Run WhatsApp campaigns <span className="bg-gradient-to-r from-emerald-300 to-teal-200 bg-clip-text text-transparent">at scale</span>.
+              <h2 className="text-4xl font-bold leading-tight tracking-tight text-slate-900 xl:text-5xl">
+                Run WhatsApp campaigns <span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">at scale</span>.
               </h2>
-              <p className="mt-4 max-w-md text-base leading-7 text-slate-300">
+              <p className="mt-4 max-w-md text-base leading-7 text-slate-600">
                 Devices, brands, members, campaigns and delivery logs — one focused workspace for your whole team.
               </p>
             </div>
@@ -112,14 +112,15 @@ function AuthPage() {
                 { icon: ShieldCheck, text: "Role-based access for brands & members" },
                 { icon: BarChart3, text: "Real-time delivery analytics & logs" },
               ].map((f) => (
-                <li key={f.text} className="flex items-center gap-3 text-sm text-slate-300">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/5 ring-1 ring-white/10">
-                    <f.icon className="h-4 w-4 text-emerald-300" />
+                <li key={f.text} className="flex items-center gap-3 text-sm text-slate-700">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white ring-1 ring-slate-200 shadow-sm">
+                    <f.icon className="h-4 w-4 text-emerald-600" />
                   </span>
                   {f.text}
                 </li>
               ))}
             </ul>
+
 
             {/* WhatsApp-style chat preview */}
             <div className="relative mt-2 w-full max-w-sm overflow-hidden rounded-[28px] border border-slate-200 bg-[#efeae2] shadow-2xl shadow-emerald-900/30">
@@ -180,22 +181,22 @@ function AuthPage() {
               <MessageCircle className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-lg font-bold tracking-tight">WA Suite</h1>
-              <p className="text-[11px] uppercase tracking-widest text-slate-400">By Hoster Camp</p>
+              <h1 className="text-lg font-bold tracking-tight text-slate-900">WA Suite</h1>
+              <p className="text-[11px] uppercase tracking-widest text-slate-500">By Hoster Camp</p>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60 sm:p-8">
             <div className="mb-6">
-              <h3 className="text-2xl font-bold tracking-tight text-white">Welcome back</h3>
-              <p className="mt-1 text-sm text-slate-400">Sign in to continue to your workspace.</p>
+              <h3 className="text-2xl font-bold tracking-tight text-slate-900">Welcome back</h3>
+              <p className="mt-1 text-sm text-slate-500">Sign in to continue to your workspace.</p>
             </div>
 
             <form onSubmit={signIn} className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="si-email" className="text-slate-300">Email</Label>
+                <Label htmlFor="si-email" className="text-slate-700">Email</Label>
                 <div className="relative">
-                  <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                  <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <Input
                     id="si-email"
                     type="email"
@@ -204,24 +205,24 @@ function AuthPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@company.com"
-                    className="h-11 border-white/10 bg-white/[0.04] pl-10 text-white placeholder:text-slate-500 focus-visible:border-emerald-400/60 focus-visible:ring-emerald-400/30"
+                    className="h-11 border-slate-200 bg-white pl-10 text-slate-900 placeholder:text-slate-400 focus-visible:border-emerald-500/60 focus-visible:ring-emerald-500/30"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="si-pass" className="text-slate-300">Password</Label>
+                  <Label htmlFor="si-pass" className="text-slate-700">Password</Label>
                   <button
                     type="button"
                     onClick={forgot}
-                    className="text-xs font-medium text-emerald-300 hover:text-emerald-200"
+                    className="text-xs font-medium text-emerald-600 hover:text-emerald-700"
                   >
                     Forgot?
                   </button>
                 </div>
                 <div className="relative">
-                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <Input
                     id="si-pass"
                     type={showPass ? "text" : "password"}
@@ -230,12 +231,12 @@ function AuthPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="h-11 border-white/10 bg-white/[0.04] px-10 text-white placeholder:text-slate-500 focus-visible:border-emerald-400/60 focus-visible:ring-emerald-400/30"
+                    className="h-11 border-slate-200 bg-white px-10 text-slate-900 placeholder:text-slate-400 focus-visible:border-emerald-500/60 focus-visible:ring-emerald-500/30"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPass((s) => !s)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                     aria-label={showPass ? "Hide password" : "Show password"}
                   >
                     {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -243,8 +244,8 @@ function AuthPage() {
                 </div>
               </div>
 
-              <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-400">
-                <Checkbox className="border-white/20 data-[state=checked]:border-emerald-500 data-[state=checked]:bg-emerald-500" />
+              <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-600">
+                <Checkbox className="border-slate-300 data-[state=checked]:border-emerald-500 data-[state=checked]:bg-emerald-500" />
                 Keep me signed in on this device
               </label>
 
