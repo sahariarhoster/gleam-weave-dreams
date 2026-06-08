@@ -49,7 +49,9 @@ export const createCampaign = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => campaignInput.parse(d))
   .handler(async ({ data, context }) => {
-    const { group_ids, media_url, ...rest } = data;
+    const { group_ids, media_url, send_mode, ...rest } = data;
+    const preset = SEND_MODE_PRESETS[send_mode];
+
 
     // pull contacts from groups, de-dupe phone numbers
     const { data: members, error: memErr } = await context.supabase
