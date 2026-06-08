@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { KeyRound, Copy, Trash2, Ban, Plus, Download, Pencil, Check, X } from "lucide-react";
+import { KeyRound, Copy, Trash2, Ban, Plus, Download, Pencil, Check, X, Package, Save } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { listBrandsLite } from "@/lib/brands.functions";
 import { getMyRoles } from "@/lib/users.functions";
@@ -20,6 +22,7 @@ import {
   deleteLicense,
   setBrandLicenseLimit,
 } from "@/lib/licenses.functions";
+import { getPluginRelease, setPluginRelease } from "@/lib/plugin-release.functions";
 
 export const Route = createFileRoute("/_authenticated/licenses")({
   head: () => ({ meta: [{ title: "Plugin Licenses — WA Notifier" }] }),
