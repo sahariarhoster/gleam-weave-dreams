@@ -23,6 +23,7 @@ import {
   setBrandLicenseLimit,
 } from "@/lib/licenses.functions";
 import { getPluginRelease, setPluginRelease } from "@/lib/plugin-release.functions";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/licenses")({
   head: () => ({ meta: [{ title: "Plugin Licenses — WA Notifier" }] }),
