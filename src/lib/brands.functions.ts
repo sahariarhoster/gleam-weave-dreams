@@ -7,7 +7,7 @@ export const listBrandsLite = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("brands")
-      .select("id, name")
+      .select("id, name, license_limit")
       .order("name");
     if (error) throw new Error(error.message);
     return data ?? [];
