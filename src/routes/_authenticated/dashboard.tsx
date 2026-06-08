@@ -67,8 +67,8 @@ function DashboardPage() {
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2 overflow-hidden border-border/60 bg-gradient-to-br from-primary/90 via-primary to-primary/70 text-primary-foreground shadow-lg">
           <CardContent className="relative p-6">
-            <div className="absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/10 blur-2xl" />
-            <div className="absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+            <div className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-white/10 opacity-70" />
+            <div className="pointer-events-none absolute -bottom-16 -left-10 h-40 w-40 rounded-full bg-white/10 opacity-70" />
             <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-2">
                 <Badge className="bg-white/20 text-primary-foreground hover:bg-white/30">
