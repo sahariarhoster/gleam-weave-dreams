@@ -64,8 +64,13 @@ export const createCampaign = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => campaignInput.parse(d))
   .handler(async ({ data, context }) => {
-    const { group_ids, media_url, send_mode, ...rest } = data;
+    const { group_ids, media_url, send_mode, min_delay_seconds, max_delay_seconds, send_window_start, send_window_end, ...rest } = data;
     const preset = SEND_MODE_PRESETS[send_mode];
+    const minD = min_delay_seconds ?? preset.min_delay_seconds;
+    const maxD = Math.max(max_delay_seconds ?? preset.max_delay_seconds, minD);
+    const avg = Math.max((minD + maxD) / 2, 0.5);
+    const daily_limit = Math.max(1, Math.floor(windowSeconds(send_window_start, send_window_end) / avg));
+
 
 
     // pull contacts from groups, de-dupe phone numbers
