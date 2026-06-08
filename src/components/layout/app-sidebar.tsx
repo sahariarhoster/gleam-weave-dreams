@@ -51,7 +51,14 @@ export function AppSidebar() {
   const fnRoles = useServerFn(getMyRoles);
   const roles = useQuery({ queryKey: ["my-roles"], queryFn: () => fnRoles() });
   const isOwner = (roles.data ?? []).includes("owner");
-  const visibleItems = items.filter((i) => isOwner || !("ownerOnly" in i && i.ownerOnly));
+  const isBrandOwner = (roles.data ?? []).includes("brand_owner");
+  const visibleItems = items.filter((i) => {
+    const o = "ownerOnly" in i && (i as any).ownerOnly;
+    const b = "brandOwnerOnly" in i && (i as any).brandOwnerOnly;
+    if (o) return isOwner;
+    if (b) return isBrandOwner;
+    return true;
+  });
 
   return (
     <Sidebar collapsible="icon">
