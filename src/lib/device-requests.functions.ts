@@ -109,7 +109,7 @@ export const updateDeviceRequest = createServerFn({ method: "POST" })
       if (brand?.created_by !== context.userId) throw new Error("Forbidden");
       if (data.status && data.status !== "cancelled") throw new Error("Only staff can change status");
     }
-    const patch: Record<string, any> = {};
+    const patch: { status?: string; admin_reply?: string | null } = {};
     if (data.status) patch.status = data.status;
     if (data.admin_reply !== undefined) patch.admin_reply = data.admin_reply;
     if (Object.keys(patch).length === 0) return { ok: true };
@@ -117,6 +117,7 @@ export const updateDeviceRequest = createServerFn({ method: "POST" })
       .from("device_requests").update(patch).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
+
   });
 
 export const deleteDeviceRequest = createServerFn({ method: "POST" })
