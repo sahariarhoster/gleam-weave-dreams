@@ -16,6 +16,7 @@ import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/send'
 import { Route as AuthenticatedMembersRouteImport } from './routes/_authenticated/members'
 import { Route as AuthenticatedLogsRouteImport } from './routes/_authenticated/logs'
+import { Route as AuthenticatedLicensesRouteImport } from './routes/_authenticated/licenses'
 import { Route as AuthenticatedGroupsRouteImport } from './routes/_authenticated/groups'
 import { Route as AuthenticatedDevicesRouteImport } from './routes/_authenticated/devices'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -23,7 +24,13 @@ import { Route as AuthenticatedContactsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedCampaignsRouteImport } from './routes/_authenticated/campaigns'
 import { Route as AuthenticatedBrandsRouteImport } from './routes/_authenticated/brands'
 import { Route as AuthenticatedBlockedRouteImport } from './routes/_authenticated/blocked'
+import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin-settings'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
+import { Route as ApiPublicPluginSendRouteImport } from './routes/api/public/plugin/send'
+import { Route as ApiPublicPluginSelectDeviceRouteImport } from './routes/api/public/plugin/select-device'
+import { Route as ApiPublicPluginHeartbeatRouteImport } from './routes/api/public/plugin/heartbeat'
+import { Route as ApiPublicPluginDevicesRouteImport } from './routes/api/public/plugin/devices'
+import { Route as ApiPublicPluginActivateRouteImport } from './routes/api/public/plugin/activate'
 import { Route as ApiPublicCronTickRouteImport } from './routes/api/public/cron/tick'
 
 const AuthRoute = AuthRouteImport.update({
@@ -58,6 +65,11 @@ const AuthenticatedMembersRoute = AuthenticatedMembersRouteImport.update({
 const AuthenticatedLogsRoute = AuthenticatedLogsRouteImport.update({
   id: '/logs',
   path: '/logs',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedLicensesRoute = AuthenticatedLicensesRouteImport.update({
+  id: '/licenses',
+  path: '/licenses',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedGroupsRoute = AuthenticatedGroupsRouteImport.update({
@@ -95,10 +107,43 @@ const AuthenticatedBlockedRoute = AuthenticatedBlockedRouteImport.update({
   path: '/blocked',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminSettingsRoute =
+  AuthenticatedAdminSettingsRouteImport.update({
+    id: '/admin-settings',
+    path: '/admin-settings',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
   id: '/activity',
   path: '/activity',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const ApiPublicPluginSendRoute = ApiPublicPluginSendRouteImport.update({
+  id: '/api/public/plugin/send',
+  path: '/api/public/plugin/send',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPluginSelectDeviceRoute =
+  ApiPublicPluginSelectDeviceRouteImport.update({
+    id: '/api/public/plugin/select-device',
+    path: '/api/public/plugin/select-device',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPluginHeartbeatRoute =
+  ApiPublicPluginHeartbeatRouteImport.update({
+    id: '/api/public/plugin/heartbeat',
+    path: '/api/public/plugin/heartbeat',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPluginDevicesRoute = ApiPublicPluginDevicesRouteImport.update({
+  id: '/api/public/plugin/devices',
+  path: '/api/public/plugin/devices',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicPluginActivateRoute = ApiPublicPluginActivateRouteImport.update({
+  id: '/api/public/plugin/activate',
+  path: '/api/public/plugin/activate',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicCronTickRoute = ApiPublicCronTickRouteImport.update({
   id: '/api/public/cron/tick',
@@ -110,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/activity': typeof AuthenticatedActivityRoute
+  '/admin-settings': typeof AuthenticatedAdminSettingsRoute
   '/blocked': typeof AuthenticatedBlockedRoute
   '/brands': typeof AuthenticatedBrandsRoute
   '/campaigns': typeof AuthenticatedCampaignsRoute
@@ -117,16 +163,23 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/devices': typeof AuthenticatedDevicesRoute
   '/groups': typeof AuthenticatedGroupsRoute
+  '/licenses': typeof AuthenticatedLicensesRoute
   '/logs': typeof AuthenticatedLogsRoute
   '/members': typeof AuthenticatedMembersRoute
   '/send': typeof AuthenticatedSendRoute
   '/users': typeof AuthenticatedUsersRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
+  '/api/public/plugin/activate': typeof ApiPublicPluginActivateRoute
+  '/api/public/plugin/devices': typeof ApiPublicPluginDevicesRoute
+  '/api/public/plugin/heartbeat': typeof ApiPublicPluginHeartbeatRoute
+  '/api/public/plugin/select-device': typeof ApiPublicPluginSelectDeviceRoute
+  '/api/public/plugin/send': typeof ApiPublicPluginSendRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/activity': typeof AuthenticatedActivityRoute
+  '/admin-settings': typeof AuthenticatedAdminSettingsRoute
   '/blocked': typeof AuthenticatedBlockedRoute
   '/brands': typeof AuthenticatedBrandsRoute
   '/campaigns': typeof AuthenticatedCampaignsRoute
@@ -134,11 +187,17 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/devices': typeof AuthenticatedDevicesRoute
   '/groups': typeof AuthenticatedGroupsRoute
+  '/licenses': typeof AuthenticatedLicensesRoute
   '/logs': typeof AuthenticatedLogsRoute
   '/members': typeof AuthenticatedMembersRoute
   '/send': typeof AuthenticatedSendRoute
   '/users': typeof AuthenticatedUsersRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
+  '/api/public/plugin/activate': typeof ApiPublicPluginActivateRoute
+  '/api/public/plugin/devices': typeof ApiPublicPluginDevicesRoute
+  '/api/public/plugin/heartbeat': typeof ApiPublicPluginHeartbeatRoute
+  '/api/public/plugin/select-device': typeof ApiPublicPluginSelectDeviceRoute
+  '/api/public/plugin/send': typeof ApiPublicPluginSendRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -146,6 +205,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
+  '/_authenticated/admin-settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/blocked': typeof AuthenticatedBlockedRoute
   '/_authenticated/brands': typeof AuthenticatedBrandsRoute
   '/_authenticated/campaigns': typeof AuthenticatedCampaignsRoute
@@ -153,11 +213,17 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/devices': typeof AuthenticatedDevicesRoute
   '/_authenticated/groups': typeof AuthenticatedGroupsRoute
+  '/_authenticated/licenses': typeof AuthenticatedLicensesRoute
   '/_authenticated/logs': typeof AuthenticatedLogsRoute
   '/_authenticated/members': typeof AuthenticatedMembersRoute
   '/_authenticated/send': typeof AuthenticatedSendRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
+  '/api/public/plugin/activate': typeof ApiPublicPluginActivateRoute
+  '/api/public/plugin/devices': typeof ApiPublicPluginDevicesRoute
+  '/api/public/plugin/heartbeat': typeof ApiPublicPluginHeartbeatRoute
+  '/api/public/plugin/select-device': typeof ApiPublicPluginSelectDeviceRoute
+  '/api/public/plugin/send': typeof ApiPublicPluginSendRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -165,6 +231,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/activity'
+    | '/admin-settings'
     | '/blocked'
     | '/brands'
     | '/campaigns'
@@ -172,16 +239,23 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/devices'
     | '/groups'
+    | '/licenses'
     | '/logs'
     | '/members'
     | '/send'
     | '/users'
     | '/api/public/cron/tick'
+    | '/api/public/plugin/activate'
+    | '/api/public/plugin/devices'
+    | '/api/public/plugin/heartbeat'
+    | '/api/public/plugin/select-device'
+    | '/api/public/plugin/send'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/activity'
+    | '/admin-settings'
     | '/blocked'
     | '/brands'
     | '/campaigns'
@@ -189,17 +263,24 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/devices'
     | '/groups'
+    | '/licenses'
     | '/logs'
     | '/members'
     | '/send'
     | '/users'
     | '/api/public/cron/tick'
+    | '/api/public/plugin/activate'
+    | '/api/public/plugin/devices'
+    | '/api/public/plugin/heartbeat'
+    | '/api/public/plugin/select-device'
+    | '/api/public/plugin/send'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/activity'
+    | '/_authenticated/admin-settings'
     | '/_authenticated/blocked'
     | '/_authenticated/brands'
     | '/_authenticated/campaigns'
@@ -207,11 +288,17 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/devices'
     | '/_authenticated/groups'
+    | '/_authenticated/licenses'
     | '/_authenticated/logs'
     | '/_authenticated/members'
     | '/_authenticated/send'
     | '/_authenticated/users'
     | '/api/public/cron/tick'
+    | '/api/public/plugin/activate'
+    | '/api/public/plugin/devices'
+    | '/api/public/plugin/heartbeat'
+    | '/api/public/plugin/select-device'
+    | '/api/public/plugin/send'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -219,6 +306,11 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ApiPublicCronTickRoute: typeof ApiPublicCronTickRoute
+  ApiPublicPluginActivateRoute: typeof ApiPublicPluginActivateRoute
+  ApiPublicPluginDevicesRoute: typeof ApiPublicPluginDevicesRoute
+  ApiPublicPluginHeartbeatRoute: typeof ApiPublicPluginHeartbeatRoute
+  ApiPublicPluginSelectDeviceRoute: typeof ApiPublicPluginSelectDeviceRoute
+  ApiPublicPluginSendRoute: typeof ApiPublicPluginSendRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -272,6 +364,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLogsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/licenses': {
+      id: '/_authenticated/licenses'
+      path: '/licenses'
+      fullPath: '/licenses'
+      preLoaderRoute: typeof AuthenticatedLicensesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/groups': {
       id: '/_authenticated/groups'
       path: '/groups'
@@ -321,12 +420,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBlockedRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin-settings': {
+      id: '/_authenticated/admin-settings'
+      path: '/admin-settings'
+      fullPath: '/admin-settings'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/activity': {
       id: '/_authenticated/activity'
       path: '/activity'
       fullPath: '/activity'
       preLoaderRoute: typeof AuthenticatedActivityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/api/public/plugin/send': {
+      id: '/api/public/plugin/send'
+      path: '/api/public/plugin/send'
+      fullPath: '/api/public/plugin/send'
+      preLoaderRoute: typeof ApiPublicPluginSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/plugin/select-device': {
+      id: '/api/public/plugin/select-device'
+      path: '/api/public/plugin/select-device'
+      fullPath: '/api/public/plugin/select-device'
+      preLoaderRoute: typeof ApiPublicPluginSelectDeviceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/plugin/heartbeat': {
+      id: '/api/public/plugin/heartbeat'
+      path: '/api/public/plugin/heartbeat'
+      fullPath: '/api/public/plugin/heartbeat'
+      preLoaderRoute: typeof ApiPublicPluginHeartbeatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/plugin/devices': {
+      id: '/api/public/plugin/devices'
+      path: '/api/public/plugin/devices'
+      fullPath: '/api/public/plugin/devices'
+      preLoaderRoute: typeof ApiPublicPluginDevicesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/plugin/activate': {
+      id: '/api/public/plugin/activate'
+      path: '/api/public/plugin/activate'
+      fullPath: '/api/public/plugin/activate'
+      preLoaderRoute: typeof ApiPublicPluginActivateRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/cron/tick': {
       id: '/api/public/cron/tick'
@@ -340,6 +481,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
+  AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedBlockedRoute: typeof AuthenticatedBlockedRoute
   AuthenticatedBrandsRoute: typeof AuthenticatedBrandsRoute
   AuthenticatedCampaignsRoute: typeof AuthenticatedCampaignsRoute
@@ -347,6 +489,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDevicesRoute: typeof AuthenticatedDevicesRoute
   AuthenticatedGroupsRoute: typeof AuthenticatedGroupsRoute
+  AuthenticatedLicensesRoute: typeof AuthenticatedLicensesRoute
   AuthenticatedLogsRoute: typeof AuthenticatedLogsRoute
   AuthenticatedMembersRoute: typeof AuthenticatedMembersRoute
   AuthenticatedSendRoute: typeof AuthenticatedSendRoute
@@ -355,6 +498,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActivityRoute: AuthenticatedActivityRoute,
+  AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedBlockedRoute: AuthenticatedBlockedRoute,
   AuthenticatedBrandsRoute: AuthenticatedBrandsRoute,
   AuthenticatedCampaignsRoute: AuthenticatedCampaignsRoute,
@@ -362,6 +506,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDevicesRoute: AuthenticatedDevicesRoute,
   AuthenticatedGroupsRoute: AuthenticatedGroupsRoute,
+  AuthenticatedLicensesRoute: AuthenticatedLicensesRoute,
   AuthenticatedLogsRoute: AuthenticatedLogsRoute,
   AuthenticatedMembersRoute: AuthenticatedMembersRoute,
   AuthenticatedSendRoute: AuthenticatedSendRoute,
@@ -376,17 +521,12 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ApiPublicCronTickRoute: ApiPublicCronTickRoute,
+  ApiPublicPluginActivateRoute: ApiPublicPluginActivateRoute,
+  ApiPublicPluginDevicesRoute: ApiPublicPluginDevicesRoute,
+  ApiPublicPluginHeartbeatRoute: ApiPublicPluginHeartbeatRoute,
+  ApiPublicPluginSelectDeviceRoute: ApiPublicPluginSelectDeviceRoute,
+  ApiPublicPluginSendRoute: ApiPublicPluginSendRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

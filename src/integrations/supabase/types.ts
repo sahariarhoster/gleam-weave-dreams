@@ -464,6 +464,63 @@ export type Database = {
           },
         ]
       }
+      plugin_licenses: {
+        Row: {
+          activated_at: string | null
+          brand_id: string
+          created_at: string
+          created_by: string | null
+          device_id: string | null
+          id: string
+          last_seen_at: string | null
+          license_key: string
+          site_url: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string | null
+          brand_id: string
+          created_at?: string
+          created_by?: string | null
+          device_id?: string | null
+          id?: string
+          last_seen_at?: string | null
+          license_key: string
+          site_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string | null
+          brand_id?: string
+          created_at?: string
+          created_by?: string | null
+          device_id?: string | null
+          id?: string
+          last_seen_at?: string | null
+          license_key?: string
+          site_url?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plugin_licenses_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plugin_licenses_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -487,6 +544,24 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      system_settings: {
+        Row: {
+          id: boolean
+          licenses_per_brand: number
+          updated_at: string
+        }
+        Insert: {
+          id?: boolean
+          licenses_per_brand?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: boolean
+          licenses_per_brand?: number
           updated_at?: string
         }
         Relationships: []

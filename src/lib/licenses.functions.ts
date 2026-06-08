@@ -1,0 +1,102 @@
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+function genKey(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const group = () =>
+    Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+  return `WAN-${group()}-${group()}-${group()}-${group()}`;
+}
+
+async function isOwner(supabase: any, userId: string) {
+  const { data } = await supabase
+    .from("user_roles").select("role").eq("user_id", userId).eq("role", "owner").maybeSingle();
+  return !!data;
+}
+
+export const listMyLicenses = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("plugin_licenses")
+      .select("id, brand_id, license_key, status, device_id, site_url, activated_at, last_seen_at, created_at, brands(name), devices(name)")
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((r: any) => ({
+      ...r,
+      brand_name: r.brands?.name,
+      device_name: r.devices?.name,
+    }));
+  });
+
+export const getLicenseSettings = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data } = await context.supabase
+      .from("system_settings").select("licenses_per_brand").eq("id", true).maybeSingle();
+    return { licenses_per_brand: data?.licenses_per_brand ?? 1 };
+  });
+
+export const setLicensesPerBrand = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ limit: z.number().int().min(1).max(1000) }).parse(d))
+  .handler(async ({ data, context }) => {
+    if (!(await isOwner(context.supabase, context.userId))) throw new Error("Owner only");
+    const { error } = await context.supabase
+      .from("system_settings")
+      .upsert({ id: true, licenses_per_brand: data.limit });
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const generateLicense = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ brand_id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    // verify brand ownership/membership via RLS by reading the brand
+    const { data: brand, error: bErr } = await context.supabase
+      .from("brands").select("id, created_by").eq("id", data.brand_id).maybeSingle();
+    if (bErr || !brand) throw new Error("Brand not found");
+    const owner = await isOwner(context.supabase, context.userId);
+    if (!owner && brand.created_by !== context.userId) throw new Error("Only the brand owner can generate licenses");
+
+    const { data: settings } = await context.supabase
+      .from("system_settings").select("licenses_per_brand").eq("id", true).maybeSingle();
+    const limit = settings?.licenses_per_brand ?? 1;
+
+    const { count } = await context.supabase
+      .from("plugin_licenses").select("*", { count: "exact", head: true })
+      .eq("brand_id", data.brand_id).eq("status", "active");
+    if ((count ?? 0) >= limit) {
+      throw new Error(`Limit reached: ${limit} active license(s) per brand`);
+    }
+
+    const key = genKey();
+    const { data: row, error } = await context.supabase
+      .from("plugin_licenses")
+      .insert({ brand_id: data.brand_id, license_key: key, status: "active", created_by: context.userId })
+      .select().single();
+    if (error) throw new Error(error.message);
+    return row;
+  });
+
+export const revokeLicense = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("plugin_licenses").update({ status: "revoked" }).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const deleteLicense = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { error } = await context.supabase
+      .from("plugin_licenses").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });

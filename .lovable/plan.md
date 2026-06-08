@@ -1,43 +1,74 @@
+## WooCommerce Plugin Integration — Plan
 
-## What we're building
+Big feature. Splitting into two deliverables: (A) backend/portal in this app, (B) WordPress plugin (separate PHP codebase, delivered as a downloadable zip).
 
-A full clone of "WA Notifier" — a multi-tenant dashboard for sending WhatsApp messages in bulk through the `whatsapp.bdwebs.com` API. Workspace owners manage brands, brands own devices (each storing its own API secret + device unique id), users are scoped to brands, and campaigns send templated messages to target groups with anti-ban controls.
+### A. Lovable app changes
 
-## Modules (matches old app sidebar)
+**1. DB (new migration)**
+- `plugin_licenses` table:
+  - `id uuid pk`, `brand_id uuid fk brands (unique)`, `license_key text unique`, `status text` (active/revoked), `device_id uuid fk devices null`, `site_url text null`, `activated_at timestamptz null`, `last_seen_at timestamptz null`, `created_by uuid`, `created_at`, `updated_at`
+- `system_settings` table (singleton row) with `licenses_per_brand int default 1` — admin can change limit later. (Schema supports >1 by removing unique on brand_id later; for now enforce in code.)
+- RLS:
+  - owner: all access
+  - brand_owner / brand_member: select own brand licenses; brand_owner can insert/update for own brand
+- GRANTs for authenticated + service_role.
 
-1. **Auth** — email/password sign-in; first user = workspace admin
-2. **Dashboard** — KPI cards (devices, brands, brand users, campaigns, active, blocked), delivery rate, 14-day volume chart, delivery breakdown donut
-3. **Devices** — CRUD; fields: name, device unique id, SIM, linked brand, API secret, status. "Test connection" pings bdwebs `/api/get/credits`
-4. **Brands** — CRUD; status (active/suspended/expired), expiry date, msg limit, device limit; activate/suspend actions
-5. **Users** — invite users, assign to a brand, role (brand admin / sender)
-6. **Contacts & Groups** — per-brand contacts (name, phone, tags) and target groups
-7. **All Campaigns** — list, status (scheduled/running/completed/cancelled), Retry Failed / Retry Skipped actions
-8. **Create Campaign** — brand, target group, template with `{{name}}` + spintax `{Hi|Hello|Hey}`, Safe vs Direct mode, Safety 1 vs Safety 2, min/max delay, daily limit, schedule
-9. **Send SMS** — single message form (device, phone, message)
-10. **Message Logs** — per-message status, filter by brand/device/date, search
-11. **Blocked Numbers** — block list per brand
-12. **Activity Log** — audit of user actions
+**2. Server functions (`src/lib/licenses.functions.ts`)**
+- `listMyLicenses` — list licenses for brands the user owns/is member of
+- `generateLicense({ brand_id })` — brand owner generates 1 per brand (respecting limit)
+- `revokeLicense({ id })`
+- `setLicenseLimit({ limit })` — owner only
 
-## Tech approach
+**3. Public API routes (called by WP plugin)** under `src/routes/api/public/plugin/`
+- `POST /api/public/plugin/activate` — body: `{ license_key, site_url }` → validates, marks active, returns `{ brand_id, brand_name }`
+- `GET /api/public/plugin/devices?license_key=...` — returns devices belonging to that brand (id, name)
+- `POST /api/public/plugin/select-device` — `{ license_key, device_id }` → persist
+- `POST /api/public/plugin/send` — `{ license_key, recipient, message }` → sends WhatsApp via the brand's selected device (uses bdwebs server lib)
+- `POST /api/public/plugin/heartbeat` — updates `last_seen_at`
+- All routes validate license_key with Zod, look up via `supabaseAdmin`, reject if revoked.
 
-- **DB (Supabase)**: tables `profiles`, `app_role` enum + `user_roles`, `brands`, `brand_members`, `devices`, `contacts`, `contact_groups`, `contact_group_members`, `campaigns`, `campaign_messages`, `blocked_numbers`, `activity_log`. RLS scoped via `has_role()` + brand membership helper functions.
-- **API calls**: per-device `api_secret` stored in DB. All bdwebs calls go through `createServerFn` handlers (never from the browser) — `sendSms`, `getCredits`, `getCampaigns`, etc.
-- **Bulk sending engine**: a `runCampaign` server fn iterates the target group, respects min/max delay, daily limit, sending window (9AM–9PM BD time), warmup ramp, duplicate detection, auto-pause on >20% failure, cooldowns. Writes per-recipient rows to `campaign_messages` with status (queued/sent/delivered/failed/skipped/blocked).
-- **Scheduled campaigns**: a `/api/public/cron/tick` route called by pg_cron every minute to advance running campaigns and start scheduled ones.
-- **UI**: TanStack Start file routes under `_authenticated/` (managed gate), shadcn sidebar, recharts for analytics, "modern refresh" of the green accent (light + subtle gradients, dark-mode-ready tokens).
+**4. UI**
+- `src/routes/_authenticated/licenses.tsx` — brand-owner page: list brands → generate license per brand, copy key, revoke, see site_url + last_seen
+- `src/routes/_authenticated/admin-settings.tsx` (owner only) — set licenses_per_brand
+- Add nav entries in `app-sidebar.tsx`
 
-## Build order (phases)
+### B. WordPress plugin (PHP)
 
-I'll ship in phases so each step is verifiable rather than one giant drop:
+Generate a downloadable plugin zip in `/mnt/documents/wa-notifier-woocommerce.zip` containing:
 
-- **Phase 1 (this turn)**: Auth + schema + roles + Dashboard shell + Devices module (CRUD + test-connection to bdwebs) + Send SMS (single) wired end-to-end. This proves the API integration works.
-- **Phase 2**: Brands, Users, Contacts/Groups.
-- **Phase 3**: Campaigns (create, list, send engine, retry).
-- **Phase 4**: Message Logs, Blocked Numbers, Activity Log, scheduled campaigns via cron.
+```
+wa-notifier-woocommerce/
+  wa-notifier-woocommerce.php       (plugin header, bootstrap)
+  includes/
+    class-api-client.php            (talks to /api/public/plugin/*)
+    class-settings.php              (option storage)
+    class-wizard.php                (5-step setup wizard)
+    class-woocommerce-hooks.php     (order status change handlers)
+    class-shortcodes.php            ({first_name},{last_name},{order_id},{total})
+  admin/
+    dashboard.php
+    woocommerce-config.php          (per-status toggle + template)
+    admin-config.php                (admin phone + admin templates)
+    change-license.php
+    test.php
+  assets/css/admin.css
+  readme.txt
+```
 
-## Notes & assumptions
+Wizard steps mirror request: license → device pick → woo status templates → admin templates → test send.
 
-- The bdwebs PDF is 88 pages; first 50 were parsed and confirm endpoints `/api/get/credits`, `/api/get/earnings`, `/api/send/sms`, `/api/get/sms.campaigns`, etc. I'll wire the most common ones first and add others as needed in later phases.
-- API secret is **per-device** and stored in DB (RLS-protected; never sent to the browser — server fns read it).
-- "Brand users" = users that can only act inside a single brand. Workspace owner sees everything.
-- No need to add bdwebs as a project secret — secrets live on the `devices` row.
+Woo statuses covered: pending, processing, on-hold, completed, cancelled, refunded, failed. Each: toggle off by default, textarea with template using shortcodes `{first_name} {last_name} {order_id} {total} {status}`.
+
+### Technical notes
+- API base URL configurable in plugin (defaults to this app's published URL).
+- License key format: `WAN-XXXX-XXXX-XXXX-XXXX` (random uppercase).
+- Public endpoints rely on license_key as bearer; no PII returned beyond brand name + device list of the owner's brand.
+- Existing `sendSingleMessage` logic refactored: extract pure helper into `bdwebs.server.ts` call already exists; the public send route reuses it.
+
+### Out of scope (ask later)
+- Per-license rate limiting / quotas
+- Multi-site per license
+- License expiry dates
+- Plugin auto-update server
+
+Proceed?
