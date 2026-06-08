@@ -7,9 +7,8 @@ async function assertOwner(supabase: any, userId: string) {
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
-    .eq("role", "owner")
-    .maybeSingle();
-  if (!data) throw new Error("Only the workspace owner can manage devices");
+    .in("role", ["owner", "brand_owner"]);
+  if (!data || data.length === 0) throw new Error("You don't have permission to manage devices");
 }
 
 type Stats = {
