@@ -32,116 +32,25 @@ export const getDashboardStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<Stats> => {
     const sb = context.supabase;
-    const since = new Date();
-    since.setDate(since.getDate() - 6);
-    since.setHours(0, 0, 0, 0);
-    const sinceIso = since.toISOString();
-    const todayStr = new Date().toISOString().slice(0, 10);
-
-    // Lightweight HEAD count queries instead of fetching full rows.
-    const head = (q: any) => q.select("*", { count: "exact", head: true });
-
-    const [
-      devicesQ,
-      brandsQ,
-      membersQ,
-      campaignsQ,
-      activeQ,
-      blockedQ,
-      msgTotalQ,
-      msgDeliveredQ,
-      msgSentQ,
-      msgFailedQ,
-      pluginTotalQ,
-      pluginDeliveredQ,
-      recentMsgsQ,
-      pluginRecentQ,
-      devicesListQ,
-    ] = await Promise.all([
-      head(sb.from("devices")),
-      head(sb.from("brands")),
-      head(sb.from("brand_members")),
-      head(sb.from("campaigns")),
-      head(sb.from("campaigns")).in("status", ["running", "scheduled"]),
-      head(sb.from("blocked_numbers")),
-      head(sb.from("campaign_messages")),
-      head(sb.from("campaign_messages")).eq("status", "delivered"),
-      head(sb.from("campaign_messages")).eq("status", "sent"),
-      head(sb.from("campaign_messages")).eq("status", "failed"),
-      head(sb.from("activity_log")).eq("action", "plugin_send"),
-      head(sb.from("activity_log")).eq("action", "plugin_send").eq("details->>status", "200"),
-      sb
-        .from("campaign_messages")
-        .select("status, created_at")
-        .gte("created_at", sinceIso)
-        .limit(1000),
-      sb
-        .from("activity_log")
-        .select("details, created_at")
-        .eq("action", "plugin_send")
-        .gte("created_at", sinceIso)
-        .limit(1000),
-      sb.from("devices").select("id, name, status").order("created_at", { ascending: false }).limit(5),
-    ]);
-
-    const msgTotal = msgTotalQ.count ?? 0;
-    const msgDelivered = (msgDeliveredQ.count ?? 0) + (msgSentQ.count ?? 0);
-    const msgFailed = msgFailedQ.count ?? 0;
-    const msgPending = Math.max(0, msgTotal - msgDelivered - msgFailed);
-
-    const pluginTotal = pluginTotalQ.count ?? 0;
-    const pluginDelivered = pluginDeliveredQ.count ?? 0;
-    const pluginFailed = Math.max(0, pluginTotal - pluginDelivered);
-
-    const totals = {
-      delivered: msgDelivered + pluginDelivered,
-      failed: msgFailed + pluginFailed,
-      pending: msgPending,
-    };
-
-    const series: Stats["series"] = [];
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(since);
-      d.setDate(since.getDate() + i);
-      series.push({ date: d.toISOString().slice(0, 10), delivered: 0, failed: 0, pending: 0 });
-    }
-    let today = 0;
-    (recentMsgsQ.data ?? []).forEach((m: any) => {
-      const day = new Date(m.created_at).toISOString().slice(0, 10);
-      const slot = series.find((x) => x.date === day);
-      if (!slot) return;
-      if (m.status === "sent" || m.status === "delivered") slot.delivered++;
-      else if (m.status === "failed") slot.failed++;
-      else slot.pending++;
-      if (day === todayStr) today++;
-    });
-    (pluginRecentQ.data ?? []).forEach((r: any) => {
-      const day = new Date(r.created_at).toISOString().slice(0, 10);
-      const slot = series.find((x) => x.date === day);
-      if (!slot) return;
-      if (r.details?.status === 200) slot.delivered++;
-      else slot.failed++;
-      if (day === todayStr) today++;
-    });
-
-    const devicesList = (devicesListQ.data ?? []) as any[];
-    const devicesOnline = devicesList.filter((d) => d.status === "active" || d.status === "online").length;
+    const { data, error } = await (sb as any).rpc("get_dashboard_stats");
+    if (error) throw new Error(error.message);
+    const stats = data as Partial<Stats> | null;
 
     return {
-      devices: devicesQ.count ?? 0,
-      devicesOnline,
-      brands: brandsQ.count ?? 0,
-      brandUsers: membersQ.count ?? 0,
-      campaigns: campaignsQ.count ?? 0,
-      activeCampaigns: activeQ.count ?? 0,
-      blockedNumbers: blockedQ.count ?? 0,
-      totalMessages: msgTotal + pluginTotal,
-      delivered: totals.delivered,
-      failed: totals.failed,
-      pending: totals.pending,
-      todayMessages: today,
-      series,
-      topDevices: devicesList.map((d) => ({ id: d.id, name: d.name, status: d.status })),
+      devices: Number(stats?.devices ?? 0),
+      devicesOnline: Number(stats?.devicesOnline ?? 0),
+      brands: Number(stats?.brands ?? 0),
+      brandUsers: Number(stats?.brandUsers ?? 0),
+      campaigns: Number(stats?.campaigns ?? 0),
+      activeCampaigns: Number(stats?.activeCampaigns ?? 0),
+      blockedNumbers: Number(stats?.blockedNumbers ?? 0),
+      totalMessages: Number(stats?.totalMessages ?? 0),
+      delivered: Number(stats?.delivered ?? 0),
+      failed: Number(stats?.failed ?? 0),
+      pending: Number(stats?.pending ?? 0),
+      todayMessages: Number(stats?.todayMessages ?? 0),
+      series: stats?.series ?? [],
+      topDevices: stats?.topDevices ?? [],
     };
   });
 

@@ -50,6 +50,8 @@ function DashboardPage() {
     queryKey: ["dashboard-stats", user?.id ?? "anon"],
     queryFn: () => fn(),
     enabled: !!user?.id,
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const stats = data ?? {
