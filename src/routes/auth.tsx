@@ -122,19 +122,19 @@ function AuthPage() {
             </ul>
 
             {/* WhatsApp-style chat preview */}
-            <div className="relative mt-2 w-full max-w-sm overflow-hidden rounded-[28px] border border-white/10 bg-[#0b141a] shadow-2xl shadow-emerald-900/30">
+            <div className="relative mt-2 w-full max-w-sm overflow-hidden rounded-[28px] border border-slate-200 bg-[#efeae2] shadow-2xl shadow-emerald-900/30">
               {/* Header */}
-              <div className="flex items-center gap-3 bg-[#202c33] px-4 py-3">
+              <div className="flex items-center gap-3 bg-[#f0f2f5] px-4 py-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-emerald-600 text-sm font-semibold text-white">
                   HC
                 </div>
                 <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-semibold text-white">Hoster Camp Store</div>
-                  <div className="flex items-center gap-1 text-[11px] text-emerald-300">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> online
+                  <div className="truncate text-sm font-semibold text-slate-900">Hoster Camp Store</div>
+                  <div className="flex items-center gap-1 text-[11px] text-emerald-600">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> online
                   </div>
                 </div>
-                <div className="text-[10px] text-slate-400">business</div>
+                <div className="text-[10px] text-slate-500">business</div>
               </div>
 
               {/* Messages */}
@@ -142,28 +142,28 @@ function AuthPage() {
                 className="space-y-2 px-3 py-4"
                 style={{
                   backgroundImage:
-                    "radial-gradient(circle at 20% 10%, rgba(16,185,129,0.05), transparent 40%), radial-gradient(circle at 80% 90%, rgba(99,102,241,0.05), transparent 40%)",
+                    "radial-gradient(circle at 20% 10%, rgba(16,185,129,0.06), transparent 40%), radial-gradient(circle at 80% 90%, rgba(99,102,241,0.05), transparent 40%)",
                 }}
               >
                 <div className="text-center">
-                  <span className="rounded-md bg-[#182229] px-2 py-0.5 text-[10px] text-slate-400">Today</span>
+                  <span className="rounded-md bg-white/80 px-2 py-0.5 text-[10px] text-slate-500 shadow-sm">Today</span>
                 </div>
 
-                <div className="animate-auth-bubble max-w-[85%] rounded-lg rounded-tl-sm bg-[#202c33] px-3 py-2 text-[12px] leading-relaxed text-slate-100 shadow" style={{ animationDelay: "0.1s" }}>
-                  <div className="mb-1 text-[11px] font-semibold text-emerald-300">✅ Order Placed</div>
-                  Hi Sarah! Your order <span className="font-semibold text-white">#HC-2841</span> has been received.
-                  <div className="mt-1.5 text-[11px] text-slate-300">
-                    1× Wireless Earbuds — <span className="text-white">$49.00</span>
+                <div className="animate-auth-bubble max-w-[85%] rounded-lg rounded-tl-sm bg-white px-3 py-2 text-[12px] leading-relaxed text-slate-800 shadow" style={{ animationDelay: "0.1s" }}>
+                  <div className="mb-1 text-[11px] font-semibold text-emerald-600">✅ Order Placed</div>
+                  Hi Sarah! Your order <span className="font-semibold text-slate-900">#HC-2841</span> has been received.
+                  <div className="mt-1.5 text-[11px] text-slate-600">
+                    1× Wireless Earbuds — <span className="text-slate-900">$49.00</span>
                   </div>
                   <div className="mt-1 flex items-center justify-end gap-1 text-[9px] text-slate-400">
-                    10:24 AM <span className="text-sky-400">✓✓</span>
+                    10:24 AM <span className="text-sky-500">✓✓</span>
                   </div>
                 </div>
 
-                <div className="animate-auth-bubble ml-auto max-w-[80%] rounded-lg rounded-tr-sm bg-[#005c4b] px-3 py-2 text-[12px] leading-relaxed text-slate-50 shadow" style={{ animationDelay: "0.7s" }}>
+                <div className="animate-auth-bubble ml-auto max-w-[80%] rounded-lg rounded-tr-sm bg-[#d9fdd3] px-3 py-2 text-[12px] leading-relaxed text-slate-800 shadow" style={{ animationDelay: "0.7s" }}>
                   Got it, thanks! 🙌
-                  <div className="mt-1 flex items-center justify-end gap-1 text-[9px] text-emerald-200/70">
-                    10:25 AM <span>✓✓</span>
+                  <div className="mt-1 flex items-center justify-end gap-1 text-[9px] text-slate-500">
+                    10:25 AM <span className="text-sky-500">✓✓</span>
                   </div>
                 </div>
               </div>
