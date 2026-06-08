@@ -26,16 +26,6 @@ export default defineConfig({
       sourcemap: false,
       cssMinify: false,
     },
-    esbuild: {
-      // Avoid spawning multiple esbuild worker threads on tiny shared hosts.
-      // Honours UV_THREADPOOL_SIZE=1 set in the env.
-    },
-    optimizeDeps: {
-      esbuildOptions: {
-        // single-threaded esbuild
-        // @ts-expect-error – passed through to esbuild
-        workerThreads: false,
-      },
-    },
   },
 });
+
