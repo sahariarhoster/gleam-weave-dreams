@@ -25,11 +25,14 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getMyRoles } from "@/lib/users.functions";
 
 const items = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Devices", url: "/devices", icon: Smartphone },
-  { title: "Brands", url: "/brands", icon: Building2 },
+  { title: "Brands", url: "/brands", icon: Building2, ownerOnly: true },
   { title: "Users", url: "/users", icon: Users },
   { title: "Contacts", url: "/contacts", icon: Contact },
   { title: "Groups", url: "/groups", icon: FolderOpen },
@@ -44,6 +47,10 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const fnRoles = useServerFn(getMyRoles);
+  const roles = useQuery({ queryKey: ["my-roles"], queryFn: () => fnRoles() });
+  const isOwner = (roles.data ?? []).includes("owner");
+  const visibleItems = items.filter((i) => isOwner || !("ownerOnly" in i && i.ownerOnly));
 
   return (
     <Sidebar collapsible="icon">
@@ -67,7 +74,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Administration</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => {
+              {visibleItems.map((item) => {
                 const active = pathname === item.url || pathname.startsWith(item.url + "/");
                 return (
                   <SidebarMenuItem key={item.url}>
