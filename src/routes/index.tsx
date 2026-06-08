@@ -30,7 +30,7 @@ function LandingPage() {
       <Header />
       <main>
         <Hero />
-        <LogoMarquee />
+        
         <TrustStrip />
         <BulkSection />
         <PluginSection />
