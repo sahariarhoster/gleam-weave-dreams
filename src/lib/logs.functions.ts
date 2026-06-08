@@ -62,14 +62,37 @@ export const listActivityLog = createServerFn({ method: "POST" })
     }).parse(d ?? {}),
   )
   .handler(async ({ data, context }) => {
+    // Scope: owners see all; others only see logs for brands they belong to.
+    const { data: ownerRow } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId)
+      .eq("role", "owner")
+      .maybeSingle();
+    const isOwner = !!ownerRow;
+    let memberBrandIds: string[] = [];
+    if (!isOwner) {
+      const { data: mems } = await context.supabase
+        .from("brand_members")
+        .select("brand_id")
+        .eq("user_id", context.userId);
+      memberBrandIds = (mems ?? []).map((m: any) => m.brand_id).filter(Boolean);
+      if (memberBrandIds.length === 0) return [];
+    }
     let q = context.supabase
       .from("activity_log")
       .select("id, action, details, brand_id, user_id, created_at")
       .order("created_at", { ascending: false })
       .limit(data.limit);
-    if (data.brand_id) q = q.eq("brand_id", data.brand_id);
+    if (data.brand_id) {
+      if (!isOwner && !memberBrandIds.includes(data.brand_id)) return [];
+      q = q.eq("brand_id", data.brand_id);
+    } else if (!isOwner) {
+      q = q.in("brand_id", memberBrandIds);
+    }
     const { data: rows, error } = await q;
-    if (error) throw new Error(error.message);
+    if (error) throw new Error("Failed to load activity log");
+
     const logs = rows ?? [];
     const userIds = Array.from(new Set(logs.map((l: any) => l.user_id).filter(Boolean)));
     let profiles: any[] = [];
