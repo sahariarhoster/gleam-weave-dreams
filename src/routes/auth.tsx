@@ -46,8 +46,7 @@ function AuthPage() {
       return toast.error(error.message);
     }
     toast.success("Welcome back!");
-    // Hard navigation avoids the extra SSR roundtrip on shared hosting
-    window.location.assign("/dashboard");
+    navigate({ to: "/dashboard", replace: true });
   }
 
   async function forgot() {
