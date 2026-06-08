@@ -183,11 +183,7 @@ function NewCampaignDialog({ onDone }: { onDone: () => void }) {
     message: "",
     media_url: "",
     scheduled_at: "",
-    min_delay_seconds: 5,
-    max_delay_seconds: 15,
-    daily_limit: 500,
-    send_window_start: "09:00",
-    send_window_end: "21:00",
+    send_mode: "safety_basic" as "direct" | "safety_basic" | "safety_max",
   });
   const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set());
 
@@ -204,9 +200,6 @@ function NewCampaignDialog({ onDone }: { onDone: () => void }) {
           ...form,
           media_url: form.media_url || null,
           scheduled_at: form.scheduled_at ? new Date(form.scheduled_at).toISOString() : null,
-          min_delay_seconds: Number(form.min_delay_seconds),
-          max_delay_seconds: Number(form.max_delay_seconds),
-          daily_limit: Number(form.daily_limit),
           group_ids: Array.from(selectedGroups),
         },
       }),
