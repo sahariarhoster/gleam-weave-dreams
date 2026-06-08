@@ -210,7 +210,11 @@ export const runCampaignChunk = createServerFn({ method: "POST" })
     const remainingToday = (camp.daily_limit ?? 500) - (sentToday ?? 0);
     if (remainingToday <= 0) return { ran: 0, reason: "daily_limit_reached" };
 
-    const { data: device, error: dErr } = await context.supabase
+    const { data: ownDevice, error: ownDevErr } = await context.supabase
+      .from("devices").select("id").eq("id", camp.device_id).maybeSingle();
+    if (ownDevErr || !ownDevice) throw new Error("Device not found");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: device, error: dErr } = await supabaseAdmin
       .from("devices")
       .select("api_secret, device_unique_id")
       .eq("id", camp.device_id)

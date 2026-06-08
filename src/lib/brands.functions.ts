@@ -68,11 +68,22 @@ export const createBrand = createServerFn({ method: "POST" })
     return row;
   });
 
+async function assertBrandManager(supabase: any, userId: string, brandId: string) {
+  const { data: roleRow } = await supabase
+    .from("user_roles").select("role").eq("user_id", userId).eq("role", "owner").maybeSingle();
+  if (roleRow) return;
+  const { data: brand } = await supabase
+    .from("brands").select("created_by").eq("id", brandId).maybeSingle();
+  if (!brand) throw new Error("Brand not found");
+  if (brand.created_by !== userId) throw new Error("Forbidden: not your brand");
+}
+
 export const updateBrand = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => brandInput.extend({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { id, ...rest } = data;
+    await assertBrandManager(context.supabase, context.userId, id);
     const { error } = await context.supabase.from("brands").update(rest).eq("id", id);
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -82,6 +93,7 @@ export const deleteBrand = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
+    await assertBrandManager(context.supabase, context.userId, data.id);
     const { error } = await context.supabase.from("brands").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };

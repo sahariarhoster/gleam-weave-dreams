@@ -167,7 +167,15 @@ export const testDeviceConnection = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { data: device, error } = await context.supabase
+    // Verify caller has access to this device via RLS-scoped read (without sensitive columns)
+    const { data: own, error: ownErr } = await context.supabase
+      .from("devices")
+      .select("id")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (ownErr || !own) throw new Error("Device not found");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: device, error } = await supabaseAdmin
       .from("devices")
       .select("api_secret, device_unique_id")
       .eq("id", data.id)
@@ -206,7 +214,11 @@ export const sendSingleMessage = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { data: device, error } = await context.supabase
+    const { data: own, error: ownErr } = await context.supabase
+      .from("devices").select("id").eq("id", data.device_id).maybeSingle();
+    if (ownErr || !own) throw new Error("Device not found");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: device, error } = await supabaseAdmin
       .from("devices")
       .select("api_secret, device_unique_id, brand_id")
       .eq("id", data.device_id)

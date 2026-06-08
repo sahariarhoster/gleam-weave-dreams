@@ -74,7 +74,8 @@ export const listActivityLog = createServerFn({ method: "POST" })
     const userIds = Array.from(new Set(logs.map((l: any) => l.user_id).filter(Boolean)));
     let profiles: any[] = [];
     if (userIds.length) {
-      const { data: p } = await context.supabase
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { data: p } = await supabaseAdmin
         .from("profiles")
         .select("id, email, full_name")
         .in("id", userIds);
