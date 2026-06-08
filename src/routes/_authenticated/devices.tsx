@@ -24,6 +24,7 @@ import {
   listDevices, createDevice, updateDevice, deleteDevice, testDeviceConnection,
 } from "@/lib/devices.functions";
 import { listBrandsLite } from "@/lib/brands.functions";
+import { getMyRoles } from "@/lib/users.functions";
 
 export const Route = createFileRoute("/_authenticated/devices")({
   head: () => ({ meta: [{ title: "Devices — WA Notifier" }] }),
