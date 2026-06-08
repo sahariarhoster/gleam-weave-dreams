@@ -186,7 +186,7 @@ function Hero() {
               className="group relative inline-flex items-center gap-2 overflow-hidden rounded-xl bg-primary px-8 py-4 text-base font-bold text-primary-foreground shadow-xl shadow-primary/25 transition-all hover:scale-[1.03] hover:bg-[color:var(--color-emerald-deep)] active:scale-95"
             >
               <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition duration-700 group-hover:translate-x-full" />
-              <span className="relative">ফ্রি ট্রায়াল শুরু করুন</span>
+              <span className="relative">এখনই শুরু করুন</span>
               <ArrowRight className="relative h-5 w-5 transition group-hover:translate-x-0.5" />
             </Link>
             <a
