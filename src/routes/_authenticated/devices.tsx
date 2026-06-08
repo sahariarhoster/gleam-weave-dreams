@@ -84,17 +84,19 @@ function DevicesPage() {
           <CardTitle className="flex items-center gap-2 text-base">
             <Smartphone className="h-4 w-4" /> All Devices
           </CardTitle>
-          <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="gap-1"><Plus className="h-4 w-4" /> Add Device</Button>
-            </DialogTrigger>
-            <DeviceDialog
-              key={editing?.id ?? "new"}
-              editing={editing}
-              brands={brands.data ?? []}
-              onDone={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["devices"] }); }}
-            />
-          </Dialog>
+          {isOwner && (
+            <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="gap-1"><Plus className="h-4 w-4" /> Add Device</Button>
+              </DialogTrigger>
+              <DeviceDialog
+                key={editing?.id ?? "new"}
+                editing={editing}
+                brands={brands.data ?? []}
+                onDone={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["devices"] }); }}
+              />
+            </Dialog>
+          )}
         </CardHeader>
         <CardContent>
           <Table>
