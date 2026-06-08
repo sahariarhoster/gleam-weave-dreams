@@ -96,28 +96,65 @@ function DashboardPage() {
         </Card>
 
         {/* Delivery rate ring */}
-        <Card className="border-border/60 shadow-sm">
+        <Card className="relative overflow-hidden border-border/60 shadow-sm">
+          <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-emerald-500/10 blur-2xl" />
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <TrendingUp className="h-4 w-4" /> Delivery Rate
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-100 text-emerald-700">
+                  <TrendingUp className="h-3.5 w-3.5" />
+                </span>
+                Delivery Rate
+              </CardTitle>
+              <Badge variant="secondary" className="gap-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-50">
+                <span className="relative flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                </span>
+                Live
+              </Badge>
+            </div>
           </CardHeader>
-          <CardContent className="pb-4">
-            <div className="relative h-44">
-              <ClientOnly fallback={<div className="h-full w-full" />}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadialBarChart
-                    innerRadius="70%" outerRadius="100%"
-                    data={[{ name: "rate", value: rate, fill: "var(--primary)" }]}
-                    startAngle={90} endAngle={-270}
-                  >
-                    <RadialBar background={{ fill: "var(--muted)" }} dataKey="value" cornerRadius={10} />
-                  </RadialBarChart>
-                </ResponsiveContainer>
-              </ClientOnly>
+          <CardContent className="pb-5">
+            <div className="relative mx-auto h-44 w-44">
+              <svg viewBox="0 0 160 160" className="h-full w-full -rotate-90">
+                <defs>
+                  <linearGradient id="rateGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="#10b981" />
+                    <stop offset="100%" stopColor="#059669" />
+                  </linearGradient>
+                </defs>
+                <circle cx="80" cy="80" r="68" fill="none" stroke="var(--muted)" strokeWidth="12" />
+                <circle
+                  cx="80" cy="80" r="68" fill="none"
+                  stroke="url(#rateGrad)" strokeWidth="12" strokeLinecap="round"
+                  strokeDasharray={2 * Math.PI * 68}
+                  strokeDashoffset={(2 * Math.PI * 68) * (1 - Math.min(100, rate) / 100)}
+                  className="transition-[stroke-dashoffset] duration-700 ease-out drop-shadow-[0_0_8px_rgba(16,185,129,0.35)]"
+                />
+              </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <div className="text-3xl font-bold">{isLoading ? "—" : `${rate.toFixed(1)}%`}</div>
-                <div className="text-xs text-muted-foreground">{stats.totalMessages} total</div>
+                <div className="text-4xl font-bold tracking-tight tabular-nums">
+                  {isLoading ? "—" : rate.toFixed(1)}
+                  <span className="text-2xl text-muted-foreground">%</span>
+                </div>
+                <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  {stats.totalMessages} total
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+              <div className="rounded-lg bg-emerald-50 px-2 py-1.5">
+                <div className="text-sm font-bold text-emerald-700 tabular-nums">{stats.delivered}</div>
+                <div className="text-[9px] font-semibold uppercase tracking-wider text-emerald-700/70">Sent</div>
+              </div>
+              <div className="rounded-lg bg-rose-50 px-2 py-1.5">
+                <div className="text-sm font-bold text-rose-700 tabular-nums">{stats.failed}</div>
+                <div className="text-[9px] font-semibold uppercase tracking-wider text-rose-700/70">Failed</div>
+              </div>
+              <div className="rounded-lg bg-amber-50 px-2 py-1.5">
+                <div className="text-sm font-bold text-amber-700 tabular-nums">{stats.pending}</div>
+                <div className="text-[9px] font-semibold uppercase tracking-wider text-amber-700/70">Pending</div>
               </div>
             </div>
           </CardContent>
