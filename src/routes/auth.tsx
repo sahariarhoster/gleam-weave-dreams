@@ -41,17 +41,18 @@ function AuthPage() {
   async function signIn(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setLoading(false);
       return toast.error(error.message);
     }
-    toast.success("Welcome back!");
-    try {
-      await navigate({ to: "/dashboard", replace: true });
-    } finally {
+    if (!data.session) {
       setLoading(false);
+      return toast.error("Sign in failed. Please try again.");
     }
+    toast.success("Welcome back!");
+    setLoading(false);
+    navigate({ to: "/dashboard", replace: true });
   }
 
   async function forgot() {
