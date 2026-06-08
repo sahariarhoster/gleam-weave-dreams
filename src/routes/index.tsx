@@ -37,6 +37,7 @@ function LandingPage() {
         <ProtectionSection />
         <Testimonials />
         <PricingSection />
+        <CompareSection />
         <FinalCta />
       </main>
       <Footer />
@@ -629,6 +630,79 @@ function PricingSection() {
             অতিরিক্ত ডিভাইস <span className="font-bold text-foreground">৳২০০</span> প্রতি ডিভাইস ·
             অতিরিক্ত WordPress প্লাগইন লাইসেন্স <span className="font-bold text-foreground">৳১৫০</span> প্রতি লাইসেন্স
           </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+
+/* ---------------- Compare with Official API ---------------- */
+function CompareSection() {
+  const rows = [
+    { f: "প্রতি মেসেজ খরচ", ours: "অন্তর্ভুক্ত", api: "৳১.৫০ – ৳৩.০০" },
+    { f: "মাসিক ফি", ours: "৳৬০০ থেকে", api: "$XXX + ডেভেলপার ফি" },
+    { f: "সেটআপ সময়", ours: "৫ মিনিট", api: "২–৪ সপ্তাহ" },
+    { f: "বিজনেস ভেরিফিকেশন", ours: "প্রয়োজন নেই", api: "বাধ্যতামূলক" },
+    { f: "ফেসবুক বিজনেস ম্যানেজার", ours: "প্রয়োজন নেই", api: "বাধ্যতামূলক" },
+    { f: "টেমপ্লেট অনুমোদন", ours: "ইনস্ট্যান্ট", api: "২৪–৪৮ ঘণ্টা" },
+    { f: "WooCommerce ইন্টিগ্রেশন", ours: "বিল্ট-ইন প্লাগইন", api: "কাস্টম ডেভেলপমেন্ট" },
+    { f: "বাংলায় সাপোর্ট", ours: "২৪/৭", api: "ইংরেজি, লিমিটেড" },
+  ];
+  return (
+    <section className="bg-secondary/30 py-20 sm:py-28">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="mx-auto max-w-2xl text-center">
+          <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
+            <BarChart3 className="mr-1 h-3 w-3" /> তুলনা
+          </span>
+          <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-5xl">
+            অফিসিয়াল WhatsApp API-এর তুলনায়{" "}
+            <span className="text-primary">১০x সস্তা</span>
+          </h2>
+          <p className="mt-4 text-muted-foreground">
+            একই ডেলিভারি, একই রিচ — কিন্তু কয়েকগুণ কম খরচে ও ঝামেলা ছাড়াই।
+          </p>
+        </div>
+
+        <div className="relative mx-auto mt-14 max-w-4xl">
+          <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-xl">
+            <div className="grid grid-cols-3 border-b border-border bg-secondary/50 text-sm font-semibold">
+              <div className="p-5 text-muted-foreground">তুলনা</div>
+              <div className="relative p-5 text-center text-foreground">
+                <div className="absolute inset-x-3 -top-2 mx-auto h-1 w-12 rounded-full bg-primary" />
+                <div className="flex items-center justify-center gap-1.5">
+                  <span className="grid h-5 w-5 place-items-center rounded-md bg-primary text-primary-foreground">
+                    <MessageSquare className="h-3 w-3" />
+                  </span>
+                  WA Suite
+                  <span className="rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-bold text-primary">
+                    BEST
+                  </span>
+                </div>
+              </div>
+              <div className="p-5 text-center text-muted-foreground">WhatsApp Official API</div>
+            </div>
+            {rows.map((r, i) => (
+              <div
+                key={r.f}
+                className={`grid grid-cols-3 text-sm ${i % 2 === 0 ? "bg-background" : "bg-secondary/20"}`}
+              >
+                <div className="border-b border-border/50 p-4 text-muted-foreground">{r.f}</div>
+                <div className="border-x border-primary/15 border-b border-b-border/50 bg-primary/[0.04] p-4 text-center font-semibold text-primary">
+                  {r.ours}
+                </div>
+                <div className="border-b border-border/50 p-4 text-center text-muted-foreground">{r.api}</div>
+              </div>
+            ))}
+            <div className="grid grid-cols-3 bg-primary/8 text-sm font-bold">
+              <div className="p-5 text-foreground">মোট সঞ্চয়</div>
+              <div className="p-5 text-center">
+                <span className="rounded-full bg-primary px-3 py-1 text-primary-foreground">৮৫–৯৫%</span>
+              </div>
+              <div className="p-5 text-center text-muted-foreground">—</div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
