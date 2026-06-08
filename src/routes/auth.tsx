@@ -135,6 +135,36 @@ function AuthPage() {
                 </li>
               ))}
             </ul>
+
+            {/* Animated chat preview */}
+            <div className="relative mt-2 max-w-md rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-sm">
+              <div className="mb-3 flex items-center justify-between text-[11px] text-slate-400">
+                <div className="flex items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-300">
+                    <MessageCircle className="h-3 w-3" />
+                  </span>
+                  Campaign · Black Friday
+                </div>
+                <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-emerald-300">Sending</span>
+              </div>
+              <div className="space-y-2">
+                <div className="animate-auth-bubble max-w-[80%] rounded-2xl rounded-bl-sm bg-white/10 px-3 py-2 text-xs text-slate-100" style={{ animationDelay: "0.1s" }}>
+                  Hi Sarah 👋 your order #2841 is confirmed.
+                </div>
+                <div className="animate-auth-bubble ml-auto max-w-[70%] rounded-2xl rounded-br-sm bg-emerald-500/90 px-3 py-2 text-xs text-white shadow-lg shadow-emerald-500/20" style={{ animationDelay: "0.6s" }}>
+                  Thanks! When will it ship? ✨
+                </div>
+                <div className="animate-auth-bubble max-w-[85%] rounded-2xl rounded-bl-sm bg-white/10 px-3 py-2 text-xs text-slate-100" style={{ animationDelay: "1.1s" }}>
+                  Tomorrow by 5 PM. Tracking: HC-1042
+                </div>
+              </div>
+              <div className="mt-3 flex items-center justify-between text-[10px] text-slate-500">
+                <span>Delivered to 12,408 contacts</span>
+                <span className="flex items-center gap-1 text-emerald-300">
+                  <span className="h-1 w-1 animate-pulse rounded-full bg-emerald-300" /> Live
+                </span>
+              </div>
+            </div>
           </div>
 
           <p className="text-xs text-slate-500">© {new Date().getFullYear()} Hoster Camp · WA Suite</p>
