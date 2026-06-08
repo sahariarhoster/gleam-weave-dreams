@@ -125,8 +125,8 @@ function DashboardPage() {
 
       {/* KPI tiles */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        {kpis.map((k) => (
-          <KpiCard key={k.key} {...k} loading={isLoading} />
+        {kpis.map(({ key, ...k }) => (
+          <KpiCard key={key} {...k} loading={isLoading} />
         ))}
       </div>
 
