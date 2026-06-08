@@ -18,6 +18,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { listGroups, createGroup, updateGroup, deleteGroup, getGroupMembers, setGroupMembers } from "@/lib/contacts.functions";
 import { listContacts } from "@/lib/contacts.functions";
 import { listBrandsLite } from "@/lib/brands.functions";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/groups")({
   head: () => ({ meta: [{ title: "Groups — WA Notifier" }] }),
