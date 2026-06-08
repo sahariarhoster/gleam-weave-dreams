@@ -267,6 +267,18 @@ export const listMyBrandMembers = createServerFn({ method: "GET" })
         profileMap[p.id] = { email: p.email, full_name: p.full_name };
       });
     }
+    // Fetch banned status from auth admin
+    const { supabaseAdmin: admin2 } = await import("@/integrations/supabase/client.server");
+    const bannedMap: Record<string, boolean> = {};
+    await Promise.all(
+      userIds.map(async (uid) => {
+        try {
+          const { data } = await admin2.auth.admin.getUserById(uid);
+          const bu = (data?.user as any)?.banned_until;
+          bannedMap[uid] = !!bu && new Date(bu).getTime() > Date.now();
+        } catch { bannedMap[uid] = false; }
+      }),
+    );
     return {
       brands: brandsRes.data ?? [],
       members: memberRows.map((m: any) => ({
@@ -276,6 +288,7 @@ export const listMyBrandMembers = createServerFn({ method: "GET" })
         role: m.role,
         email: profileMap[m.user_id]?.email,
         full_name: profileMap[m.user_id]?.full_name,
+        inactive: bannedMap[m.user_id] ?? false,
       })),
     };
   });
@@ -326,6 +339,46 @@ export const removeMyBrandMember = createServerFn({ method: "POST" })
       .delete()
       .eq("user_id", data.user_id)
       .eq("brand_id", data.brand_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const setMyBrandMemberActive = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      user_id: z.string().uuid(),
+      brand_id: z.string().uuid(),
+      inactive: z.boolean(),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const ids = await getMyBrandIds(context.supabase, context.userId);
+    if (!ids.includes(data.brand_id)) throw new Error("Forbidden: not your brand");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(data.user_id, {
+      ban_duration: data.inactive ? "876000h" : "none",
+    } as any);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const deleteMyBrandMember = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ user_id: z.string().uuid(), brand_id: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const ids = await getMyBrandIds(context.supabase, context.userId);
+    if (!ids.includes(data.brand_id)) throw new Error("Forbidden: not your brand");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Safety: don't delete an owner-role user
+    const { data: roles } = await supabaseAdmin
+      .from("user_roles").select("role").eq("user_id", data.user_id);
+    if ((roles ?? []).some((r: any) => r.role === "owner")) {
+      throw new Error("Cannot delete an owner account");
+    }
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.user_id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

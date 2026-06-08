@@ -108,10 +108,10 @@ function DashboardPage() {
                 <ResponsiveContainer width="100%" height="100%">
                   <RadialBarChart
                     innerRadius="70%" outerRadius="100%"
-                    data={[{ name: "rate", value: rate, fill: "hsl(var(--primary))" }]}
+                    data={[{ name: "rate", value: rate, fill: "var(--primary)" }]}
                     startAngle={90} endAngle={-270}
                   >
-                    <RadialBar background={{ fill: "hsl(var(--muted))" }} dataKey="value" cornerRadius={10} />
+                    <RadialBar background={{ fill: "var(--muted)" }} dataKey="value" cornerRadius={10} />
                   </RadialBarChart>
                 </ResponsiveContainer>
               </ClientOnly>
@@ -147,31 +147,31 @@ function DashboardPage() {
                   <AreaChart data={stats.series} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="gDel" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                        <stop offset="0%" stopColor="var(--primary)" stopOpacity={0.4} />
+                        <stop offset="100%" stopColor="var(--primary)" stopOpacity={0} />
                       </linearGradient>
                       <linearGradient id="gFail" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor="#f43f5e" stopOpacity={0.35} />
                         <stop offset="100%" stopColor="#f43f5e" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
                     <XAxis
                       dataKey="date"
                       tickFormatter={(d) => new Date(d).toLocaleDateString(undefined, { weekday: "short" })}
-                      stroke="hsl(var(--muted-foreground))"
+                      stroke="var(--muted-foreground)"
                       fontSize={11} tickLine={false} axisLine={false}
                     />
-                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} width={32} />
+                    <YAxis stroke="var(--muted-foreground)" fontSize={11} tickLine={false} axisLine={false} width={32} />
                     <Tooltip
                       contentStyle={{
-                        background: "hsl(var(--background))",
-                        border: "1px solid hsl(var(--border))",
+                        background: "var(--background)",
+                        border: "1px solid var(--border)",
                         borderRadius: 8,
                         fontSize: 12,
                       }}
                     />
-                    <Area type="monotone" dataKey="delivered" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#gDel)" />
+                    <Area type="monotone" dataKey="delivered" stroke="var(--primary)" strokeWidth={2} fill="url(#gDel)" />
                     <Area type="monotone" dataKey="failed" stroke="#f43f5e" strokeWidth={2} fill="url(#gFail)" />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -193,7 +193,7 @@ function DashboardPage() {
                   <PieChart>
                     <Pie
                       data={[
-                        { name: "Delivered", value: stats.delivered, fill: "hsl(var(--primary))" },
+                        { name: "Delivered", value: stats.delivered, fill: "var(--primary)" },
                         { name: "Failed", value: stats.failed, fill: "#f43f5e" },
                         { name: "Pending", value: stats.pending, fill: "#f59e0b" },
                       ]}
@@ -203,8 +203,8 @@ function DashboardPage() {
                     </Pie>
                     <Tooltip
                       contentStyle={{
-                        background: "hsl(var(--background))",
-                        border: "1px solid hsl(var(--border))",
+                        background: "var(--background)",
+                        border: "1px solid var(--border)",
                         borderRadius: 8,
                         fontSize: 12,
                       }}
@@ -214,7 +214,7 @@ function DashboardPage() {
               </ClientOnly>
             </div>
             <div className="mt-3 space-y-2">
-              <LegendRow color="hsl(var(--primary))" label="Delivered" value={stats.delivered} />
+              <LegendRow color="var(--primary)" label="Delivered" value={stats.delivered} />
               <LegendRow color="#f43f5e" label="Failed" value={stats.failed} />
               <LegendRow color="#f59e0b" label="Pending" value={stats.pending} />
             </div>
