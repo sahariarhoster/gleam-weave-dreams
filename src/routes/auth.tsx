@@ -181,22 +181,22 @@ function AuthPage() {
               <MessageCircle className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-lg font-bold tracking-tight">WA Suite</h1>
-              <p className="text-[11px] uppercase tracking-widest text-slate-400">By Hoster Camp</p>
+              <h1 className="text-lg font-bold tracking-tight text-slate-900">WA Suite</h1>
+              <p className="text-[11px] uppercase tracking-widest text-slate-500">By Hoster Camp</p>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+          <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/60 sm:p-8">
             <div className="mb-6">
-              <h3 className="text-2xl font-bold tracking-tight text-white">Welcome back</h3>
-              <p className="mt-1 text-sm text-slate-400">Sign in to continue to your workspace.</p>
+              <h3 className="text-2xl font-bold tracking-tight text-slate-900">Welcome back</h3>
+              <p className="mt-1 text-sm text-slate-500">Sign in to continue to your workspace.</p>
             </div>
 
             <form onSubmit={signIn} className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="si-email" className="text-slate-300">Email</Label>
+                <Label htmlFor="si-email" className="text-slate-700">Email</Label>
                 <div className="relative">
-                  <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                  <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <Input
                     id="si-email"
                     type="email"
@@ -205,24 +205,24 @@ function AuthPage() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@company.com"
-                    className="h-11 border-white/10 bg-white/[0.04] pl-10 text-white placeholder:text-slate-500 focus-visible:border-emerald-400/60 focus-visible:ring-emerald-400/30"
+                    className="h-11 border-slate-200 bg-white pl-10 text-slate-900 placeholder:text-slate-400 focus-visible:border-emerald-500/60 focus-visible:ring-emerald-500/30"
                   />
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="si-pass" className="text-slate-300">Password</Label>
+                  <Label htmlFor="si-pass" className="text-slate-700">Password</Label>
                   <button
                     type="button"
                     onClick={forgot}
-                    className="text-xs font-medium text-emerald-300 hover:text-emerald-200"
+                    className="text-xs font-medium text-emerald-600 hover:text-emerald-700"
                   >
                     Forgot?
                   </button>
                 </div>
                 <div className="relative">
-                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <Input
                     id="si-pass"
                     type={showPass ? "text" : "password"}
@@ -231,12 +231,12 @@ function AuthPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="h-11 border-white/10 bg-white/[0.04] px-10 text-white placeholder:text-slate-500 focus-visible:border-emerald-400/60 focus-visible:ring-emerald-400/30"
+                    className="h-11 border-slate-200 bg-white px-10 text-slate-900 placeholder:text-slate-400 focus-visible:border-emerald-500/60 focus-visible:ring-emerald-500/30"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPass((s) => !s)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                     aria-label={showPass ? "Hide password" : "Show password"}
                   >
                     {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -244,8 +244,8 @@ function AuthPage() {
                 </div>
               </div>
 
-              <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-400">
-                <Checkbox className="border-white/20 data-[state=checked]:border-emerald-500 data-[state=checked]:bg-emerald-500" />
+              <label className="flex cursor-pointer items-center gap-2 text-xs text-slate-600">
+                <Checkbox className="border-slate-300 data-[state=checked]:border-emerald-500 data-[state=checked]:bg-emerald-500" />
                 Keep me signed in on this device
               </label>
 
