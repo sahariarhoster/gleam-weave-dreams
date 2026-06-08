@@ -128,6 +128,8 @@ export type Database = {
           name: string
           status: Database["public"]["Enums"]["brand_status"]
           updated_at: string
+          whmcs_product_id: string | null
+          whmcs_service_id: string | null
         }
         Insert: {
           created_at?: string
@@ -140,6 +142,8 @@ export type Database = {
           name: string
           status?: Database["public"]["Enums"]["brand_status"]
           updated_at?: string
+          whmcs_product_id?: string | null
+          whmcs_service_id?: string | null
         }
         Update: {
           created_at?: string
@@ -152,6 +156,8 @@ export type Database = {
           name?: string
           status?: Database["public"]["Enums"]["brand_status"]
           updated_at?: string
+          whmcs_product_id?: string | null
+          whmcs_service_id?: string | null
         }
         Relationships: []
       }
