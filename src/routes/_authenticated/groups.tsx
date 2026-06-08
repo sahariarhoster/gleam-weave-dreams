@@ -47,15 +47,19 @@ function GroupsPage() {
 
   return (
     <div className="mx-auto max-w-7xl">
-      <Card className="border-border/60 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base"><FolderOpen className="h-4 w-4" /> Contact Groups</CardTitle>
+      <PageHeader
+        icon={FolderOpen}
+        title="Contact Groups"
+        description="Bundle contacts into reusable groups for targeted campaigns."
+        actions={
           <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
             <DialogTrigger asChild><Button size="sm" className="gap-1"><Plus className="h-4 w-4" /> Add Group</Button></DialogTrigger>
             <GroupDialog editing={editing} brands={brands.data ?? []} onDone={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["groups"] }); }} />
           </Dialog>
-        </CardHeader>
-        <CardContent>
+        }
+      />
+      <Card className="border-border/60 shadow-sm">
+        <CardContent className="pt-6">
           <Table>
             <TableHeader>
               <TableRow>
