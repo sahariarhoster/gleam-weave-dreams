@@ -46,10 +46,22 @@ export const Route = createFileRoute("/api/public/whmcs/provision")({
           });
           if (error || !created.user) return json({ error: "user_create_failed", detail: error?.message }, 500);
           userId = created.user.id;
-          // Ensure brand_owner role
-          await supabaseAdmin.from("user_roles").delete().eq("user_id", userId);
-          await supabaseAdmin.from("user_roles").insert({ user_id: userId, role: "brand_owner" });
         }
+
+        // The auth trigger may be disabled/missing in imported projects, so make
+        // the records used by the app UI explicit and idempotent here too.
+        const { error: profileErr } = await supabaseAdmin.from("profiles").upsert({
+          id: userId,
+          email: input.owner_email,
+          full_name: input.owner_name,
+        }, { onConflict: "id" });
+        if (profileErr) return json({ error: "profile_create_failed", detail: profileErr.message }, 500);
+
+        const { error: roleErr } = await supabaseAdmin.from("user_roles").upsert({
+          user_id: userId,
+          role: "brand_owner",
+        }, { onConflict: "user_id,role" });
+        if (roleErr) return json({ error: "role_create_failed", detail: roleErr.message }, 500);
 
         // Create brand
         const { data: brand, error: bErr } = await supabaseAdmin.from("brands").insert({
@@ -63,6 +75,20 @@ export const Route = createFileRoute("/api/public/whmcs/provision")({
           created_by: userId,
         }).select("id").single();
         if (bErr || !brand) return json({ error: "brand_create_failed", detail: bErr?.message }, 500);
+
+        const { error: memberErr } = await supabaseAdmin.from("brand_members").upsert({
+          brand_id: brand.id,
+          user_id: userId,
+          role: "brand_admin",
+        }, { onConflict: "brand_id,user_id" });
+        if (memberErr) return json({ error: "brand_member_create_failed", detail: memberErr.message }, 500);
+
+        await supabaseAdmin.from("activity_log").insert({
+          user_id: userId,
+          brand_id: brand.id,
+          action: "whmcs_provision",
+          details: { service_id: input.service_id, product_id: input.product_id },
+        });
 
         return json({
           ok: true,
