@@ -1,7 +1,7 @@
 // Shared helpers for /api/public/plugin/* routes
 import { z } from "zod";
 
-export const licenseKeySchema = z.string().regex(/^WAN-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/);
+export const licenseKeySchema = z.string().regex(/^(HS|WAN)-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/);
 
 export function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
