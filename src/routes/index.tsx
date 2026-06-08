@@ -50,7 +50,7 @@ function Header() {
     <header className="sticky top-0 z-40 border-b border-border/50 bg-background/70 backdrop-blur-xl supports-[backdrop-filter]:bg-background/55">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         <Link to="/" className="flex items-center gap-2.5">
-          <span className="relative grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-primary via-primary to-[color:var(--color-emerald-deep)] text-primary-foreground shadow-[0_10px_30px_-12px_var(--primary)]">
+          <span className="relative grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground shadow-[0_10px_30px_-12px_var(--primary)]">
             <MessageSquare className="h-4.5 w-4.5" />
             <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-[color:var(--color-gold)] ring-2 ring-background" />
           </span>
@@ -163,7 +163,7 @@ function Hero() {
           {/* Headline */}
           <h1 className="font-display text-5xl font-extrabold leading-[1.15] tracking-tight text-[color:var(--color-emerald-deep)] sm:text-6xl md:text-7xl">
             হাজারো কাস্টমারের কাছে{" "}
-            <span className="bg-gradient-to-r from-primary to-[color:var(--color-gold)] bg-clip-text text-transparent">
+            <span className="text-primary">
               এক ক্লিকেই
             </span>{" "}
             হোয়াটসঅ্যাপ মেসেজ
@@ -262,7 +262,7 @@ function TrustStrip() {
           {stats.map((s) => (
             <div key={s.label} className="bg-card px-6 py-8 text-center transition hover:bg-accent/30">
               <div className="font-display text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                <span className="bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent">
+                <span className="text-foreground">
                   {s.value}
                 </span>
               </div>
@@ -357,7 +357,7 @@ function BulkSection() {
             </div>
             <div className="mt-6">
               <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-secondary">
-                <div className="h-full w-[88%] rounded-full bg-gradient-to-r from-primary via-primary to-[color:var(--color-gold)] shadow-[0_0_20px_color-mix(in_oklab,var(--primary)_60%,transparent)]" />
+                <div className="h-full w-[88%] rounded-full bg-primary shadow-[0_0_20px_color-mix(in_oklab,var(--primary)_60%,transparent)]" />
                 <div className="absolute inset-0 -translate-x-full animate-auth-beam bg-gradient-to-r from-transparent via-white/40 to-transparent" />
               </div>
               <div className="mt-2 flex justify-between text-xs text-muted-foreground">
@@ -455,7 +455,7 @@ function PluginSection() {
                   </div>
                 ))}
               </div>
-              <div className="mt-5 rounded-lg border border-[color:var(--color-gold)]/30 bg-gradient-to-br from-primary/8 to-[color:var(--color-gold)]/10 p-3 text-xs leading-relaxed text-foreground">
+              <div className="mt-5 rounded-lg border border-primary/20 bg-primary/8 p-3 text-xs leading-relaxed text-foreground">
                 "প্রিয় রহিম, আপনার অর্ডার #১২৩৪ আমরা পেয়েছি। মোট: ৳১,২০০।
                 <span className="font-semibold text-primary"> আমাদের সেলস টিম কিছুক্ষণের মধ্যে আপনাকে কল করবে।</span>"
               </div>
@@ -502,9 +502,9 @@ function ProtectionSection() {
               key={l.t}
               className="group relative overflow-hidden rounded-2xl border border-border bg-card p-6 transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/10"
             >
-              <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-gradient-to-br from-primary/10 to-[color:var(--color-gold)]/10 opacity-0 blur-2xl transition group-hover:opacity-100" />
+              <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-primary/10 opacity-0 blur-2xl transition group-hover:opacity-100" />
               <div className="relative">
-                <div className="inline-grid h-12 w-12 place-items-center rounded-xl bg-gradient-to-br from-primary/15 to-[color:var(--color-gold)]/20 text-primary ring-1 ring-primary/20">
+                <div className="inline-grid h-12 w-12 place-items-center rounded-xl bg-primary/12 text-primary ring-1 ring-primary/20">
                   <l.icon className="h-5 w-5" />
                 </div>
                 <div className="mt-4 flex items-center gap-2">
@@ -565,7 +565,7 @@ function Testimonials() {
               </div>
               <p className="mt-3 text-sm leading-relaxed text-foreground/90">"{t.text}"</p>
               <div className="mt-6 flex items-center gap-3 border-t border-border/60 pt-4">
-                <span className="grid h-10 w-10 place-items-center rounded-full bg-gradient-to-br from-primary to-[color:var(--color-emerald-deep)] text-sm font-bold text-primary-foreground">
+                <span className="grid h-10 w-10 place-items-center rounded-full bg-primary text-sm font-bold text-primary-foreground">
                   {t.name.charAt(0)}
                 </span>
                 <div className="flex-1">
@@ -615,7 +615,7 @@ function PricingSection() {
             <div className="grid grid-cols-3 border-b border-border bg-secondary/40 text-sm font-semibold">
               <div className="p-5 text-muted-foreground">তুলনা</div>
               <div className="relative p-5 text-center text-foreground">
-                <div className="absolute inset-x-3 -top-2 mx-auto h-1 w-12 rounded-full bg-gradient-to-r from-primary to-[color:var(--color-gold)]" />
+                <div className="absolute inset-x-3 -top-2 mx-auto h-1 w-12 rounded-full bg-primary" />
                 <div className="flex items-center justify-center gap-1.5">
                   <span className="grid h-5 w-5 place-items-center rounded-md bg-primary text-primary-foreground">
                     <MessageSquare className="h-3 w-3" />
@@ -640,7 +640,7 @@ function PricingSection() {
                 <div className="border-b border-border/50 p-4 text-center text-muted-foreground">{r.api}</div>
               </div>
             ))}
-            <div className="grid grid-cols-3 bg-gradient-to-r from-primary/10 via-[color:var(--color-gold)]/10 to-primary/10 text-sm font-bold">
+            <div className="grid grid-cols-3 bg-primary/8 text-sm font-bold">
               <div className="p-5 text-foreground">মোট সঞ্চয়</div>
               <div className="p-5 text-center">
                 <span className="rounded-full bg-primary px-3 py-1 text-primary-foreground">৮৫–৯৫%</span>
@@ -653,7 +653,7 @@ function PricingSection() {
         <div className="mt-10 text-center">
           <Link
             to="/auth"
-            className="group inline-flex items-center gap-2 rounded-lg bg-gradient-to-br from-primary to-[color:var(--color-emerald-deep)] px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_20px_50px_-15px_var(--primary)] transition hover:shadow-[0_25px_60px_-15px_var(--primary)]"
+            className="group inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-[0_20px_50px_-15px_var(--primary)] transition hover:shadow-[0_25px_60px_-15px_var(--primary)]"
           >
             এখনই অ্যাকাউন্ট খুলুন <ArrowRight className="h-4 w-4 transition group-hover:translate-x-0.5" />
           </Link>
@@ -668,7 +668,7 @@ function FinalCta() {
   return (
     <section className="py-20 sm:py-28">
       <div className="mx-auto max-w-5xl px-4 sm:px-6">
-        <div className="relative overflow-hidden rounded-3xl border border-[color:var(--color-gold)]/30 bg-gradient-to-br from-[color:var(--color-emerald-deep)] via-primary to-[color:var(--color-emerald-deep)] p-10 text-center text-primary-foreground shadow-2xl sm:p-16">
+        <div className="relative overflow-hidden rounded-3xl border border-[color:var(--color-gold)]/30 bg-[color:var(--color-emerald-deep)] p-10 text-center text-primary-foreground shadow-2xl sm:p-16">
           <div aria-hidden className="absolute inset-0 bg-[radial-gradient(50%_70%_at_85%_15%,color-mix(in_oklab,var(--color-gold)_35%,transparent)_0%,transparent_60%)]" />
           <div aria-hidden className="absolute inset-0 bg-[radial-gradient(45%_60%_at_10%_90%,color-mix(in_oklab,var(--primary-glow)_45%,transparent)_0%,transparent_60%)]" />
           <div aria-hidden className="absolute inset-0 opacity-[0.07]" style={{ backgroundImage: "radial-gradient(white 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
@@ -679,7 +679,7 @@ function FinalCta() {
             </span>
             <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-5xl">
               আজই শুরু করুন। প্রথম{" "}
-              <span className="bg-gradient-to-r from-[color:var(--color-gold-soft)] to-[color:var(--color-gold)] bg-clip-text text-transparent">
+              <span className="text-primary">
                 ১০০ মেসেজ ফ্রি
               </span>
               ।
@@ -690,7 +690,7 @@ function FinalCta() {
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link
                 to="/auth"
-                className="group relative inline-flex items-center gap-2 overflow-hidden rounded-lg bg-gradient-to-br from-[color:var(--color-gold-soft)] to-[color:var(--color-gold)] px-6 py-3 text-sm font-bold text-[color:var(--color-emerald-deep)] shadow-xl shadow-black/20 transition hover:scale-[1.02]"
+                className="group relative inline-flex items-center gap-2 overflow-hidden rounded-lg bg-[color:var(--color-gold)] px-6 py-3 text-sm font-bold text-[color:var(--color-emerald-deep)] shadow-xl shadow-black/20 transition hover:scale-[1.02]"
               >
                 <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/50 to-transparent transition duration-700 group-hover:translate-x-full" />
                 <span className="relative">ফ্রি অ্যাকাউন্ট খুলুন</span>
@@ -718,7 +718,7 @@ function Footer() {
         <div className="grid gap-10 md:grid-cols-4">
           <div className="md:col-span-2">
             <div className="flex items-center gap-2.5">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-primary to-[color:var(--color-emerald-deep)] text-primary-foreground shadow-md">
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary text-primary-foreground shadow-md">
                 <MessageSquare className="h-4 w-4" />
               </span>
               <span className="font-display text-lg font-bold">WA Suite</span>
