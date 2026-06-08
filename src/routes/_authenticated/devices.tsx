@@ -112,11 +112,11 @@ function DevicesPage() {
             </TableHeader>
             <TableBody>
               {devices.isLoading && (
-                <TableRow><TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">Loading…</TableCell></TableRow>
+                <TableRow><TableCell colSpan={isOwner ? 6 : 5} className="py-10 text-center text-sm text-muted-foreground">Loading…</TableCell></TableRow>
               )}
               {!devices.isLoading && (devices.data?.length ?? 0) === 0 && (
-                <TableRow><TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-                  No devices yet. Add one to start sending.
+                <TableRow><TableCell colSpan={isOwner ? 6 : 5} className="py-10 text-center text-sm text-muted-foreground">
+                  No devices yet.
                 </TableCell></TableRow>
               )}
               {(devices.data ?? []).map((d) => (
