@@ -17,6 +17,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { listMyBrandMembers, createBrandMemberUser, removeMyBrandMember } from "@/lib/users.functions";
+import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/members")({
   head: () => ({ meta: [{ title: "Members — WA Notifier" }] }),
