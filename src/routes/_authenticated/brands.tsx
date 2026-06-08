@@ -18,7 +18,7 @@ import { listBrands, createBrand, updateBrand, deleteBrand } from "@/lib/brands.
 import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/brands")({
-  head: () => ({ meta: [{ title: "Brands — WA Notifier" }] }),
+  head: () => ({ meta: [{ title: "Brands — WA Suite" }] }),
   component: BrandsPage,
 });
 

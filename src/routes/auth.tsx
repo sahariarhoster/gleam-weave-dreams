@@ -10,7 +10,7 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Sign in — WA Notifier" }] }),
+  head: () => ({ meta: [{ title: "Sign in — WA Suite" }] }),
   component: AuthPage,
 });
 
@@ -44,7 +44,7 @@ function AuthPage() {
               <MessageCircle className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold tracking-tight">WA Notifier</h1>
+              <h1 className="text-xl font-semibold tracking-tight">WA Suite</h1>
               <p className="text-xs text-primary-foreground/75">WhatsApp campaigns at scale</p>
             </div>
           </div>
@@ -65,7 +65,7 @@ function AuthPage() {
               <MessageCircle className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-xl font-semibold tracking-tight">WA Notifier</h1>
+              <h1 className="text-xl font-semibold tracking-tight">WA Suite</h1>
               <p className="text-xs text-muted-foreground">WhatsApp campaigns at scale</p>
             </div>
           </div>

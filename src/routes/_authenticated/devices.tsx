@@ -28,7 +28,7 @@ import { getMyRoles } from "@/lib/users.functions";
 import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/devices")({
-  head: () => ({ meta: [{ title: "Devices — WA Notifier" }] }),
+  head: () => ({ meta: [{ title: "Devices — WA Suite" }] }),
   component: DevicesPage,
 });
 
@@ -191,7 +191,7 @@ function DevicesPage() {
 
 function TestDialog({ device, pending, onSend }: { device: Device | null; pending: boolean; onSend: (recipient: string, message: string) => void }) {
   const [recipient, setRecipient] = useState("");
-  const [message, setMessage] = useState("✅ Test message from WA Notifier");
+  const [message, setMessage] = useState("✅ Test message from WA Suite");
   return (
     <DialogContent>
       <DialogHeader>

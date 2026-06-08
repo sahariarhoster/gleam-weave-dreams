@@ -31,7 +31,7 @@ export const Route = createFileRoute("/api/public/plugin/update-check")({
 
         return jsonResponse({
           slug: "wa-notifier-woocommerce",
-          name: "WA Notifier for WooCommerce",
+          name: "WA Suite for WooCommerce",
           version: s?.plugin_version ?? "1.0.0",
           download_url: download,
           changelog: s?.plugin_changelog ?? "",

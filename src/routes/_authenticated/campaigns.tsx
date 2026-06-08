@@ -24,7 +24,7 @@ import { listDevices } from "@/lib/devices.functions";
 import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/campaigns")({
-  head: () => ({ meta: [{ title: "Campaigns — WA Notifier" }] }),
+  head: () => ({ meta: [{ title: "Campaigns — WA Suite" }] }),
   component: CampaignsPage,
 });
 

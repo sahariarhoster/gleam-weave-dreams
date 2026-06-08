@@ -21,7 +21,7 @@ import { Power, UserX } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/members")({
-  head: () => ({ meta: [{ title: "Members — WA Notifier" }] }),
+  head: () => ({ meta: [{ title: "Members — WA Suite" }] }),
   component: MembersPage,
 });
 

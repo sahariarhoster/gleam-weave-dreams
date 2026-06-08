@@ -125,7 +125,7 @@ function BillingPage() {
             <summary className="cursor-pointer font-medium">Setup instructions</summary>
             <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground">
               <li>Generate the API token above and copy the Server URL.</li>
-              <li>In WHMCS: <strong>System Settings → Servers → Add New Server</strong>. Module: <code>WA Notifier</code>. Hostname: paste your Server URL. Access Hash: paste your API token.</li>
+              <li>In WHMCS: <strong>System Settings → Servers → Add New Server</strong>. Module: <code>WA Suite</code>. Hostname: paste your Server URL. Access Hash: paste your API token.</li>
               <li>Create a Server Group containing this server.</li>
               <li>Create a Product (type: Other / Server). Module Settings → Module Name: <code>wanotifier</code>. Configure <em>Message Limit</em>, <em>Device Limit</em>, and the Product ID is sent automatically.</li>
               <li>On Create / Suspend / Unsuspend / Terminate, WHMCS calls the matching endpoint here. Credentials are emailed via WHMCS's "Product/Service Welcome Email".</li>

@@ -16,7 +16,7 @@ import { listDevices, sendSingleMessage } from "@/lib/devices.functions";
 import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/send")({
-  head: () => ({ meta: [{ title: "Send SMS — WA Notifier" }] }),
+  head: () => ({ meta: [{ title: "Send SMS — WA Suite" }] }),
   component: SendSmsPage,
 });
 
