@@ -199,3 +199,85 @@ export const resetUserPassword = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
+
+// ============ Brand-owner: manage members of own brands ============
+
+async function getMyBrandIds(supabase: any, userId: string): Promise<string[]> {
+  const { data } = await supabase.from("brands").select("id").eq("created_by", userId);
+  return (data ?? []).map((b: any) => b.id as string);
+}
+
+export const listMyBrandMembers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const ids = await getMyBrandIds(context.supabase, context.userId);
+    if (ids.length === 0) return { brands: [], members: [] };
+    const [brandsRes, membersRes] = await Promise.all([
+      context.supabase.from("brands").select("id, name").in("id", ids),
+      context.supabase
+        .from("brand_members")
+        .select("user_id, role, brand_id, brands(name), profiles:user_id(email, full_name)")
+        .in("brand_id", ids),
+    ]);
+    return {
+      brands: brandsRes.data ?? [],
+      members: (membersRes.data ?? []).map((m: any) => ({
+        user_id: m.user_id,
+        brand_id: m.brand_id,
+        brand_name: m.brands?.name,
+        role: m.role,
+        email: m.profiles?.email,
+        full_name: m.profiles?.full_name,
+      })),
+    };
+  });
+
+export const createBrandMemberUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      email: z.string().email().max(255),
+      password: z.string().min(6).max(72),
+      full_name: z.string().min(1).max(100),
+      brand_id: z.string().uuid(),
+      role: z.enum(["brand_admin", "brand_member", "sender"]).default("brand_member"),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const ids = await getMyBrandIds(context.supabase, context.userId);
+    if (!ids.includes(data.brand_id)) throw new Error("Forbidden: not your brand");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
+      email: data.email,
+      password: data.password,
+      email_confirm: true,
+      user_metadata: { full_name: data.full_name },
+    });
+    if (error) throw new Error(error.message);
+    const uid = created.user?.id;
+    if (!uid) throw new Error("User creation failed");
+    // Force role to plain 'member' (override trigger's brand_owner default)
+    await supabaseAdmin.from("user_roles").delete().eq("user_id", uid);
+    await supabaseAdmin.from("user_roles").insert({ user_id: uid, role: "member" });
+    await supabaseAdmin.from("brand_members").insert({
+      user_id: uid, brand_id: data.brand_id, role: data.role,
+    });
+    return { ok: true, user_id: uid };
+  });
+
+export const removeMyBrandMember = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ user_id: z.string().uuid(), brand_id: z.string().uuid() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const ids = await getMyBrandIds(context.supabase, context.userId);
+    if (!ids.includes(data.brand_id)) throw new Error("Forbidden: not your brand");
+    const { error } = await context.supabase
+      .from("brand_members")
+      .delete()
+      .eq("user_id", data.user_id)
+      .eq("brand_id", data.brand_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
