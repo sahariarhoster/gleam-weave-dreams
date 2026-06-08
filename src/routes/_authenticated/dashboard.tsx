@@ -291,7 +291,7 @@ function DashboardPage() {
 
 function HeroStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl bg-white/15 px-3 py-2 backdrop-blur">
+    <div className="rounded-xl bg-white/15 px-3 py-2">
       <div className="text-[10px] uppercase tracking-wider text-primary-foreground/70">{label}</div>
       <div className="text-xl font-bold">{value}</div>
     </div>
