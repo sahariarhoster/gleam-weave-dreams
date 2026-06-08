@@ -44,7 +44,12 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 
 function DashboardPage() {
   const fn = useServerFn(getDashboardStats);
-  const { data, isLoading } = useQuery({ queryKey: ["dashboard-stats"], queryFn: () => fn() });
+  const { user } = useAuth();
+  const { data, isLoading } = useQuery({
+    queryKey: ["dashboard-stats", user?.id ?? "anon"],
+    queryFn: () => fn(),
+    enabled: !!user?.id,
+  });
 
   const stats = data ?? {
     devices: 0, devicesOnline: 0, brands: 0, brandUsers: 0, campaigns: 0,
