@@ -13,6 +13,7 @@ async function assertOwner(supabase: any, userId: string) {
 
 type Stats = {
   devices: number;
+  devicesOnline: number;
   brands: number;
   brandUsers: number;
   campaigns: number;
@@ -22,28 +23,78 @@ type Stats = {
   delivered: number;
   failed: number;
   pending: number;
+  todayMessages: number;
+  series: { date: string; delivered: number; failed: number; pending: number }[];
+  topDevices: { id: string; name: string; status: string }[];
 };
 
 export const getDashboardStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<Stats> => {
     const sb = context.supabase;
-    const counts = await Promise.all([
-      sb.from("devices").select("*", { count: "exact", head: true }),
-      sb.from("brands").select("*", { count: "exact", head: true }),
-      sb.from("brand_members").select("*", { count: "exact", head: true }),
-    ]);
+    const since = new Date();
+    since.setDate(since.getDate() - 6);
+    since.setHours(0, 0, 0, 0);
+
+    const [devicesQ, brandsQ, membersQ, campaignsQ, activeQ, blockedQ, msgsQ, recentMsgsQ, devicesListQ] =
+      await Promise.all([
+        sb.from("devices").select("*", { count: "exact", head: true }),
+        sb.from("brands").select("*", { count: "exact", head: true }),
+        sb.from("brand_members").select("*", { count: "exact", head: true }),
+        sb.from("campaigns").select("*", { count: "exact", head: true }),
+        sb.from("campaigns").select("*", { count: "exact", head: true }).in("status", ["running", "scheduled"]),
+        sb.from("blocked_numbers").select("*", { count: "exact", head: true }),
+        sb.from("campaign_messages").select("status"),
+        sb
+          .from("campaign_messages")
+          .select("status, created_at")
+          .gte("created_at", since.toISOString()),
+        sb.from("devices").select("id, name, status").order("created_at", { ascending: false }).limit(5),
+      ]);
+
+    const totals = { delivered: 0, failed: 0, pending: 0 };
+    (msgsQ.data ?? []).forEach((m: any) => {
+      if (m.status === "sent" || m.status === "delivered") totals.delivered++;
+      else if (m.status === "failed") totals.failed++;
+      else totals.pending++;
+    });
+
+    const series: Stats["series"] = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(since);
+      d.setDate(since.getDate() + i);
+      series.push({ date: d.toISOString().slice(0, 10), delivered: 0, failed: 0, pending: 0 });
+    }
+    const todayStr = new Date().toISOString().slice(0, 10);
+    let today = 0;
+    (recentMsgsQ.data ?? []).forEach((m: any) => {
+      const day = new Date(m.created_at).toISOString().slice(0, 10);
+      const slot = series.find((x) => x.date === day);
+      if (!slot) return;
+      if (m.status === "sent" || m.status === "delivered") slot.delivered++;
+      else if (m.status === "failed") slot.failed++;
+      else slot.pending++;
+      if (day === todayStr) today++;
+    });
+
+    const devicesList = (devicesListQ.data ?? []) as any[];
+    const devicesOnline = devicesList.filter((d) => d.status === "active" || d.status === "online").length;
+
     return {
-      devices: counts[0].count ?? 0,
-      brands: counts[1].count ?? 0,
-      brandUsers: counts[2].count ?? 0,
-      campaigns: 0,
-      activeCampaigns: 0,
-      blockedNumbers: 0,
-      totalMessages: 0,
-      delivered: 0,
-      failed: 0,
-      pending: 0,
+      devices: devicesQ.count ?? 0,
+      devicesOnline,
+      brands: brandsQ.count ?? 0,
+      brandUsers: membersQ.count ?? 0,
+      campaigns: campaignsQ.count ?? 0,
+      activeCampaigns: activeQ.count ?? 0,
+      blockedNumbers: blockedQ.count ?? 0,
+      totalMessages: (msgsQ.data ?? []).length,
+      delivered: totals.delivered,
+      failed: totals.failed,
+      pending: totals.pending,
+      todayMessages: today,
+      series,
+      topDevices: devicesList.map((d) => ({ id: d.id, name: d.name, status: d.status })),
     };
   });
 
