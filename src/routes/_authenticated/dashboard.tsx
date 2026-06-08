@@ -189,28 +189,30 @@ function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="h-44">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={[
-                      { name: "Delivered", value: stats.delivered, fill: "hsl(var(--primary))" },
-                      { name: "Failed", value: stats.failed, fill: "#f43f5e" },
-                      { name: "Pending", value: stats.pending, fill: "#f59e0b" },
-                    ]}
-                    dataKey="value" innerRadius={45} outerRadius={70} paddingAngle={3}
-                  >
-                    <Cell />
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      background: "hsl(var(--background))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: 8,
-                      fontSize: 12,
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+              <ClientOnly fallback={<div className="h-full w-full" />}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: "Delivered", value: stats.delivered, fill: "hsl(var(--primary))" },
+                        { name: "Failed", value: stats.failed, fill: "#f43f5e" },
+                        { name: "Pending", value: stats.pending, fill: "#f59e0b" },
+                      ]}
+                      dataKey="value" innerRadius={45} outerRadius={70} paddingAngle={3}
+                    >
+                      <Cell />
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        background: "hsl(var(--background))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: 8,
+                        fontSize: 12,
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </ClientOnly>
             </div>
             <div className="mt-3 space-y-2">
               <LegendRow color="hsl(var(--primary))" label="Delivered" value={stats.delivered} />
