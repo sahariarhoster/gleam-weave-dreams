@@ -12,6 +12,7 @@ class WANW_Updater {
         add_filter('pre_set_site_transient_update_plugins', [__CLASS__, 'inject_update']);
         add_filter('plugins_api', [__CLASS__, 'plugins_api'], 10, 3);
         add_action('upgrader_process_complete', [__CLASS__, 'clear_cache'], 10, 2);
+        add_action('admin_post_wanw_check_update', [__CLASS__, 'manual_check']);
     }
 
     public static function plugin_basename() {
@@ -24,6 +25,24 @@ class WANW_Updater {
 
     public static function clear_cache() {
         delete_transient(self::TRANSIENT);
+    }
+
+    public static function update_url() {
+        return wp_nonce_url(
+            self_admin_url('update.php?action=upgrade-plugin&plugin=' . rawurlencode(self::plugin_basename())),
+            'upgrade-plugin_' . self::plugin_basename()
+        );
+    }
+
+    public static function manual_check() {
+        if (!current_user_can('update_plugins')) wp_die('Permission denied.');
+        check_admin_referer('wanw_check_update');
+        self::clear_cache();
+        delete_site_transient('update_plugins');
+        self::fetch_remote(true);
+        wp_update_plugins();
+        wp_safe_redirect(admin_url('admin.php?page=wanw-dashboard&wanw_update_checked=1'));
+        exit;
     }
 
     public static function fetch_remote($force = false) {
