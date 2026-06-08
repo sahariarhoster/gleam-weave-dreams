@@ -246,3 +246,40 @@ function AddUserButton({ onDone }: { onDone: () => void }) {
     </Dialog>
   );
 }
+
+function ResetPasswordButton({ userId, email }: { userId: string; email: string }) {
+  const fn = useServerFn(resetUserPassword);
+  const [open, setOpen] = useState(false);
+  const [password, setPassword] = useState("");
+  const mut = useMutation({
+    mutationFn: () => fn({ data: { user_id: userId, password } }),
+    onSuccess: () => { toast.success("Password updated"); setOpen(false); setPassword(""); },
+    onError: (e) => toast.error((e as Error).message),
+  });
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="ghost" className="gap-1" title="Reset password">
+          <KeyRound className="h-4 w-4" /> Reset
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Reset Password</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-3">
+          <p className="text-sm text-muted-foreground">Set a new password for <span className="font-medium">{email}</span>.</p>
+          <div className="space-y-1.5">
+            <Label>New Password</Label>
+            <Input required type="password" minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" />
+          </div>
+          <DialogFooter>
+            <Button type="submit" disabled={mut.isPending} className="w-full">
+              {mut.isPending ? "Updating…" : "Update Password"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
