@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, ClientOnly } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -105,15 +105,17 @@ function DashboardPage() {
           </CardHeader>
           <CardContent className="pb-4">
             <div className="relative h-44">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadialBarChart
-                  innerRadius="70%" outerRadius="100%"
-                  data={[{ name: "rate", value: rate, fill: "hsl(var(--primary))" }]}
-                  startAngle={90} endAngle={-270}
-                >
-                  <RadialBar background={{ fill: "hsl(var(--muted))" }} dataKey="value" cornerRadius={10} />
-                </RadialBarChart>
-              </ResponsiveContainer>
+              <ClientOnly fallback={<div className="h-full w-full" />}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <RadialBarChart
+                    innerRadius="70%" outerRadius="100%"
+                    data={[{ name: "rate", value: rate, fill: "hsl(var(--primary))" }]}
+                    startAngle={90} endAngle={-270}
+                  >
+                    <RadialBar background={{ fill: "hsl(var(--muted))" }} dataKey="value" cornerRadius={10} />
+                  </RadialBarChart>
+                </ResponsiveContainer>
+              </ClientOnly>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <div className="text-3xl font-bold">{isLoading ? "—" : `${rate.toFixed(1)}%`}</div>
                 <div className="text-xs text-muted-foreground">{stats.totalMessages} total</div>
@@ -141,38 +143,40 @@ function DashboardPage() {
           </CardHeader>
           <CardContent className="pl-2">
             <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={stats.series} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="gDel" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                      <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                    </linearGradient>
-                    <linearGradient id="gFail" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#f43f5e" stopOpacity={0.35} />
-                      <stop offset="100%" stopColor="#f43f5e" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                  <XAxis
-                    dataKey="date"
-                    tickFormatter={(d) => new Date(d).toLocaleDateString(undefined, { weekday: "short" })}
-                    stroke="hsl(var(--muted-foreground))"
-                    fontSize={11} tickLine={false} axisLine={false}
-                  />
-                  <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} width={32} />
-                  <Tooltip
-                    contentStyle={{
-                      background: "hsl(var(--background))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: 8,
-                      fontSize: 12,
-                    }}
-                  />
-                  <Area type="monotone" dataKey="delivered" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#gDel)" />
-                  <Area type="monotone" dataKey="failed" stroke="#f43f5e" strokeWidth={2} fill="url(#gFail)" />
-                </AreaChart>
-              </ResponsiveContainer>
+              <ClientOnly fallback={<div className="h-full w-full" />}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={stats.series} margin={{ top: 10, right: 16, left: 0, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="gDel" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                        <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="gFail" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#f43f5e" stopOpacity={0.35} />
+                        <stop offset="100%" stopColor="#f43f5e" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                    <XAxis
+                      dataKey="date"
+                      tickFormatter={(d) => new Date(d).toLocaleDateString(undefined, { weekday: "short" })}
+                      stroke="hsl(var(--muted-foreground))"
+                      fontSize={11} tickLine={false} axisLine={false}
+                    />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} width={32} />
+                    <Tooltip
+                      contentStyle={{
+                        background: "hsl(var(--background))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: 8,
+                        fontSize: 12,
+                      }}
+                    />
+                    <Area type="monotone" dataKey="delivered" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#gDel)" />
+                    <Area type="monotone" dataKey="failed" stroke="#f43f5e" strokeWidth={2} fill="url(#gFail)" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </ClientOnly>
             </div>
           </CardContent>
         </Card>
@@ -185,28 +189,30 @@ function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="h-44">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={[
-                      { name: "Delivered", value: stats.delivered, fill: "hsl(var(--primary))" },
-                      { name: "Failed", value: stats.failed, fill: "#f43f5e" },
-                      { name: "Pending", value: stats.pending, fill: "#f59e0b" },
-                    ]}
-                    dataKey="value" innerRadius={45} outerRadius={70} paddingAngle={3}
-                  >
-                    <Cell />
-                  </Pie>
-                  <Tooltip
-                    contentStyle={{
-                      background: "hsl(var(--background))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: 8,
-                      fontSize: 12,
-                    }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+              <ClientOnly fallback={<div className="h-full w-full" />}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: "Delivered", value: stats.delivered, fill: "hsl(var(--primary))" },
+                        { name: "Failed", value: stats.failed, fill: "#f43f5e" },
+                        { name: "Pending", value: stats.pending, fill: "#f59e0b" },
+                      ]}
+                      dataKey="value" innerRadius={45} outerRadius={70} paddingAngle={3}
+                    >
+                      <Cell />
+                    </Pie>
+                    <Tooltip
+                      contentStyle={{
+                        background: "hsl(var(--background))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: 8,
+                        fontSize: 12,
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </ClientOnly>
             </div>
             <div className="mt-3 space-y-2">
               <LegendRow color="hsl(var(--primary))" label="Delivered" value={stats.delivered} />
