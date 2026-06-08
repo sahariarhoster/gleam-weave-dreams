@@ -13,14 +13,22 @@ export const listDeviceRequests = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("device_requests")
-      .select("id, brand_id, requested_by, device_name, notes, status, admin_reply, created_at, updated_at, brands(name), profiles:requested_by(email, full_name)")
+      .select("id, brand_id, requested_by, device_name, notes, status, admin_reply, created_at, updated_at, brands(name)")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return (data ?? []).map((r: any) => ({
+    const rows = data ?? [];
+    const userIds = Array.from(new Set(rows.map((r: any) => r.requested_by).filter(Boolean)));
+    let profileMap: Record<string, { email?: string; full_name?: string }> = {};
+    if (userIds.length) {
+      const { data: profs } = await context.supabase
+        .from("profiles").select("id, email, full_name").in("id", userIds);
+      (profs ?? []).forEach((p: any) => { profileMap[p.id] = { email: p.email, full_name: p.full_name }; });
+    }
+    return rows.map((r: any) => ({
       ...r,
       brand_name: r.brands?.name,
-      requester_email: r.profiles?.email,
-      requester_name: r.profiles?.full_name,
+      requester_email: profileMap[r.requested_by]?.email,
+      requester_name: profileMap[r.requested_by]?.full_name,
     }));
   });
 
