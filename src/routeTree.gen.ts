@@ -24,6 +24,7 @@ import { Route as AuthenticatedCampaignsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedBrandsRouteImport } from './routes/_authenticated/brands'
 import { Route as AuthenticatedBlockedRouteImport } from './routes/_authenticated/blocked'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
+import { Route as ApiPublicPluginSendRouteImport } from './routes/api/public/plugin/send'
 import { Route as ApiPublicPluginSelectDeviceRouteImport } from './routes/api/public/plugin/select-device'
 import { Route as ApiPublicPluginDevicesRouteImport } from './routes/api/public/plugin/devices'
 import { Route as ApiPublicPluginActivateRouteImport } from './routes/api/public/plugin/activate'
@@ -103,6 +104,11 @@ const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
   path: '/activity',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicPluginSendRoute = ApiPublicPluginSendRouteImport.update({
+  id: '/api/public/plugin/send',
+  path: '/api/public/plugin/send',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPluginSelectDeviceRoute =
   ApiPublicPluginSelectDeviceRouteImport.update({
     id: '/api/public/plugin/select-device',
@@ -144,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/api/public/plugin/activate': typeof ApiPublicPluginActivateRoute
   '/api/public/plugin/devices': typeof ApiPublicPluginDevicesRoute
   '/api/public/plugin/select-device': typeof ApiPublicPluginSelectDeviceRoute
+  '/api/public/plugin/send': typeof ApiPublicPluginSendRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -164,6 +171,7 @@ export interface FileRoutesByTo {
   '/api/public/plugin/activate': typeof ApiPublicPluginActivateRoute
   '/api/public/plugin/devices': typeof ApiPublicPluginDevicesRoute
   '/api/public/plugin/select-device': typeof ApiPublicPluginSelectDeviceRoute
+  '/api/public/plugin/send': typeof ApiPublicPluginSendRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -186,6 +194,7 @@ export interface FileRoutesById {
   '/api/public/plugin/activate': typeof ApiPublicPluginActivateRoute
   '/api/public/plugin/devices': typeof ApiPublicPluginDevicesRoute
   '/api/public/plugin/select-device': typeof ApiPublicPluginSelectDeviceRoute
+  '/api/public/plugin/send': typeof ApiPublicPluginSendRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -208,6 +217,7 @@ export interface FileRouteTypes {
     | '/api/public/plugin/activate'
     | '/api/public/plugin/devices'
     | '/api/public/plugin/select-device'
+    | '/api/public/plugin/send'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -228,6 +238,7 @@ export interface FileRouteTypes {
     | '/api/public/plugin/activate'
     | '/api/public/plugin/devices'
     | '/api/public/plugin/select-device'
+    | '/api/public/plugin/send'
   id:
     | '__root__'
     | '/'
@@ -249,6 +260,7 @@ export interface FileRouteTypes {
     | '/api/public/plugin/activate'
     | '/api/public/plugin/devices'
     | '/api/public/plugin/select-device'
+    | '/api/public/plugin/send'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -259,6 +271,7 @@ export interface RootRouteChildren {
   ApiPublicPluginActivateRoute: typeof ApiPublicPluginActivateRoute
   ApiPublicPluginDevicesRoute: typeof ApiPublicPluginDevicesRoute
   ApiPublicPluginSelectDeviceRoute: typeof ApiPublicPluginSelectDeviceRoute
+  ApiPublicPluginSendRoute: typeof ApiPublicPluginSendRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -368,6 +381,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedActivityRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/plugin/send': {
+      id: '/api/public/plugin/send'
+      path: '/api/public/plugin/send'
+      fullPath: '/api/public/plugin/send'
+      preLoaderRoute: typeof ApiPublicPluginSendRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/plugin/select-device': {
       id: '/api/public/plugin/select-device'
       path: '/api/public/plugin/select-device'
@@ -440,6 +460,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicPluginActivateRoute: ApiPublicPluginActivateRoute,
   ApiPublicPluginDevicesRoute: ApiPublicPluginDevicesRoute,
   ApiPublicPluginSelectDeviceRoute: ApiPublicPluginSelectDeviceRoute,
+  ApiPublicPluginSendRoute: ApiPublicPluginSendRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
