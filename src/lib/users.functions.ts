@@ -185,11 +185,15 @@ export const createUser = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     const uid = created.user?.id;
     if (!uid) throw new Error("User creation failed");
-    // handle_new_user trigger seeds default member role; override when a non-member role is requested
-    if (data.role !== "member") {
-      await supabaseAdmin.from("user_roles").delete().eq("user_id", uid);
-      await supabaseAdmin.from("user_roles").insert({ user_id: uid, role: data.role });
-    }
+    const { error: profileErr } = await supabaseAdmin.from("profiles").upsert({
+      id: uid,
+      email: data.email,
+      full_name: data.full_name,
+    }, { onConflict: "id" });
+    if (profileErr) throw new Error(profileErr.message);
+    await supabaseAdmin.from("user_roles").delete().eq("user_id", uid);
+    const { error: roleErr } = await supabaseAdmin.from("user_roles").insert({ user_id: uid, role: data.role });
+    if (roleErr) throw new Error(roleErr.message);
     return { ok: true, user_id: uid };
   });
 
