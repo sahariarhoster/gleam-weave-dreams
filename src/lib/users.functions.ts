@@ -49,7 +49,7 @@ export const setUserRole = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({
       user_id: z.string().uuid(),
-      role: z.enum(["owner", "member"]),
+      role: z.enum(["owner", "admin", "support_agent", "member"]),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -134,7 +134,7 @@ export const createUser = createServerFn({ method: "POST" })
       email: z.string().email().max(255),
       password: z.string().min(6).max(72),
       full_name: z.string().min(1).max(100),
-      role: z.enum(["owner", "member"]).default("member"),
+      role: z.enum(["owner", "admin", "support_agent", "member"]).default("member"),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
