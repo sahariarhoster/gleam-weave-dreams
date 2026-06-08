@@ -79,12 +79,12 @@ function DevicesPage() {
 
   return (
     <div className="mx-auto max-w-7xl">
-      <Card className="border-border/60 shadow-sm">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Smartphone className="h-4 w-4" /> All Devices
-          </CardTitle>
-          {isOwner && (
+      <PageHeader
+        icon={Smartphone}
+        title="Devices"
+        description="Connect Android phones running BD-Webs to send messages."
+        actions={
+          isOwner && (
             <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-1"><Plus className="h-4 w-4" /> Add Device</Button>
@@ -96,7 +96,12 @@ function DevicesPage() {
                 onDone={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["devices"] }); }}
               />
             </Dialog>
-          )}
+          )
+        }
+      />
+      <Card className="border-border/60 shadow-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-medium text-muted-foreground">All Devices</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
