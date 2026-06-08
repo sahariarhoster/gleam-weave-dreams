@@ -33,7 +33,7 @@ function UsersPage() {
   const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => fnBrands() });
 
   const roleMut = useMutation({
-    mutationFn: (v: { user_id: string; role: "owner" | "admin" | "manager" | "brand_owner" | "support_agent" | "member" }) => fnSetRole({ data: v }),
+    mutationFn: (v: { user_id: string; role: "owner" | "admin" | "manager" | "brand_owner" | "support_agent" | "sales_agent" | "member" }) => fnSetRole({ data: v }),
     onSuccess: () => { toast.success("Role updated"); qc.invalidateQueries({ queryKey: ["users"] }); },
     onError: (e) => toast.error((e as Error).message),
   });
@@ -96,7 +96,7 @@ function UsersPage() {
                   <TableCell>
                     <Select
                       value={u.roles?.[0] ?? "member"}
-                      onValueChange={(v) => roleMut.mutate({ user_id: u.id, role: v as "owner" | "admin" | "manager" | "brand_owner" | "support_agent" | "member" })}
+                      onValueChange={(v) => roleMut.mutate({ user_id: u.id, role: v as "owner" | "admin" | "manager" | "brand_owner" | "support_agent" | "sales_agent" | "member" })}
                     >
                       <SelectTrigger className="h-8 w-32"><SelectValue /></SelectTrigger>
                       <SelectContent>
@@ -105,6 +105,7 @@ function UsersPage() {
                         <SelectItem value="manager">Manager</SelectItem>
                         <SelectItem value="brand_owner">Brand Owner</SelectItem>
                         <SelectItem value="support_agent">Support Agent</SelectItem>
+                        <SelectItem value="sales_agent">Sales Agent</SelectItem>
                         <SelectItem value="member">Member</SelectItem>
                       </SelectContent>
                     </Select>
@@ -198,7 +199,7 @@ function AddBrandDialog({ userId, brands, onDone }: { userId: string; brands: { 
 function AddUserButton({ onDone }: { onDone: () => void }) {
   const fn = useServerFn(createUser);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ email: "", password: "", full_name: "", role: "brand_owner" as "owner" | "admin" | "manager" | "brand_owner" | "support_agent" | "member" });
+  const [form, setForm] = useState({ email: "", password: "", full_name: "", role: "brand_owner" as "owner" | "admin" | "manager" | "brand_owner" | "support_agent" | "sales_agent" | "member" });
   const mut = useMutation({
     mutationFn: () => fn({ data: form }),
     onSuccess: () => {
@@ -230,11 +231,12 @@ function AddUserButton({ onDone }: { onDone: () => void }) {
             <Input required type="password" minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
           </div>
           <div className="space-y-1.5"><Label>Role</Label>
-            <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as "owner" | "admin" | "manager" | "brand_owner" | "support_agent" | "member" })}>
+            <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as "owner" | "admin" | "manager" | "brand_owner" | "support_agent" | "sales_agent" | "member" })}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="member">Member</SelectItem>
                 <SelectItem value="support_agent">Support Agent</SelectItem>
+                <SelectItem value="sales_agent">Sales Agent</SelectItem>
                 <SelectItem value="brand_owner">Brand Owner</SelectItem>
                 <SelectItem value="manager">Manager</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
