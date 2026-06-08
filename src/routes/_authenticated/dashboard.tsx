@@ -290,9 +290,9 @@ function DashboardPage() {
 
 function HeroStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl bg-white/15 px-3 py-2">
+    <div className="rounded-xl bg-white/15 px-4 py-2.5 min-w-[72px] text-center md:text-left">
       <div className="text-[10px] uppercase tracking-wider text-primary-foreground/70">{label}</div>
-      <div className="text-xl font-bold">{value}</div>
+      <div className="text-2xl font-bold leading-tight">{value}</div>
     </div>
   );
 }
