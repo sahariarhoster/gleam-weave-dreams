@@ -14,9 +14,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { listContacts, createContact, updateContact, deleteContact, importContacts } from "@/lib/contacts.functions";
-import { listBrandsLite } from "@/lib/brands.functions";
+import { createContact, updateContact, deleteContact, importContacts } from "@/lib/contacts.functions";
 import { PageHeader } from "@/components/layout/page-header";
+import { listBrandsLiteClient, listContactsClient } from "@/lib/client-queries";
 
 export const Route = createFileRoute("/_authenticated/contacts")({
   head: () => ({ meta: [{ title: "Contacts — WA Suite" }] }),
@@ -31,8 +31,6 @@ type Contact = {
 
 function ContactsPage() {
   const qc = useQueryClient();
-  const fnList = useServerFn(listContacts);
-  const fnBrands = useServerFn(listBrandsLite);
   const fnDelete = useServerFn(deleteContact);
 
   const [brandFilter, setBrandFilter] = useState<string>("all");
@@ -40,10 +38,10 @@ function ContactsPage() {
   const [open, setOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
-  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => fnBrands() });
+  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: listBrandsLiteClient });
   const contacts = useQuery({
     queryKey: ["contacts", brandFilter],
-    queryFn: () => fnList({ data: brandFilter === "all" ? {} : { brand_id: brandFilter } }),
+    queryFn: () => listContactsClient(brandFilter === "all" ? {} : { brand_id: brandFilter }),
   });
 
   const delMut = useMutation({
