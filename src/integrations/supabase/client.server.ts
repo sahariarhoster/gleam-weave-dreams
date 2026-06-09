@@ -5,7 +5,13 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-function createSupabaseAdminClient() {
+async function getWebSocketTransport() {
+  if (globalThis.WebSocket) return globalThis.WebSocket;
+  const { default: WebSocket } = await import('ws');
+  return WebSocket as unknown as typeof globalThis.WebSocket;
+}
+
+async function createSupabaseAdminClient() {
   const SUPABASE_URL = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
   const SUPABASE_SERVICE_ROLE_KEY =
     process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.APP_SUPABASE_SERVICE_ROLE_KEY;
@@ -20,23 +26,31 @@ function createSupabaseAdminClient() {
     throw new Error(message);
   }
 
+  const transport = await getWebSocketTransport();
+
   return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: {
       storage: undefined,
       persistSession: false,
       autoRefreshToken: false,
-    }
+    },
+    realtime: { transport },
   });
 }
 
-let _supabaseAdmin: ReturnType<typeof createSupabaseAdminClient> | undefined;
+let _supabaseAdmin: Awaited<ReturnType<typeof createSupabaseAdminClient>> | undefined;
 
 // Server-side Supabase client with service role - bypasses RLS
 // SECURITY: Only use this for trusted server-side operations, never expose to client code
 // Import like: import { supabaseAdmin } from "@/integrations/supabase/client.server";
 export const supabaseAdmin = new Proxy({} as ReturnType<typeof createSupabaseAdminClient>, {
   get(_, prop, receiver) {
-    if (!_supabaseAdmin) _supabaseAdmin = createSupabaseAdminClient();
+    if (!_supabaseAdmin) throw new Error('Supabase admin client was used before initialization');
     return Reflect.get(_supabaseAdmin, prop, receiver);
   },
 });
+
+export async function getSupabaseAdmin() {
+  if (!_supabaseAdmin) _supabaseAdmin = await createSupabaseAdminClient();
+  return _supabaseAdmin;
+}
