@@ -299,7 +299,7 @@ function DashboardPage() {
         <Card className="lg:col-span-2 border-border/60 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Activity className="h-4 w-4 text-primary" /> Messages — Last 7 days
+              <Activity className="h-4 w-4 text-primary" /> Messages — {range.start === range.end ? range.start : `${range.start} → ${range.end}`}
             </CardTitle>
             <Badge variant="secondary">{stats.series.reduce((a, d) => a + d.delivered + d.failed + d.pending, 0)} total</Badge>
           </CardHeader>
