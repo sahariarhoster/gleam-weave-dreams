@@ -535,8 +535,25 @@ function Testimonials() {
 function PricingSection() {
   const plans = [
     {
+      name: "ট্রায়াল",
+      price: "১০০",
+      period: "/৩ দিন",
+      tagline: "প্রথমে পরীক্ষা করে দেখুন — মাত্র ১০০ টাকায়",
+      features: [
+        "৩ দিনের ট্রায়াল",
+        "১ নাম্বার / ডিভাইস",
+        "১ WordPress প্লাগইন লাইসেন্স",
+        "আনলিমিটেড মেসেজ",
+        "৬-লেয়ার অ্যান্টি-ব্যান প্রোটেকশন",
+        "বাংলায় সাপোর্ট",
+      ],
+      highlighted: false,
+      cta: "ট্রায়াল নিন",
+    },
+    {
       name: "স্টার্টার",
       price: "৬০০",
+      period: "/মাস",
       tagline: "ছোট ব্যবসা ও সিঙ্গেল স্টোরের জন্য পারফেক্ট",
       features: [
         "আনলিমিটেড মেসেজ",
@@ -552,6 +569,7 @@ function PricingSection() {
     {
       name: "প্রো",
       price: "৮০০",
+      period: "/মাস",
       tagline: "একাধিক ব্র্যান্ড ও বড় টিমের জন্য",
       features: [
         "আনলিমিটেড মেসেজ",
@@ -577,15 +595,15 @@ function PricingSection() {
             আপনার জন্য সেরা <span className="text-primary">প্ল্যান</span> বেছে নিন
           </h2>
           <p className="mt-4 text-muted-foreground">
-            কোনো লুকানো চার্জ নেই। প্রতিটি প্ল্যানে আনলিমিটেড মেসেজ ও আনলিমিটেড এজেন্ট অন্তর্ভুক্ত।
+            কোনো লুকানো চার্জ নেই। প্রতিটি প্ল্যানে আনলিমিটেড মেসেজ অন্তর্ভুক্ত। শুরু করুন ৳১০০ ট্রায়াল দিয়ে।
           </p>
         </div>
 
-        <div className="mx-auto mt-14 grid max-w-5xl gap-6 md:grid-cols-2">
+        <div className="mx-auto mt-14 grid max-w-6xl gap-6 md:grid-cols-3">
           {plans.map((p) => (
             <div
               key={p.name}
-              className={`relative overflow-hidden rounded-3xl border bg-card p-8 shadow-lg transition hover:shadow-2xl sm:p-10 ${
+              className={`relative overflow-hidden rounded-3xl border bg-card p-7 shadow-lg transition hover:shadow-2xl sm:p-8 ${
                 p.highlighted
                   ? "border-primary/40 ring-2 ring-primary/30"
                   : "border-border"
@@ -600,7 +618,7 @@ function PricingSection() {
               <p className="mt-1 text-sm text-muted-foreground">{p.tagline}</p>
               <div className="mt-6 flex items-baseline gap-1">
                 <span className="font-display text-5xl font-extrabold text-foreground">৳{p.price}</span>
-                <span className="text-sm font-medium text-muted-foreground">/মাস</span>
+                <span className="text-sm font-medium text-muted-foreground">{p.period}</span>
               </div>
               <ul className="mt-8 space-y-3">
                 {p.features.map((f) => (
@@ -610,16 +628,16 @@ function PricingSection() {
                   </li>
                 ))}
               </ul>
-              <a
-                href="#order"
+              <Link
+                to="/order"
                 className={`mt-8 inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold transition ${
                   p.highlighted
                     ? "bg-primary text-primary-foreground hover:bg-[color:var(--color-emerald-deep)]"
                     : "border-2 border-border bg-background text-foreground hover:border-primary hover:text-primary"
                 }`}
               >
-                অর্ডার করুন <ArrowRight className="h-4 w-4" />
-              </a>
+                {p.cta} <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
           ))}
         </div>
