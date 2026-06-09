@@ -2,7 +2,6 @@
 import { createMiddleware } from '@tanstack/react-start'
 import { getRequest } from '@tanstack/react-start/server'
 import { createClient } from '@supabase/supabase-js'
-import WebSocket from 'ws'
 import type { Database } from './types'
 
 
@@ -47,6 +46,8 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
     if (!token) {
       throw new Error('Unauthorized: No token provided');
     }
+
+    const { default: WebSocket } = await import('ws');
 
     const supabase = createClient<Database>(
       SUPABASE_URL!,
