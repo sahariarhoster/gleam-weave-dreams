@@ -10,29 +10,42 @@ const Body = z.object({
 });
 
 const GROUP_NAME = "WordPress";
+const GROUP_SUCCESS = "WordPress - Success";
+const GROUP_FAILED = "WordPress - Failed";
+
+async function getOrCreateGroup(supabaseAdmin: any, brand_id: string, name: string, description: string) {
+  const { data: existing } = await supabaseAdmin
+    .from("contact_groups")
+    .select("id")
+    .eq("brand_id", brand_id)
+    .eq("name", name)
+    .maybeSingle();
+  if (existing) return existing;
+  const ins = await supabaseAdmin
+    .from("contact_groups")
+    .insert({ brand_id, name, description })
+    .select("id")
+    .single();
+  return ins.data;
+}
 
 async function ensureContactInWordpressGroup(
   supabaseAdmin: any,
   brand_id: string,
   phone: string,
   name: string | undefined,
+  outcome: "success" | "failed",
 ) {
-  // Find/create group
-  let { data: group } = await supabaseAdmin
-    .from("contact_groups")
-    .select("id")
-    .eq("brand_id", brand_id)
-    .eq("name", GROUP_NAME)
-    .maybeSingle();
-  if (!group) {
-    const ins = await supabaseAdmin
-      .from("contact_groups")
-      .insert({ brand_id, name: GROUP_NAME, description: "Auto-created from WordPress plugin" })
-      .select("id")
-      .single();
-    group = ins.data;
-  }
-  if (!group) return;
+  // Base "WordPress" group (kept for backward compatibility with stats endpoint)
+  const baseGroup = await getOrCreateGroup(supabaseAdmin, brand_id, GROUP_NAME, "Auto-created from WordPress plugin");
+  const outcomeGroup = await getOrCreateGroup(
+    supabaseAdmin,
+    brand_id,
+    outcome === "success" ? GROUP_SUCCESS : GROUP_FAILED,
+    outcome === "success"
+      ? "Recipients of successful WordPress plugin sends"
+      : "Recipients of failed WordPress plugin sends",
+  );
 
   // Find/create contact by phone
   let { data: contact } = await supabaseAdmin
