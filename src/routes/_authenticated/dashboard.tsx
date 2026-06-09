@@ -125,11 +125,18 @@ function normalizeStats(value: Partial<DashboardStats> | null): DashboardStats {
 
 function DashboardPage() {
   const { user } = useAuth();
+  const [preset, setPreset] = useState<RangePreset>("7");
+  const [customFrom, setCustomFrom] = useState<Date | undefined>();
+  const [customTo, setCustomTo] = useState<Date | undefined>();
+  const range = resolveRange(preset, { from: customFrom, to: customTo });
+
   const { data, isLoading } = useQuery({
-    queryKey: ["dashboard-stats", user?.id ?? "anon"],
+    queryKey: ["dashboard-stats", user?.id ?? "anon", range.start, range.end],
     queryFn: async () => {
       if (!user?.id) return emptyStats;
-      const { data, error } = await supabase.rpc("get_dashboard_stats_for_user", { _user_id: user.id });
+      const { data, error } = await supabase.rpc("get_dashboard_stats_for_user", {
+        _user_id: user.id, _start: range.start, _end: range.end,
+      });
       if (error) throw new Error(error.message);
       return normalizeStats(data as Partial<DashboardStats> | null);
     },
@@ -151,7 +158,38 @@ function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-3">
-      {/* Hero */}
+      {/* Filter bar */}
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/60 bg-card px-3 py-2 shadow-sm">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <CalendarIcon className="h-3.5 w-3.5" />
+          <span>
+            {range.start === range.end ? range.start : `${range.start} → ${range.end}`}
+            <span className="ml-2 rounded bg-muted px-1.5 py-0.5 font-mono text-[10px]">{TZ}</span>
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Select value={preset} onValueChange={(v) => setPreset(v as RangePreset)}>
+            <SelectTrigger className="h-8 w-40"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="yesterday">Yesterday</SelectItem>
+              <SelectItem value="3">Last 3 days</SelectItem>
+              <SelectItem value="7">Last 7 days</SelectItem>
+              <SelectItem value="15">Last 15 days</SelectItem>
+              <SelectItem value="30">Last 30 days</SelectItem>
+              <SelectItem value="custom">Custom range</SelectItem>
+            </SelectContent>
+          </Select>
+          {preset === "custom" && (
+            <>
+              <DateBtn label="From" value={customFrom} onChange={setCustomFrom} />
+              <DateBtn label="To" value={customTo} onChange={setCustomTo} />
+            </>
+          )}
+        </div>
+      </div>
+
+
       <div className="grid gap-3 lg:grid-cols-3">
         <Card className="lg:col-span-2 overflow-hidden border-border/60 bg-gradient-to-br from-primary/90 via-primary to-primary/70 text-primary-foreground shadow-lg">
           <CardContent className="relative p-4">
