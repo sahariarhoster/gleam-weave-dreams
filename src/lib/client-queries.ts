@@ -241,3 +241,47 @@ export async function listDeviceRequestsClient() {
     requester_name: profileMap[row.requested_by]?.full_name,
   }));
 }
+
+export async function createBrandClient(input: {
+  name: string;
+  status?: string;
+  expires_at?: string | null;
+  message_limit?: number | null;
+  device_limit?: number;
+}) {
+  const { data: userRes } = await supabase.auth.getUser();
+  const userId = userRes.user?.id;
+  if (!userId) throw new Error("Not authenticated");
+  const payload = {
+    name: input.name,
+    status: input.status ?? "active",
+    expires_at: input.expires_at ?? null,
+    message_limit: input.message_limit ?? null,
+    device_limit: input.device_limit ?? 1,
+    created_by: userId,
+  };
+  const { data, error } = await db.from("brands").insert(payload).select().single();
+  assertOk(error);
+  await db.from("brand_members").insert({ brand_id: data.id, user_id: userId, role: "brand_admin" });
+  return data;
+}
+
+export async function updateBrandClient(input: {
+  id: string;
+  name: string;
+  status?: string;
+  expires_at?: string | null;
+  message_limit?: number | null;
+  device_limit?: number;
+}) {
+  const { id, ...rest } = input;
+  const { error } = await db.from("brands").update(rest).eq("id", id);
+  assertOk(error);
+  return { ok: true };
+}
+
+export async function deleteBrandClient(id: string) {
+  const { error } = await db.from("brands").delete().eq("id", id);
+  assertOk(error);
+  return { ok: true };
+}

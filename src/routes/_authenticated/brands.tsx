@@ -14,9 +14,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { createBrand, updateBrand, deleteBrand } from "@/lib/brands.functions";
 import { PageHeader } from "@/components/layout/page-header";
-import { listBrandsClient } from "@/lib/client-queries";
+import { listBrandsClient, createBrandClient, updateBrandClient, deleteBrandClient } from "@/lib/client-queries";
+
 
 export const Route = createFileRoute("/_authenticated/brands")({
   head: () => ({ meta: [{ title: "Brands — WA Suite" }] }),
@@ -31,14 +31,14 @@ type Brand = {
 
 function BrandsPage() {
   const qc = useQueryClient();
-  const fnDelete = useServerFn(deleteBrand);
   const brands = useQuery({ queryKey: ["brands"], queryFn: listBrandsClient });
+
 
   const [editing, setEditing] = useState<Brand | null>(null);
   const [open, setOpen] = useState(false);
 
   const delMut = useMutation({
-    mutationFn: (id: string) => fnDelete({ data: { id } }),
+    mutationFn: (id: string) => deleteBrandClient(id),
     onSuccess: () => { toast.success("Brand deleted"); qc.invalidateQueries({ queryKey: ["brands"] }); },
     onError: (e) => toast.error((e as Error).message),
   });
@@ -126,8 +126,6 @@ function BrandsPage() {
 }
 
 function BrandDialog({ editing, onDone }: { editing: Brand | null; onDone: () => void }) {
-  const fnCreate = useServerFn(createBrand);
-  const fnUpdate = useServerFn(updateBrand);
   const [form, setForm] = useState({
     name: editing?.name ?? "",
     status: editing?.status ?? "active",
@@ -139,13 +137,13 @@ function BrandDialog({ editing, onDone }: { editing: Brand | null; onDone: () =>
     mutationFn: async () => {
       const payload = {
         name: form.name,
-        status: form.status as "active" | "suspended" | "expired",
+        status: form.status,
         expires_at: form.expires_at ? new Date(form.expires_at).toISOString() : null,
         message_limit: form.message_limit ? parseInt(form.message_limit, 10) : null,
         device_limit: parseInt(form.device_limit, 10) || 1,
       };
-      if (editing) return fnUpdate({ data: { id: editing.id, ...payload } });
-      return fnCreate({ data: payload });
+      if (editing) return updateBrandClient({ id: editing.id, ...payload });
+      return createBrandClient(payload);
     },
     onSuccess: () => { toast.success(editing ? "Brand updated" : "Brand created"); onDone(); },
     onError: (e) => toast.error((e as Error).message),
