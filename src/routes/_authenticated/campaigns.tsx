@@ -18,10 +18,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Progress } from "@/components/ui/progress";
 import { listCampaigns, createCampaign, deleteCampaign, setCampaignStatus, runCampaignChunk } from "@/lib/campaigns.functions";
-import { listBrandsLite } from "@/lib/brands.functions";
-import { listGroups } from "@/lib/contacts.functions";
-import { listDevices } from "@/lib/devices.functions";
 import { PageHeader } from "@/components/layout/page-header";
+import { listBrandsLiteClient, listCampaignsClient, listDevicesClient, listGroupsClient } from "@/lib/client-queries";
 
 export const Route = createFileRoute("/_authenticated/campaigns")({
   head: () => ({ meta: [{ title: "Campaigns — WA Suite" }] }),
@@ -39,12 +37,11 @@ function statusColor(s: string) {
 
 function CampaignsPage() {
   const qc = useQueryClient();
-  const fnList = useServerFn(listCampaigns);
   const fnDelete = useServerFn(deleteCampaign);
   const fnStatus = useServerFn(setCampaignStatus);
   const fnRun = useServerFn(runCampaignChunk);
 
-  const camps = useQuery({ queryKey: ["campaigns"], queryFn: () => fnList() });
+  const camps = useQuery({ queryKey: ["campaigns"], queryFn: listCampaignsClient });
   const [open, setOpen] = useState(false);
 
   const delMut = useMutation({
@@ -174,12 +171,9 @@ function CampaignsPage() {
 
 function NewCampaignDialog({ onDone }: { onDone: () => void }) {
   const fnCreate = useServerFn(createCampaign);
-  const fnBrands = useServerFn(listBrandsLite);
-  const fnGroups = useServerFn(listGroups);
-  const fnDevices = useServerFn(listDevices);
 
-  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => fnBrands() });
-  const devices = useQuery({ queryKey: ["devices"], queryFn: () => fnDevices() });
+  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: listBrandsLiteClient });
+  const devices = useQuery({ queryKey: ["devices"], queryFn: listDevicesClient });
 
   const PRESETS = {
     direct:       { min: 0,  max: 2 },
@@ -218,7 +212,7 @@ function NewCampaignDialog({ onDone }: { onDone: () => void }) {
 
   const groups = useQuery({
     queryKey: ["groups", form.brand_id],
-    queryFn: () => fnGroups({ data: form.brand_id ? { brand_id: form.brand_id } : {} }),
+    queryFn: () => listGroupsClient(form.brand_id ? { brand_id: form.brand_id } : {}),
     enabled: !!form.brand_id,
   });
 
