@@ -29,9 +29,8 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
-import { getMyRoles } from "@/lib/users.functions";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 const items = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
@@ -57,10 +56,14 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user } = useAuth();
-  const fnRoles = useServerFn(getMyRoles);
   const roles = useQuery({
     queryKey: ["my-roles", user?.id ?? "anon"],
-    queryFn: () => fnRoles(),
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+      if (error) throw new Error(error.message);
+      return (data ?? []).map((r) => r.role as string);
+    },
     enabled: !!user?.id,
     staleTime: 5 * 60 * 1000,
   });

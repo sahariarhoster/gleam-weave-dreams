@@ -1,5 +1,4 @@
 import { createFileRoute, Link, ClientOnly } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import {
   Smartphone,
@@ -35,30 +34,72 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getDashboardStats } from "@/lib/devices.functions";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — WA Suite" }] }),
   component: DashboardPage,
 });
 
+type DashboardStats = {
+  devices: number;
+  devicesOnline: number;
+  brands: number;
+  brandUsers: number;
+  campaigns: number;
+  activeCampaigns: number;
+  blockedNumbers: number;
+  totalMessages: number;
+  delivered: number;
+  failed: number;
+  pending: number;
+  todayMessages: number;
+  series: { date: string; delivered: number; failed: number; pending: number }[];
+  topDevices: { id: string; name: string; status: string }[];
+};
+
+const emptyStats: DashboardStats = {
+  devices: 0, devicesOnline: 0, brands: 0, brandUsers: 0, campaigns: 0,
+  activeCampaigns: 0, blockedNumbers: 0, totalMessages: 0, delivered: 0,
+  failed: 0, pending: 0, todayMessages: 0, series: [], topDevices: [],
+};
+
+function normalizeStats(value: Partial<DashboardStats> | null): DashboardStats {
+  return {
+    devices: Number(value?.devices ?? 0),
+    devicesOnline: Number(value?.devicesOnline ?? 0),
+    brands: Number(value?.brands ?? 0),
+    brandUsers: Number(value?.brandUsers ?? 0),
+    campaigns: Number(value?.campaigns ?? 0),
+    activeCampaigns: Number(value?.activeCampaigns ?? 0),
+    blockedNumbers: Number(value?.blockedNumbers ?? 0),
+    totalMessages: Number(value?.totalMessages ?? 0),
+    delivered: Number(value?.delivered ?? 0),
+    failed: Number(value?.failed ?? 0),
+    pending: Number(value?.pending ?? 0),
+    todayMessages: Number(value?.todayMessages ?? 0),
+    series: value?.series ?? [],
+    topDevices: value?.topDevices ?? [],
+  };
+}
+
 function DashboardPage() {
-  const fn = useServerFn(getDashboardStats);
   const { user } = useAuth();
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard-stats", user?.id ?? "anon"],
-    queryFn: () => fn(),
+    queryFn: async () => {
+      if (!user?.id) return emptyStats;
+      const { data, error } = await supabase.rpc("get_dashboard_stats_for_user", { _user_id: user.id });
+      if (error) throw new Error(error.message);
+      return normalizeStats(data as Partial<DashboardStats> | null);
+    },
     enabled: !!user?.id,
     staleTime: 60 * 1000,
     refetchOnWindowFocus: false,
   });
 
-  const stats = data ?? {
-    devices: 0, devicesOnline: 0, brands: 0, brandUsers: 0, campaigns: 0,
-    activeCampaigns: 0, blockedNumbers: 0, totalMessages: 0, delivered: 0,
-    failed: 0, pending: 0, todayMessages: 0, series: [], topDevices: [],
-  };
+  const stats = data ?? emptyStats;
   const rate = stats.totalMessages > 0 ? (stats.delivered / stats.totalMessages) * 100 : 0;
   const onlinePct = stats.devices > 0 ? (stats.devicesOnline / stats.devices) * 100 : 0;
 
