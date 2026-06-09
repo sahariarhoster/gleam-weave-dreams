@@ -15,8 +15,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { listBlocked, addBlocked, removeBlocked } from "@/lib/logs.functions";
-import { listBrandsLite } from "@/lib/brands.functions";
+import { addBlocked, removeBlocked } from "@/lib/logs.functions";
+import { listBlockedClient, listBrandsLiteClient } from "@/lib/client-queries";
 import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/blocked")({
@@ -26,16 +26,14 @@ export const Route = createFileRoute("/_authenticated/blocked")({
 
 function BlockedPage() {
   const qc = useQueryClient();
-  const fnList = useServerFn(listBlocked);
-  const fnBrands = useServerFn(listBrandsLite);
   const fnRemove = useServerFn(removeBlocked);
   const [brand, setBrand] = useState("all");
   const [open, setOpen] = useState(false);
 
-  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => fnBrands() });
+  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => listBrandsLiteClient() });
   const blocked = useQuery({
     queryKey: ["blocked", brand],
-    queryFn: () => fnList({ data: { brand_id: brand === "all" ? null : brand } }),
+    queryFn: () => listBlockedClient({ brand_id: brand === "all" ? null : brand }),
   });
 
   const delMut = useMutation({
@@ -56,7 +54,7 @@ function BlockedPage() {
               <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Brands</SelectItem>
-                {(brands.data ?? []).map((b) => (
+                {(brands.data ?? []).map((b: any) => (
                   <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
                 ))}
               </SelectContent>
@@ -144,7 +142,7 @@ function BlockDialog({ brands, onDone }: { brands: { id: string; name: string }[
           <Label>Brand</Label>
           <Select value={brandId} onValueChange={setBrandId}>
             <SelectTrigger><SelectValue placeholder="Pick a brand" /></SelectTrigger>
-            <SelectContent>{brands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+            <SelectContent>{brands.map((b: any) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <div className="space-y-1.5">

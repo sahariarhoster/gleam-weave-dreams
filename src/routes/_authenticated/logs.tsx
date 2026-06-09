@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { ListChecks, Search } from "lucide-react";
@@ -9,8 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { listMessageLogs } from "@/lib/logs.functions";
-import { listBrandsLite } from "@/lib/brands.functions";
+import { listMessageLogsClient, listBrandsLiteClient } from "@/lib/client-queries";
 import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/logs")({
@@ -26,22 +24,18 @@ const statusColor: Record<string, string> = {
 };
 
 function LogsPage() {
-  const fnList = useServerFn(listMessageLogs);
-  const fnBrands = useServerFn(listBrandsLite);
   const [brand, setBrand] = useState("all");
   const [status, setStatus] = useState("all");
   const [search, setSearch] = useState("");
 
-  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => fnBrands() });
+  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => listBrandsLiteClient() });
   const logs = useQuery({
     queryKey: ["logs", brand, status, search],
     queryFn: () =>
-      fnList({
-        data: {
-          brand_id: brand === "all" ? null : brand,
-          status: status === "all" ? null : (status as any),
-          search: search || null,
-        },
+      listMessageLogsClient({
+        brand_id: brand === "all" ? null : brand,
+        status: status === "all" ? null : status,
+        search: search || null,
       }),
   });
 
@@ -79,7 +73,7 @@ function LogsPage() {
               <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Brands</SelectItem>
-                {(brands.data ?? []).map((b) => (
+                {(brands.data ?? []).map((b: any) => (
                   <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
                 ))}
               </SelectContent>

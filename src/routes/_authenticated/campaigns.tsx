@@ -242,7 +242,7 @@ function NewCampaignDialog({ onDone }: { onDone: () => void }) {
           <div className="space-y-1.5"><Label>Brand</Label>
             <Select value={form.brand_id} onValueChange={(v) => { setForm({ ...form, brand_id: v, device_id: "" }); setSelectedGroups(new Set()); }}>
               <SelectTrigger><SelectValue placeholder="Pick brand" /></SelectTrigger>
-              <SelectContent>{(brands.data ?? []).map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+              <SelectContent>{(brands.data ?? []).map((b: any) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5"><Label>Device</Label>

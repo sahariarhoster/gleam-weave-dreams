@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { ScrollText } from "lucide-react";
@@ -8,8 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { listActivityLog } from "@/lib/logs.functions";
-import { listBrandsLite } from "@/lib/brands.functions";
+import { listActivityLogClient, listBrandsLiteClient } from "@/lib/client-queries";
 import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/activity")({
@@ -18,14 +16,12 @@ export const Route = createFileRoute("/_authenticated/activity")({
 });
 
 function ActivityPage() {
-  const fnList = useServerFn(listActivityLog);
-  const fnBrands = useServerFn(listBrandsLite);
   const [brand, setBrand] = useState("all");
 
-  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => fnBrands() });
+  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => listBrandsLiteClient() });
   const logs = useQuery({
     queryKey: ["activity", brand],
-    queryFn: () => fnList({ data: { brand_id: brand === "all" ? null : brand } }),
+    queryFn: () => listActivityLogClient({ brand_id: brand === "all" ? null : brand }),
   });
 
   return (
@@ -39,7 +35,7 @@ function ActivityPage() {
             <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Brands</SelectItem>
-              {(brands.data ?? []).map((b) => (
+              {(brands.data ?? []).map((b: any) => (
                 <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
               ))}
             </SelectContent>

@@ -13,10 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { listBrandsLite } from "@/lib/brands.functions";
-import { getMyRoles } from "@/lib/users.functions";
+import { listBrandsLiteClient, listLicensesClient, listMyRolesClient } from "@/lib/client-queries";
+import { useAuth } from "@/hooks/use-auth";
 import {
-  listMyLicenses,
   generateLicense,
   revokeLicense,
   deleteLicense,
@@ -31,20 +30,18 @@ export const Route = createFileRoute("/_authenticated/licenses")({
 });
 
 function LicensesPage() {
+  const { user } = useAuth();
   const qc = useQueryClient();
-  const fnList = useServerFn(listMyLicenses);
-  const fnBrands = useServerFn(listBrandsLite);
   const fnGen = useServerFn(generateLicense);
   const fnRevoke = useServerFn(revokeLicense);
   const fnDel = useServerFn(deleteLicense);
   const fnSetLimit = useServerFn(setBrandLicenseLimit);
-  const fnRoles = useServerFn(getMyRoles);
   const fnGetRelease = useServerFn(getPluginRelease);
   const fnSetRelease = useServerFn(setPluginRelease);
 
-  const licenses = useQuery({ queryKey: ["licenses"], queryFn: () => fnList() });
-  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => fnBrands() });
-  const roles = useQuery({ queryKey: ["my-roles"], queryFn: () => fnRoles() });
+  const licenses = useQuery({ queryKey: ["licenses"], queryFn: () => listLicensesClient() });
+  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => listBrandsLiteClient() });
+  const roles = useQuery({ queryKey: ["my-roles", user?.id], queryFn: () => listMyRolesClient(user?.id), enabled: !!user?.id });
   const release = useQuery({ queryKey: ["plugin-release"], queryFn: () => fnGetRelease() });
   const isOwner = (roles.data ?? []).includes("owner");
 
