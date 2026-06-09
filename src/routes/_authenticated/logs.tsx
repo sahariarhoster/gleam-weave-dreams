@@ -24,22 +24,18 @@ const statusColor: Record<string, string> = {
 };
 
 function LogsPage() {
-  const fnList = useServerFn(listMessageLogs);
-  const fnBrands = useServerFn(listBrandsLite);
   const [brand, setBrand] = useState("all");
   const [status, setStatus] = useState("all");
   const [search, setSearch] = useState("");
 
-  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => fnBrands() });
+  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => listBrandsLiteClient() });
   const logs = useQuery({
     queryKey: ["logs", brand, status, search],
     queryFn: () =>
-      fnList({
-        data: {
-          brand_id: brand === "all" ? null : brand,
-          status: status === "all" ? null : (status as any),
-          search: search || null,
-        },
+      listMessageLogsClient({
+        brand_id: brand === "all" ? null : brand,
+        status: status === "all" ? null : status,
+        search: search || null,
       }),
   });
 
