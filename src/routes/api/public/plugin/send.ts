@@ -66,10 +66,15 @@ async function ensureContactInWordpressGroup(
   }
   if (!contact) return;
 
-  // Link in group_members (idempotent)
-  await supabaseAdmin
-    .from("contact_group_members")
-    .upsert({ group_id: group.id, contact_id: contact.id }, { onConflict: "group_id,contact_id" });
+  // Link in both base group and outcome-specific group (idempotent)
+  const rows: any[] = [];
+  if (baseGroup?.id) rows.push({ group_id: baseGroup.id, contact_id: contact.id });
+  if (outcomeGroup?.id) rows.push({ group_id: outcomeGroup.id, contact_id: contact.id });
+  if (rows.length) {
+    await supabaseAdmin
+      .from("contact_group_members")
+      .upsert(rows, { onConflict: "group_id,contact_id" });
+  }
 }
 
 // ---- Ban-protection knobs (tuned conservatively) ----
