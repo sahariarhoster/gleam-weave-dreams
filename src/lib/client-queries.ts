@@ -148,32 +148,86 @@ export async function listCampaignsClient() {
   return data ?? [];
 }
 
-export async function listMessageLogsClient(filters: { brand_id?: string | null; campaign_id?: string | null; status?: string | null; search?: string | null; limit?: number } = {}) {
-  let query = db
+export async function listMessageLogsClient(filters: { brand_id?: string | null; campaign_id?: string | null; status?: string | null; search?: string | null; source?: string | null; limit?: number } = {}) {
+  const limit = filters.limit ?? 300;
+
+  // 1) Campaign messages
+  let cmQ = db
     .from("campaign_messages")
     .select("id, campaign_id, phone, rendered_message, status, error_message, sent_at, created_at")
     .order("created_at", { ascending: false })
-    .limit(filters.limit ?? 200);
-  if (filters.status) query = query.eq("status", filters.status);
-  if (filters.campaign_id) query = query.eq("campaign_id", filters.campaign_id);
-  if (filters.search) query = query.ilike("phone", `%${filters.search}%`);
-  const { data, error } = await query;
-  assertOk(error);
-  const rows = data ?? [];
-  const campaignIds = Array.from(new Set(rows.map((row: any) => row.campaign_id).filter(Boolean)));
-  if (campaignIds.length === 0) return [];
-  const { data: campaigns, error: campaignsError } = await db.from("campaigns").select("id, name, brand_id").in("id", campaignIds);
-  assertOk(campaignsError);
-  const campaignMap = Object.fromEntries((campaigns ?? []).map((campaign: any) => [campaign.id, campaign]));
-  const enriched = rows
-    .map((row: any) => ({
-      ...row,
-      campaign_name: campaignMap[row.campaign_id]?.name ?? null,
-      brand_id: campaignMap[row.campaign_id]?.brand_id ?? null,
-    }))
-    .filter((row: any) => !filters.brand_id || row.brand_id === filters.brand_id);
-  return attachBrandNames(enriched);
+    .limit(limit);
+  if (filters.status) cmQ = cmQ.eq("status", filters.status);
+  if (filters.campaign_id) cmQ = cmQ.eq("campaign_id", filters.campaign_id);
+  if (filters.search) cmQ = cmQ.ilike("phone", `%${filters.search}%`);
+  const { data: cmRows, error: cmErr } = await cmQ;
+  assertOk(cmErr);
+
+  const campaignIds = Array.from(new Set((cmRows ?? []).map((r: any) => r.campaign_id).filter(Boolean)));
+  let campaignMap: Record<string, any> = {};
+  if (campaignIds.length) {
+    const { data: campaigns, error: cErr } = await db.from("campaigns").select("id, name, brand_id").in("id", campaignIds);
+    assertOk(cErr);
+    campaignMap = Object.fromEntries((campaigns ?? []).map((c: any) => [c.id, c]));
+  }
+
+  const campaignLogs = (cmRows ?? []).map((row: any) => ({
+    id: `cm:${row.id}`,
+    source: "campaign" as const,
+    source_label: campaignMap[row.campaign_id]?.name ?? "Campaign",
+    phone: row.phone,
+    rendered_message: row.rendered_message,
+    status: row.status, // sent/failed/pending/delivered/skipped
+    error_message: row.error_message,
+    brand_id: campaignMap[row.campaign_id]?.brand_id ?? null,
+    created_at: row.created_at,
+    sent_at: row.sent_at,
+  }));
+
+  // 2) Plugin & single sends from activity_log
+  let alQ = db
+    .from("activity_log")
+    .select("id, action, brand_id, details, created_at")
+    .in("action", ["plugin_send", "send_single"])
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (filters.brand_id) alQ = alQ.eq("brand_id", filters.brand_id);
+  const { data: alRows, error: alErr } = await alQ;
+  assertOk(alErr);
+
+  const activityLogs = (alRows ?? [])
+    .map((row: any) => {
+      const d = row.details ?? {};
+      const httpOk = String(d.status) === "200";
+      return {
+        id: `al:${row.id}`,
+        source: row.action === "send_single" ? ("single" as const) : ("plugin" as const),
+        source_label: row.action === "send_single" ? "Single Send" : "Plugin",
+        phone: d.recipient ?? "",
+        rendered_message: d.message_text ?? d.body ?? null,
+        status: httpOk ? "sent" : "failed",
+        error_message: httpOk ? null : (d.message ?? d.error ?? `HTTP ${d.status ?? "?"}`),
+        brand_id: row.brand_id ?? null,
+        created_at: row.created_at,
+        sent_at: row.created_at,
+      };
+    })
+    .filter((row: any) => {
+      if (filters.search && !String(row.phone).includes(filters.search)) return false;
+      if (filters.status && row.status !== filters.status) return false;
+      return true;
+    });
+
+  // 3) Merge, filter by brand & source, sort, cap
+  let merged = [...campaignLogs, ...activityLogs];
+  if (filters.brand_id) merged = merged.filter((r) => r.brand_id === filters.brand_id);
+  if (filters.source && filters.source !== "all") merged = merged.filter((r) => r.source === filters.source);
+  merged.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  merged = merged.slice(0, limit);
+
+  return attachBrandNames(merged);
 }
+
 
 export async function listBlockedClient(filter: BrandFilter = {}) {
   let query = db.from("blocked_numbers").select("id, phone, reason, brand_id, created_at").order("created_at", { ascending: false }).limit(500);
