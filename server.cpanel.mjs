@@ -8,18 +8,26 @@ import { pathToFileURL } from "node:url";
 import path from "node:path";
 
 function loadLocalEnv() {
-  const envFile = path.resolve(".env");
-  if (!existsSync(envFile)) return;
-  for (const line of readFileSync(envFile, "utf8").split(/\r?\n/)) {
-    const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)?\s*$/);
-    if (!match) continue;
-    const key = match[1];
-    let value = match[2] ?? "";
-    value = value.replace(/^['"]|['"]$/g, "");
-    if (process.env[key] == null) process.env[key] = value;
+  for (const file of [".env", ".env.local", ".env.production", ".env.production.local"]) {
+    const envFile = path.resolve(file);
+    if (!existsSync(envFile)) continue;
+    for (const line of readFileSync(envFile, "utf8").split(/\r?\n/)) {
+      const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)?\s*$/);
+      if (!match) continue;
+      const key = match[1];
+      let value = match[2] ?? "";
+      value = value.replace(/^['"]|['"]$/g, "");
+      if (process.env[key] == null) process.env[key] = value;
+    }
   }
+
   process.env.SUPABASE_URL ??= process.env.VITE_SUPABASE_URL;
-  process.env.SUPABASE_PUBLISHABLE_KEY ??= process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  process.env.VITE_SUPABASE_URL ??= process.env.SUPABASE_URL;
+  process.env.SUPABASE_PUBLISHABLE_KEY ??=
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_ANON_KEY;
+  process.env.VITE_SUPABASE_PUBLISHABLE_KEY ??=
+    process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_ANON_KEY;
+  process.env.SUPABASE_ANON_KEY ??= process.env.SUPABASE_PUBLISHABLE_KEY ?? process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 }
 
 loadLocalEnv();
