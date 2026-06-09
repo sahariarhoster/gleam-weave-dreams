@@ -84,7 +84,7 @@ function PackagesPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-4">
       <PageHeader icon={Package} title="Packages" description="Manage packages shown on the public order page."
-        action={<Button onClick={() => { setForm(empty); setOpen(true); }}><Plus className="h-4 w-4 mr-1" /> New package</Button>}
+        actions={<Button onClick={() => { setForm(empty); setOpen(true); }}><Plus className="h-4 w-4 mr-1" /> New package</Button>}
       />
       <Card><CardContent className="p-0">
         <Table>
