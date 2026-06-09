@@ -1,5 +1,7 @@
 import { createFileRoute, Link, ClientOnly } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { format } from "date-fns";
 import {
   Smartphone,
   Building2,
@@ -16,6 +18,7 @@ import {
   ArrowUpRight,
   Wifi,
   WifiOff,
+  CalendarIcon,
 } from "lucide-react";
 import {
   Area,
@@ -24,8 +27,6 @@ import {
   Cell,
   Pie,
   PieChart,
-  RadialBar,
-  RadialBarChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -34,6 +35,10 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -41,6 +46,40 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — WA Suite" }] }),
   component: DashboardPage,
 });
+
+// Asia/Dhaka "today" helper — keeps date math in the app timezone.
+const TZ = "Asia/Dhaka";
+function todayInDhaka(): Date {
+  const s = new Date().toLocaleString("en-CA", {
+    timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit",
+  });
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d));
+}
+function addDays(d: Date, n: number): Date {
+  const x = new Date(d);
+  x.setUTCDate(x.getUTCDate() + n);
+  return x;
+}
+function fmtISO(d: Date): string { return d.toISOString().slice(0, 10); }
+
+type RangePreset = "today" | "yesterday" | "3" | "7" | "15" | "30" | "custom";
+
+function resolveRange(preset: RangePreset, custom: { from?: Date; to?: Date }) {
+  const today = todayInDhaka();
+  if (preset === "today") return { start: fmtISO(today), end: fmtISO(today) };
+  if (preset === "yesterday") {
+    const y = addDays(today, -1);
+    return { start: fmtISO(y), end: fmtISO(y) };
+  }
+  if (preset === "custom") {
+    const from = custom.from ?? addDays(today, -6);
+    const to = custom.to ?? today;
+    return { start: fmtISO(from), end: fmtISO(to) };
+  }
+  const days = parseInt(preset, 10);
+  return { start: fmtISO(addDays(today, -(days - 1))), end: fmtISO(today) };
+}
 
 type DashboardStats = {
   devices: number;
@@ -86,11 +125,18 @@ function normalizeStats(value: Partial<DashboardStats> | null): DashboardStats {
 
 function DashboardPage() {
   const { user } = useAuth();
+  const [preset, setPreset] = useState<RangePreset>("7");
+  const [customFrom, setCustomFrom] = useState<Date | undefined>();
+  const [customTo, setCustomTo] = useState<Date | undefined>();
+  const range = resolveRange(preset, { from: customFrom, to: customTo });
+
   const { data, isLoading } = useQuery({
-    queryKey: ["dashboard-stats", user?.id ?? "anon"],
+    queryKey: ["dashboard-stats", user?.id ?? "anon", range.start, range.end],
     queryFn: async () => {
       if (!user?.id) return emptyStats;
-      const { data, error } = await supabase.rpc("get_dashboard_stats_for_user", { _user_id: user.id });
+      const { data, error } = await supabase.rpc("get_dashboard_stats_for_user", {
+        _user_id: user.id, _start: range.start, _end: range.end,
+      });
       if (error) throw new Error(error.message);
       return normalizeStats(data as Partial<DashboardStats> | null);
     },
@@ -112,7 +158,38 @@ function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-3">
-      {/* Hero */}
+      {/* Filter bar */}
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/60 bg-card px-3 py-2 shadow-sm">
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <CalendarIcon className="h-3.5 w-3.5" />
+          <span>
+            {range.start === range.end ? range.start : `${range.start} → ${range.end}`}
+            <span className="ml-2 rounded bg-muted px-1.5 py-0.5 font-mono text-[10px]">{TZ}</span>
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Select value={preset} onValueChange={(v) => setPreset(v as RangePreset)}>
+            <SelectTrigger className="h-8 w-40"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="today">Today</SelectItem>
+              <SelectItem value="yesterday">Yesterday</SelectItem>
+              <SelectItem value="3">Last 3 days</SelectItem>
+              <SelectItem value="7">Last 7 days</SelectItem>
+              <SelectItem value="15">Last 15 days</SelectItem>
+              <SelectItem value="30">Last 30 days</SelectItem>
+              <SelectItem value="custom">Custom range</SelectItem>
+            </SelectContent>
+          </Select>
+          {preset === "custom" && (
+            <>
+              <DateBtn label="From" value={customFrom} onChange={setCustomFrom} />
+              <DateBtn label="To" value={customTo} onChange={setCustomTo} />
+            </>
+          )}
+        </div>
+      </div>
+
+
       <div className="grid gap-3 lg:grid-cols-3">
         <Card className="lg:col-span-2 overflow-hidden border-border/60 bg-gradient-to-br from-primary/90 via-primary to-primary/70 text-primary-foreground shadow-lg">
           <CardContent className="relative p-4">
@@ -222,7 +299,7 @@ function DashboardPage() {
         <Card className="lg:col-span-2 border-border/60 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
-              <Activity className="h-4 w-4 text-primary" /> Messages — Last 7 days
+              <Activity className="h-4 w-4 text-primary" /> Messages — {range.start === range.end ? range.start : `${range.start} → ${range.end}`}
             </CardTitle>
             <Badge variant="secondary">{stats.series.reduce((a, d) => a + d.delivered + d.failed + d.pending, 0)} total</Badge>
           </CardHeader>
@@ -464,5 +541,21 @@ function EmptyState({ label, cta, to }: { label: string; cta: string; to: string
         <Link to={to}>{cta}</Link>
       </Button>
     </div>
+  );
+}
+
+function DateBtn({ label, value, onChange }: { label: string; value?: Date; onChange: (d?: Date) => void }) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" size="sm" className={cn("h-8 gap-1.5 font-normal", !value && "text-muted-foreground")}>
+          <CalendarIcon className="h-3.5 w-3.5" />
+          {value ? format(value, "MMM d, yyyy") : label}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-0" align="end">
+        <Calendar mode="single" selected={value} onSelect={onChange} initialFocus className={cn("p-3 pointer-events-auto")} />
+      </PopoverContent>
+    </Popover>
   );
 }
