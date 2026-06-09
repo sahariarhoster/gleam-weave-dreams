@@ -1,5 +1,7 @@
 import { createFileRoute, Link, ClientOnly } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { format } from "date-fns";
 import {
   Smartphone,
   Building2,
@@ -16,6 +18,7 @@ import {
   ArrowUpRight,
   Wifi,
   WifiOff,
+  CalendarIcon,
 } from "lucide-react";
 import {
   Area,
@@ -24,8 +27,6 @@ import {
   Cell,
   Pie,
   PieChart,
-  RadialBar,
-  RadialBarChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -34,6 +35,10 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -41,6 +46,40 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — WA Suite" }] }),
   component: DashboardPage,
 });
+
+// Asia/Dhaka "today" helper — keeps date math in the app timezone.
+const TZ = "Asia/Dhaka";
+function todayInDhaka(): Date {
+  const s = new Date().toLocaleString("en-CA", {
+    timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit",
+  });
+  const [y, m, d] = s.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d));
+}
+function addDays(d: Date, n: number): Date {
+  const x = new Date(d);
+  x.setUTCDate(x.getUTCDate() + n);
+  return x;
+}
+function fmtISO(d: Date): string { return d.toISOString().slice(0, 10); }
+
+type RangePreset = "today" | "yesterday" | "3" | "7" | "15" | "30" | "custom";
+
+function resolveRange(preset: RangePreset, custom: { from?: Date; to?: Date }) {
+  const today = todayInDhaka();
+  if (preset === "today") return { start: fmtISO(today), end: fmtISO(today) };
+  if (preset === "yesterday") {
+    const y = addDays(today, -1);
+    return { start: fmtISO(y), end: fmtISO(y) };
+  }
+  if (preset === "custom") {
+    const from = custom.from ?? addDays(today, -6);
+    const to = custom.to ?? today;
+    return { start: fmtISO(from), end: fmtISO(to) };
+  }
+  const days = parseInt(preset, 10);
+  return { start: fmtISO(addDays(today, -(days - 1))), end: fmtISO(today) };
+}
 
 type DashboardStats = {
   devices: number;
