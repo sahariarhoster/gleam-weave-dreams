@@ -41,7 +41,8 @@ function getConfiguredOrigin() {
 }
 
 if (typeof serverEntry?.fetch !== "function") {
-  console.log("Started node-server build from .output/server/index.mjs.");
+  console.error("Invalid cPanel build output: .output/server/index.mjs does not export fetch. Run `npm run build:cpanel` with the updated config, then restart the app.");
+  process.exit(1);
 } else {
   const port = Number(process.env.PORT || process.env.NODE_PORT || 3000);
   const hostname = process.env.HOST || "0.0.0.0";
