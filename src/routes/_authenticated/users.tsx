@@ -12,10 +12,10 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { listUsers, setUserRole, addBrandMember, removeBrandMember, impersonateUser, createUser, resetUserPassword } from "@/lib/users.functions";
+import { setUserRole, addBrandMember, removeBrandMember, impersonateUser, createUser, resetUserPassword } from "@/lib/users.functions";
 import { supabase } from "@/integrations/supabase/client";
-import { listBrandsLite } from "@/lib/brands.functions";
 import { PageHeader } from "@/components/layout/page-header";
+import { listBrandsLiteClient, listUsersClient } from "@/lib/client-queries";
 
 export const Route = createFileRoute("/_authenticated/users")({
   head: () => ({ meta: [{ title: "Users — WA Suite" }] }),
@@ -24,13 +24,11 @@ export const Route = createFileRoute("/_authenticated/users")({
 
 function UsersPage() {
   const qc = useQueryClient();
-  const fnList = useServerFn(listUsers);
-  const fnBrands = useServerFn(listBrandsLite);
   const fnSetRole = useServerFn(setUserRole);
   const fnRemove = useServerFn(removeBrandMember);
   const fnImpersonate = useServerFn(impersonateUser);
-  const users = useQuery({ queryKey: ["users"], queryFn: () => fnList() });
-  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => fnBrands() });
+  const users = useQuery({ queryKey: ["users"], queryFn: listUsersClient });
+  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: listBrandsLiteClient });
 
   const roleMut = useMutation({
     mutationFn: (v: { user_id: string; role: "owner" | "admin" | "manager" | "brand_owner" | "support_agent" | "sales_agent" | "member" }) => fnSetRole({ data: v }),
