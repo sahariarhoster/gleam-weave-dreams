@@ -1,18 +1,23 @@
-// @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
-// or the app will break with duplicate plugins:
-//   - tanstackStart, viteReact, tailwindcss, tsConfigPaths, nitro (build-only using cloudflare as a default target),
-//     componentTagger (dev-only), VITE_* env injection, @ path alias, React/TanStack dedupe,
-//     error logger plugins, and sandbox detection (port/host/strictPort).
-// You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
+// @lovable.dev/vite-tanstack-config already includes nitro (cloudflare default).
+// For self-hosted cPanel/Node builds, set BUILD_TARGET=node before `vite build`
+// to switch the nitro preset to `node-server`. Lovable preview leaves it unset
+// so the default Cloudflare Worker output is used (required by the preview proxy).
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+
+const isNodeBuild = process.env.BUILD_TARGET === "node";
 
 export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
+  ...(isNodeBuild
+    ? {
+        nitro: {
+          preset: "node-server",
+        },
+      }
+    : {}),
   vite: {
-    // Low-memory hosting: esbuild's worker pool is killed by the OOM killer
-    // ("The service was stopped"). Disable minify and force a single worker.
     build: {
       minify: false,
       sourcemap: false,
@@ -20,4 +25,3 @@ export default defineConfig({
     },
   },
 });
-
