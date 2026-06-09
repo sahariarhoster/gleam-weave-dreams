@@ -15,11 +15,12 @@ async function assertOwner(supabase: any, userId: string) {
 export const getMyRoles = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data, error } = await context.supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin
       .from("user_roles")
       .select("role")
       .eq("user_id", context.userId);
-    if (error) return [] as string[];
+    if (error) throw new Error(error.message);
     return (data ?? []).map((r: any) => r.role as string);
   });
 
