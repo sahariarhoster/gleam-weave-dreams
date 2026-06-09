@@ -15,8 +15,7 @@ async function assertOwner(supabase: any, userId: string) {
 export const getMyRoles = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await context.supabase
       .from("user_roles")
       .select("role")
       .eq("user_id", context.userId);
