@@ -2,35 +2,42 @@ import { useEffect, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
+type AuthState = { session: Session | null; user: User | null; loading: boolean };
+
+let authState: AuthState = { session: null, user: null, loading: true };
+let initialized = false;
+const listeners = new Set<(state: AuthState) => void>();
+
+function emit(next: AuthState) {
+  authState = next;
+  listeners.forEach((listener) => listener(authState));
+}
+
+function initializeAuth() {
+  if (initialized) return;
+  initialized = true;
+
+  supabase.auth.onAuthStateChange((_event, session) => {
+    emit({ session, user: session?.user ?? null, loading: false });
+  });
+
+  supabase.auth
+    .getSession()
+    .then(({ data }) => emit({ session: data.session, user: data.session?.user ?? null, loading: false }))
+    .catch(() => emit({ session: null, user: null, loading: false }));
+}
+
 export function useAuth() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [state, setState] = useState<AuthState>(authState);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s);
-      setUser(s?.user ?? null);
-    });
-    supabase.auth.getUser().then(({ data, error }) => {
-      if (error || !data.user) {
-        setSession(null);
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-      supabase.auth.getSession().then(({ data: sessionData }) => {
-        setSession(sessionData.session);
-        setUser(data.user);
-        setLoading(false);
-      });
-    }).catch(() => {
-      setSession(null);
-      setUser(null);
-      setLoading(false);
-    });
-    return () => sub.subscription.unsubscribe();
+    initializeAuth();
+    listeners.add(setState);
+    setState(authState);
+    return () => {
+      listeners.delete(setState);
+    };
   }, []);
 
-  return { session, user, loading };
+  return state;
 }
