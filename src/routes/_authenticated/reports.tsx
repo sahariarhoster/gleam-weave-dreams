@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
-import { useUserRole } from "@/hooks/use-user-role";
+
 import { supabase } from "@/integrations/supabase/client";
 import { listBrandsLiteClient } from "@/lib/client-queries";
 import { getNotifySettings, saveNotifySettings, sendDailyReportNow } from "@/lib/notify-settings.functions";
