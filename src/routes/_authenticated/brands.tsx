@@ -126,8 +126,6 @@ function BrandsPage() {
 }
 
 function BrandDialog({ editing, onDone }: { editing: Brand | null; onDone: () => void }) {
-  const fnCreate = useServerFn(createBrand);
-  const fnUpdate = useServerFn(updateBrand);
   const [form, setForm] = useState({
     name: editing?.name ?? "",
     status: editing?.status ?? "active",
@@ -139,13 +137,13 @@ function BrandDialog({ editing, onDone }: { editing: Brand | null; onDone: () =>
     mutationFn: async () => {
       const payload = {
         name: form.name,
-        status: form.status as "active" | "suspended" | "expired",
+        status: form.status,
         expires_at: form.expires_at ? new Date(form.expires_at).toISOString() : null,
         message_limit: form.message_limit ? parseInt(form.message_limit, 10) : null,
         device_limit: parseInt(form.device_limit, 10) || 1,
       };
-      if (editing) return fnUpdate({ data: { id: editing.id, ...payload } });
-      return fnCreate({ data: payload });
+      if (editing) return updateBrandClient({ id: editing.id, ...payload });
+      return createBrandClient(payload);
     },
     onSuccess: () => { toast.success(editing ? "Brand updated" : "Brand created"); onDone(); },
     onError: (e) => toast.error((e as Error).message),
