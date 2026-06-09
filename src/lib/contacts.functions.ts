@@ -285,9 +285,11 @@ export const importDeliveredNumbers = createServerFn({ method: "POST" })
       .in("phone", phones);
     const contactIds = (contactRows ?? []).map((r: any) => r.id);
 
-    // Determine target group
-    let groupId: string | null = data.existing_group_id ?? null;
-    if (!groupId && data.group_name) {
+    // Determine target groups — both can be set; numbers are ADDED to each
+    // (never removed from any other group they may already belong to).
+    const targetGroupIds: string[] = [];
+    if (data.existing_group_id) targetGroupIds.push(data.existing_group_id);
+    if (data.group_name) {
       const { data: g, error } = await context.supabase
         .from("contact_groups")
         .insert({
@@ -299,17 +301,25 @@ export const importDeliveredNumbers = createServerFn({ method: "POST" })
         .select("id")
         .single();
       if (error) throw new Error(error.message);
-      groupId = g!.id;
+      if (g?.id) targetGroupIds.push(g.id);
     }
 
     let added = 0;
-    if (groupId && contactIds.length) {
-      const rows = contactIds.map((cid: string) => ({ group_id: groupId, contact_id: cid }));
+    if (targetGroupIds.length && contactIds.length) {
+      const rows = targetGroupIds.flatMap((gid) =>
+        contactIds.map((cid: string) => ({ group_id: gid, contact_id: cid })),
+      );
       await context.supabase
         .from("contact_group_members")
         .upsert(rows, { onConflict: "group_id,contact_id", ignoreDuplicates: true });
       added = rows.length;
     }
 
-    return { ok: true, found: phones.length, inserted: contactIds.length, group_id: groupId, added };
+    return {
+      ok: true,
+      found: phones.length,
+      inserted: contactIds.length,
+      group_ids: targetGroupIds,
+      added,
+    };
   });
