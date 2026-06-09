@@ -1,0 +1,243 @@
+import { supabase } from "@/integrations/supabase/client";
+
+const db = supabase as any;
+
+type BrandFilter = { brand_id?: string | null };
+
+function assertOk(error: { message?: string } | null | undefined) {
+  if (error) throw new Error(error.message ?? "Failed to load data");
+}
+
+async function attachBrandNames<T extends Record<string, any>>(rows: T[], key = "brand_id") {
+  const ids = Array.from(new Set(rows.map((r) => r[key]).filter(Boolean)));
+  if (ids.length === 0) return rows;
+  const { data, error } = await db.from("brands").select("id, name").in("id", ids);
+  assertOk(error);
+  const names = Object.fromEntries((data ?? []).map((b: any) => [b.id, b.name]));
+  return rows.map((row) => ({ ...row, brand_name: row[key] ? names[row[key]] ?? null : null }));
+}
+
+export async function listMyRolesClient(userId?: string | null) {
+  if (!userId) return [];
+  const { data, error } = await db.from("user_roles").select("role").eq("user_id", userId);
+  assertOk(error);
+  return (data ?? []).map((row: any) => row.role as string);
+}
+
+export async function listBrandsLiteClient() {
+  const { data, error } = await db.from("brands").select("id, name, license_limit").order("name");
+  assertOk(error);
+  return data ?? [];
+}
+
+export async function listBrandsClient() {
+  const { data, error } = await db
+    .from("brands")
+    .select("id, name, status, expires_at, message_limit, device_limit, license_limit, created_at")
+    .order("created_at", { ascending: false });
+  assertOk(error);
+  const rows = data ?? [];
+  const ids = rows.map((brand: any) => brand.id);
+  if (ids.length === 0) return [];
+  const [devicesRes, membersRes] = await Promise.all([
+    db.from("devices").select("brand_id").in("brand_id", ids),
+    db.from("brand_members").select("brand_id").in("brand_id", ids),
+  ]);
+  assertOk(devicesRes.error);
+  assertOk(membersRes.error);
+  const deviceCount: Record<string, number> = {};
+  const memberCount: Record<string, number> = {};
+  (devicesRes.data ?? []).forEach((row: any) => {
+    if (row.brand_id) deviceCount[row.brand_id] = (deviceCount[row.brand_id] ?? 0) + 1;
+  });
+  (membersRes.data ?? []).forEach((row: any) => {
+    if (row.brand_id) memberCount[row.brand_id] = (memberCount[row.brand_id] ?? 0) + 1;
+  });
+  return rows.map((brand: any) => ({
+    ...brand,
+    devices_count: deviceCount[brand.id] ?? 0,
+    members_count: memberCount[brand.id] ?? 0,
+  }));
+}
+
+export async function listDevicesClient() {
+  const { data, error } = await db
+    .from("devices")
+    .select("id, name, device_unique_id, sim_info, brand_id, status, last_checked_at, created_at, brands(name)")
+    .order("created_at", { ascending: false });
+  assertOk(error);
+  return data ?? [];
+}
+
+export async function listUsersClient() {
+  const { data: profiles, error } = await db
+    .from("profiles")
+    .select("id, email, full_name, created_at")
+    .order("created_at", { ascending: false });
+  assertOk(error);
+  const [rolesRes, membersRes] = await Promise.all([
+    db.from("user_roles").select("user_id, role"),
+    db.from("brand_members").select("user_id, role, brand_id, brands(name)"),
+  ]);
+  assertOk(rolesRes.error);
+  assertOk(membersRes.error);
+  const roleMap: Record<string, string[]> = {};
+  const memberMap: Record<string, any[]> = {};
+  (rolesRes.data ?? []).forEach((row: any) => {
+    roleMap[row.user_id] = [...(roleMap[row.user_id] ?? []), row.role];
+  });
+  (membersRes.data ?? []).forEach((row: any) => {
+    memberMap[row.user_id] = [
+      ...(memberMap[row.user_id] ?? []),
+      { brand_id: row.brand_id, brand_name: row.brands?.name, role: row.role },
+    ];
+  });
+  return (profiles ?? []).map((profile: any) => ({
+    ...profile,
+    roles: roleMap[profile.id] ?? [],
+    memberships: memberMap[profile.id] ?? [],
+  }));
+}
+
+export async function listContactsClient(filter: BrandFilter = {}) {
+  let query = db
+    .from("contacts")
+    .select("id, brand_id, name, phone, email, tags, notes, created_at, brands(name)")
+    .order("created_at", { ascending: false });
+  if (filter.brand_id) query = query.eq("brand_id", filter.brand_id);
+  const { data, error } = await query;
+  assertOk(error);
+  return data ?? [];
+}
+
+export async function listGroupsClient(filter: BrandFilter = {}) {
+  let query = db
+    .from("contact_groups")
+    .select("id, brand_id, name, description, created_at, brands(name)")
+    .order("created_at", { ascending: false });
+  if (filter.brand_id) query = query.eq("brand_id", filter.brand_id);
+  const { data, error } = await query;
+  assertOk(error);
+  const rows = data ?? [];
+  const ids = rows.map((group: any) => group.id);
+  if (ids.length === 0) return [];
+  const { data: members, error: membersError } = await db.from("contact_group_members").select("group_id").in("group_id", ids);
+  assertOk(membersError);
+  const counts: Record<string, number> = {};
+  (members ?? []).forEach((member: any) => {
+    counts[member.group_id] = (counts[member.group_id] ?? 0) + 1;
+  });
+  return rows.map((group: any) => ({ ...group, member_count: counts[group.id] ?? 0 }));
+}
+
+export async function getGroupMembersClient(groupId: string) {
+  const { data, error } = await db
+    .from("contact_group_members")
+    .select("contact_id, contacts(id, name, phone, email)")
+    .eq("group_id", groupId);
+  assertOk(error);
+  return (data ?? []).map((row: any) => row.contacts).filter(Boolean);
+}
+
+export async function listCampaignsClient() {
+  const { data, error } = await db
+    .from("campaigns")
+    .select("id, name, status, total_recipients, sent_count, failed_count, scheduled_at, created_at, brands(name), devices(name)")
+    .order("created_at", { ascending: false });
+  assertOk(error);
+  return data ?? [];
+}
+
+export async function listMessageLogsClient(filters: { brand_id?: string | null; campaign_id?: string | null; status?: string | null; search?: string | null; limit?: number } = {}) {
+  let query = db
+    .from("campaign_messages")
+    .select("id, campaign_id, phone, rendered_message, status, error_message, sent_at, created_at")
+    .order("created_at", { ascending: false })
+    .limit(filters.limit ?? 200);
+  if (filters.status) query = query.eq("status", filters.status);
+  if (filters.campaign_id) query = query.eq("campaign_id", filters.campaign_id);
+  if (filters.search) query = query.ilike("phone", `%${filters.search}%`);
+  const { data, error } = await query;
+  assertOk(error);
+  const rows = data ?? [];
+  const campaignIds = Array.from(new Set(rows.map((row: any) => row.campaign_id).filter(Boolean)));
+  if (campaignIds.length === 0) return [];
+  const { data: campaigns, error: campaignsError } = await db.from("campaigns").select("id, name, brand_id").in("id", campaignIds);
+  assertOk(campaignsError);
+  const campaignMap = Object.fromEntries((campaigns ?? []).map((campaign: any) => [campaign.id, campaign]));
+  const enriched = rows
+    .map((row: any) => ({
+      ...row,
+      campaign_name: campaignMap[row.campaign_id]?.name ?? null,
+      brand_id: campaignMap[row.campaign_id]?.brand_id ?? null,
+    }))
+    .filter((row: any) => !filters.brand_id || row.brand_id === filters.brand_id);
+  return attachBrandNames(enriched);
+}
+
+export async function listBlockedClient(filter: BrandFilter = {}) {
+  let query = db.from("blocked_numbers").select("id, phone, reason, brand_id, created_at").order("created_at", { ascending: false }).limit(500);
+  if (filter.brand_id) query = query.eq("brand_id", filter.brand_id);
+  const { data, error } = await query;
+  assertOk(error);
+  return attachBrandNames(data ?? []);
+}
+
+export async function listActivityLogClient(filter: BrandFilter = {}) {
+  let query = db.from("activity_log").select("id, action, details, brand_id, user_id, created_at").order("created_at", { ascending: false }).limit(200);
+  if (filter.brand_id) query = query.eq("brand_id", filter.brand_id);
+  const { data, error } = await query;
+  assertOk(error);
+  const rows = data ?? [];
+  const userIds = Array.from(new Set(rows.map((row: any) => row.user_id).filter(Boolean)));
+  let profiles: any[] = [];
+  if (userIds.length) {
+    const { data: profileRows, error: profilesError } = await db.from("profiles").select("id, email, full_name").in("id", userIds);
+    assertOk(profilesError);
+    profiles = profileRows ?? [];
+  }
+  const profileMap = Object.fromEntries(profiles.map((profile: any) => [profile.id, profile]));
+  const enriched = rows.map((row: any) => ({
+    ...row,
+    user_email: profileMap[row.user_id]?.email ?? null,
+    user_name: profileMap[row.user_id]?.full_name ?? null,
+  }));
+  return attachBrandNames(enriched);
+}
+
+export async function listLicensesClient() {
+  const { data, error } = await db
+    .from("plugin_licenses")
+    .select("id, brand_id, license_key, status, device_id, site_url, activated_at, last_seen_at, created_at, brands(name, license_limit), devices(name)")
+    .order("created_at", { ascending: false });
+  assertOk(error);
+  return (data ?? []).map((row: any) => ({
+    ...row,
+    brand_name: row.brands?.name,
+    brand_license_limit: row.brands?.license_limit,
+    device_name: row.devices?.name,
+  }));
+}
+
+export async function listDeviceRequestsClient() {
+  const { data, error } = await db
+    .from("device_requests")
+    .select("id, brand_id, requested_by, device_name, notes, status, admin_reply, created_at, updated_at, brands(name)")
+    .order("created_at", { ascending: false });
+  assertOk(error);
+  const rows = data ?? [];
+  const userIds = Array.from(new Set(rows.map((row: any) => row.requested_by).filter(Boolean)));
+  let profiles: any[] = [];
+  if (userIds.length) {
+    const { data: profileRows, error: profilesError } = await db.from("profiles").select("id, email, full_name").in("id", userIds);
+    assertOk(profilesError);
+    profiles = profileRows ?? [];
+  }
+  const profileMap = Object.fromEntries(profiles.map((profile: any) => [profile.id, profile]));
+  return rows.map((row: any) => ({
+    ...row,
+    brand_name: row.brands?.name,
+    requester_email: profileMap[row.requested_by]?.email,
+    requester_name: profileMap[row.requested_by]?.full_name,
+  }));
+}
