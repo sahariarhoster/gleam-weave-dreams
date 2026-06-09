@@ -25,6 +25,7 @@ import { Route as AuthenticatedGroupsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedDevicesRouteImport } from './routes/_authenticated/devices'
 import { Route as AuthenticatedDeviceRequestsRouteImport } from './routes/_authenticated/device-requests'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedCouponsRouteImport } from './routes/_authenticated/coupons'
 import { Route as AuthenticatedContactsRouteImport } from './routes/_authenticated/contacts'
 import { Route as AuthenticatedCampaignsRouteImport } from './routes/_authenticated/campaigns'
 import { Route as AuthenticatedBrandsRouteImport } from './routes/_authenticated/brands'
@@ -124,6 +125,11 @@ const AuthenticatedDeviceRequestsRoute =
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCouponsRoute = AuthenticatedCouponsRouteImport.update({
+  id: '/coupons',
+  path: '/coupons',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedContactsRoute = AuthenticatedContactsRouteImport.update({
@@ -241,6 +247,7 @@ export interface FileRoutesByFullPath {
   '/brands': typeof AuthenticatedBrandsRoute
   '/campaigns': typeof AuthenticatedCampaignsRoute
   '/contacts': typeof AuthenticatedContactsRoute
+  '/coupons': typeof AuthenticatedCouponsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/device-requests': typeof AuthenticatedDeviceRequestsRoute
   '/devices': typeof AuthenticatedDevicesRoute
@@ -278,6 +285,7 @@ export interface FileRoutesByTo {
   '/brands': typeof AuthenticatedBrandsRoute
   '/campaigns': typeof AuthenticatedCampaignsRoute
   '/contacts': typeof AuthenticatedContactsRoute
+  '/coupons': typeof AuthenticatedCouponsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/device-requests': typeof AuthenticatedDeviceRequestsRoute
   '/devices': typeof AuthenticatedDevicesRoute
@@ -317,6 +325,7 @@ export interface FileRoutesById {
   '/_authenticated/brands': typeof AuthenticatedBrandsRoute
   '/_authenticated/campaigns': typeof AuthenticatedCampaignsRoute
   '/_authenticated/contacts': typeof AuthenticatedContactsRoute
+  '/_authenticated/coupons': typeof AuthenticatedCouponsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/device-requests': typeof AuthenticatedDeviceRequestsRoute
   '/_authenticated/devices': typeof AuthenticatedDevicesRoute
@@ -356,6 +365,7 @@ export interface FileRouteTypes {
     | '/brands'
     | '/campaigns'
     | '/contacts'
+    | '/coupons'
     | '/dashboard'
     | '/device-requests'
     | '/devices'
@@ -393,6 +403,7 @@ export interface FileRouteTypes {
     | '/brands'
     | '/campaigns'
     | '/contacts'
+    | '/coupons'
     | '/dashboard'
     | '/device-requests'
     | '/devices'
@@ -431,6 +442,7 @@ export interface FileRouteTypes {
     | '/_authenticated/brands'
     | '/_authenticated/campaigns'
     | '/_authenticated/contacts'
+    | '/_authenticated/coupons'
     | '/_authenticated/dashboard'
     | '/_authenticated/device-requests'
     | '/_authenticated/devices'
@@ -594,6 +606,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/coupons': {
+      id: '/_authenticated/coupons'
+      path: '/coupons'
+      fullPath: '/coupons'
+      preLoaderRoute: typeof AuthenticatedCouponsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/contacts': {
       id: '/_authenticated/contacts'
       path: '/contacts'
@@ -744,6 +763,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBrandsRoute: typeof AuthenticatedBrandsRoute
   AuthenticatedCampaignsRoute: typeof AuthenticatedCampaignsRoute
   AuthenticatedContactsRoute: typeof AuthenticatedContactsRoute
+  AuthenticatedCouponsRoute: typeof AuthenticatedCouponsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDeviceRequestsRoute: typeof AuthenticatedDeviceRequestsRoute
   AuthenticatedDevicesRoute: typeof AuthenticatedDevicesRoute
@@ -765,6 +785,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBrandsRoute: AuthenticatedBrandsRoute,
   AuthenticatedCampaignsRoute: AuthenticatedCampaignsRoute,
   AuthenticatedContactsRoute: AuthenticatedContactsRoute,
+  AuthenticatedCouponsRoute: AuthenticatedCouponsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDeviceRequestsRoute: AuthenticatedDeviceRequestsRoute,
   AuthenticatedDevicesRoute: AuthenticatedDevicesRoute,
@@ -805,3 +826,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
