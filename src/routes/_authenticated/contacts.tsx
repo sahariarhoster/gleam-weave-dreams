@@ -355,12 +355,12 @@ function DeliveredDialog({ brands, onDone }: { brands: { id: string; name: strin
           brand_id: brandId,
           start,
           end,
-          group_name: existingGroupId === "none" ? (groupName || `Delivered ${start} → ${end}`) : null,
+          group_name: groupName.trim() || null,
           existing_group_id: existingGroupId !== "none" ? existingGroupId : null,
         },
       }),
     onSuccess: (r) => {
-      toast.success(`Found ${r.found} delivered numbers · Added ${r.added} to group`);
+      toast.success(`Found ${r.found} delivered numbers · added to ${r.group_ids?.length ?? 0} group(s)`);
       onDone();
     },
     onError: (e) => toast.error((e as Error).message),
@@ -383,6 +383,8 @@ function DeliveredDialog({ brands, onDone }: { brands: { id: string; name: strin
     }
   };
 
+  const nothingPicked = existingGroupId === "none" && !groupName.trim();
+
   return (
     <DialogContent>
       <DialogHeader>
@@ -390,8 +392,9 @@ function DeliveredDialog({ brands, onDone }: { brands: { id: string; name: strin
       </DialogHeader>
       <div className="space-y-3">
         <p className="text-xs text-muted-foreground">
-          Pull every phone number you successfully delivered to in a date range,
-          save them as contacts, and put them in a group ready for a new campaign.
+          Pull every phone number you successfully delivered to in a date range and
+          <strong> add</strong> them to one or both groups below. Numbers already in
+          other groups stay where they are — nothing is removed.
         </p>
         <div className="space-y-1.5">
           <Label>Brand</Label>
@@ -415,29 +418,33 @@ function DeliveredDialog({ brands, onDone }: { brands: { id: string; name: strin
           <Button type="button" size="sm" variant="outline" onClick={() => setQuick("30d")}>Last 30 days</Button>
         </div>
         <div className="space-y-1.5">
-          <Label>Add to existing group (optional)</Label>
+          <Label>Add to an existing group</Label>
           <Select value={existingGroupId} onValueChange={setExistingGroupId} disabled={!brandId}>
-            <SelectTrigger><SelectValue placeholder="Create a new group" /></SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="— None —" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">— Create a new group —</SelectItem>
+              <SelectItem value="none">— None —</SelectItem>
               {(groups.data ?? []).map((g: any) => (
                 <SelectItem key={g.id} value={g.id}>{g.name} ({g.member_count})</SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
-        {existingGroupId === "none" && (
-          <div className="space-y-1.5">
-            <Label>New group name</Label>
-            <Input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder={`Delivered ${start} → ${end}`} />
-          </div>
-        )}
+        <div className="space-y-1.5">
+          <Label>And/or create a new group</Label>
+          <Input
+            value={groupName}
+            onChange={(e) => setGroupName(e.target.value)}
+            placeholder={`e.g. Delivered ${start} → ${end}`}
+          />
+          <p className="text-xs text-muted-foreground">Leave blank to skip creating a new group.</p>
+        </div>
       </div>
       <DialogFooter>
-        <Button disabled={!brandId || mut.isPending} onClick={() => mut.mutate()} className="w-full">
-          {mut.isPending ? "Importing…" : "Import & Create Group"}
+        <Button disabled={!brandId || nothingPicked || mut.isPending} onClick={() => mut.mutate()} className="w-full">
+          {mut.isPending ? "Importing…" : "Import & Add to Group(s)"}
         </Button>
       </DialogFooter>
+
     </DialogContent>
   );
 }
