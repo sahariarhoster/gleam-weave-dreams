@@ -16,7 +16,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { listBrandsLiteClient, listLicensesClient, listMyRolesClient } from "@/lib/client-queries";
 import { useAuth } from "@/hooks/use-auth";
 import {
-  listMyLicenses,
   generateLicense,
   revokeLicense,
   deleteLicense,
