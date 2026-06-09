@@ -15,10 +15,9 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { listGroups, createGroup, updateGroup, deleteGroup, getGroupMembers, setGroupMembers } from "@/lib/contacts.functions";
-import { listContacts } from "@/lib/contacts.functions";
-import { listBrandsLite } from "@/lib/brands.functions";
+import { createGroup, updateGroup, deleteGroup, setGroupMembers } from "@/lib/contacts.functions";
 import { PageHeader } from "@/components/layout/page-header";
+import { getGroupMembersClient, listBrandsLiteClient, listContactsClient, listGroupsClient } from "@/lib/client-queries";
 
 export const Route = createFileRoute("/_authenticated/groups")({
   head: () => ({ meta: [{ title: "Groups — WA Suite" }] }),
@@ -29,11 +28,9 @@ type Group = { id: string; brand_id: string; name: string; description: string |
 
 function GroupsPage() {
   const qc = useQueryClient();
-  const fnList = useServerFn(listGroups);
-  const fnBrands = useServerFn(listBrandsLite);
   const fnDelete = useServerFn(deleteGroup);
-  const groups = useQuery({ queryKey: ["groups"], queryFn: () => fnList({ data: {} }) });
-  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => fnBrands() });
+  const groups = useQuery({ queryKey: ["groups"], queryFn: () => listGroupsClient({}) });
+  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: listBrandsLiteClient });
 
   const [editing, setEditing] = useState<Group | null>(null);
   const [open, setOpen] = useState(false);
@@ -162,17 +159,15 @@ function GroupDialog({ editing, brands, onDone }: { editing: Group | null; brand
 }
 
 function MembersDialog({ group, onDone }: { group: Group; onDone: () => void }) {
-  const fnContacts = useServerFn(listContacts);
-  const fnMembers = useServerFn(getGroupMembers);
   const fnSet = useServerFn(setGroupMembers);
 
   const contacts = useQuery({
     queryKey: ["contacts", group.brand_id],
-    queryFn: () => fnContacts({ data: { brand_id: group.brand_id } }),
+    queryFn: () => listContactsClient({ brand_id: group.brand_id }),
   });
   const members = useQuery({
     queryKey: ["group-members", group.id],
-    queryFn: () => fnMembers({ data: { group_id: group.id } }),
+    queryFn: () => getGroupMembersClient(group.id),
   });
 
   const [selected, setSelected] = useState<Set<string> | null>(null);
