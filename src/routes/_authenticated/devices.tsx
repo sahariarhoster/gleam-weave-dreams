@@ -81,7 +81,7 @@ function DevicesPage() {
       <PageHeader
         icon={Smartphone}
         title="Devices"
-        description="Connect Android phones running BD-Webs to send messages."
+        description="Connect Android phones to send WhatsApp messages."
         actions={
           isOwner && (
             <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
