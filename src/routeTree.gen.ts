@@ -9,12 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as OrderRouteImport } from './routes/order'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/send'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
+import { Route as AuthenticatedOrdersRouteImport } from './routes/_authenticated/orders'
 import { Route as AuthenticatedMembersRouteImport } from './routes/_authenticated/members'
 import { Route as AuthenticatedLogsRouteImport } from './routes/_authenticated/logs'
 import { Route as AuthenticatedLicensesRouteImport } from './routes/_authenticated/licenses'
@@ -43,6 +45,11 @@ import { Route as ApiPublicPluginActivateRouteImport } from './routes/api/public
 import { Route as ApiPublicCronTickRouteImport } from './routes/api/public/cron/tick'
 import { Route as ApiPublicCronDailyReportRouteImport } from './routes/api/public/cron/daily-report'
 
+const OrderRoute = OrderRouteImport.update({
+  id: '/order',
+  path: '/order',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
@@ -70,6 +77,11 @@ const AuthenticatedSendRoute = AuthenticatedSendRouteImport.update({
 const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOrdersRoute = AuthenticatedOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMembersRoute = AuthenticatedMembersRouteImport.update({
@@ -216,6 +228,7 @@ const ApiPublicCronDailyReportRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/order': typeof OrderRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/blocked': typeof AuthenticatedBlockedRoute
@@ -229,6 +242,7 @@ export interface FileRoutesByFullPath {
   '/licenses': typeof AuthenticatedLicensesRoute
   '/logs': typeof AuthenticatedLogsRoute
   '/members': typeof AuthenticatedMembersRoute
+  '/orders': typeof AuthenticatedOrdersRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/send': typeof AuthenticatedSendRoute
   '/users': typeof AuthenticatedUsersRoute
@@ -250,6 +264,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/order': typeof OrderRoute
   '/activity': typeof AuthenticatedActivityRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/blocked': typeof AuthenticatedBlockedRoute
@@ -263,6 +278,7 @@ export interface FileRoutesByTo {
   '/licenses': typeof AuthenticatedLicensesRoute
   '/logs': typeof AuthenticatedLogsRoute
   '/members': typeof AuthenticatedMembersRoute
+  '/orders': typeof AuthenticatedOrdersRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/send': typeof AuthenticatedSendRoute
   '/users': typeof AuthenticatedUsersRoute
@@ -286,6 +302,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/order': typeof OrderRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/blocked': typeof AuthenticatedBlockedRoute
@@ -299,6 +316,7 @@ export interface FileRoutesById {
   '/_authenticated/licenses': typeof AuthenticatedLicensesRoute
   '/_authenticated/logs': typeof AuthenticatedLogsRoute
   '/_authenticated/members': typeof AuthenticatedMembersRoute
+  '/_authenticated/orders': typeof AuthenticatedOrdersRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/send': typeof AuthenticatedSendRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
@@ -322,6 +340,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/order'
     | '/activity'
     | '/billing'
     | '/blocked'
@@ -335,6 +354,7 @@ export interface FileRouteTypes {
     | '/licenses'
     | '/logs'
     | '/members'
+    | '/orders'
     | '/reports'
     | '/send'
     | '/users'
@@ -356,6 +376,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/order'
     | '/activity'
     | '/billing'
     | '/blocked'
@@ -369,6 +390,7 @@ export interface FileRouteTypes {
     | '/licenses'
     | '/logs'
     | '/members'
+    | '/orders'
     | '/reports'
     | '/send'
     | '/users'
@@ -391,6 +413,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/order'
     | '/_authenticated/activity'
     | '/_authenticated/billing'
     | '/_authenticated/blocked'
@@ -404,6 +427,7 @@ export interface FileRouteTypes {
     | '/_authenticated/licenses'
     | '/_authenticated/logs'
     | '/_authenticated/members'
+    | '/_authenticated/orders'
     | '/_authenticated/reports'
     | '/_authenticated/send'
     | '/_authenticated/users'
@@ -427,6 +451,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  OrderRoute: typeof OrderRoute
   ApiPublicCronDailyReportRoute: typeof ApiPublicCronDailyReportRoute
   ApiPublicCronTickRoute: typeof ApiPublicCronTickRoute
   ApiPublicPluginActivateRoute: typeof ApiPublicPluginActivateRoute
@@ -445,6 +470,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/order': {
+      id: '/order'
+      path: '/order'
+      fullPath: '/order'
+      preLoaderRoute: typeof OrderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/auth': {
       id: '/auth'
       path: '/auth'
@@ -485,6 +517,13 @@ declare module '@tanstack/react-router' {
       path: '/reports'
       fullPath: '/reports'
       preLoaderRoute: typeof AuthenticatedReportsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/orders': {
+      id: '/_authenticated/orders'
+      path: '/orders'
+      fullPath: '/orders'
+      preLoaderRoute: typeof AuthenticatedOrdersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/members': {
@@ -693,6 +732,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedLicensesRoute: typeof AuthenticatedLicensesRoute
   AuthenticatedLogsRoute: typeof AuthenticatedLogsRoute
   AuthenticatedMembersRoute: typeof AuthenticatedMembersRoute
+  AuthenticatedOrdersRoute: typeof AuthenticatedOrdersRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSendRoute: typeof AuthenticatedSendRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
@@ -712,6 +752,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLicensesRoute: AuthenticatedLicensesRoute,
   AuthenticatedLogsRoute: AuthenticatedLogsRoute,
   AuthenticatedMembersRoute: AuthenticatedMembersRoute,
+  AuthenticatedOrdersRoute: AuthenticatedOrdersRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSendRoute: AuthenticatedSendRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
@@ -724,6 +765,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  OrderRoute: OrderRoute,
   ApiPublicCronDailyReportRoute: ApiPublicCronDailyReportRoute,
   ApiPublicCronTickRoute: ApiPublicCronTickRoute,
   ApiPublicPluginActivateRoute: ApiPublicPluginActivateRoute,
@@ -742,3 +784,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
