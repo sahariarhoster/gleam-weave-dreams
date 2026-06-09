@@ -31,8 +31,10 @@ type Stats = {
 export const getDashboardStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<Stats> => {
-    const sb = context.supabase;
-    const { data, error } = await (sb as any).rpc("get_dashboard_stats");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await (supabaseAdmin as any).rpc("get_dashboard_stats_for_user", {
+      _user_id: context.userId,
+    });
     if (error) throw new Error(error.message);
     const stats = data as Partial<Stats> | null;
 
