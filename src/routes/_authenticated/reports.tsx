@@ -58,12 +58,19 @@ function ReportsPage() {
     },
     enabled: !!user?.id,
   });
+
+  const t = stats.data?.totals ?? { sent: 0, failed: 0, total: 0, successRate: 0 };
+  const brands = useMemo(() => stats.data?.brands ?? [], [stats.data]);
+  const failureRate = t.total > 0 ? Math.round((t.failed / t.total) * 1000) / 10 : 0;
   const avgPerDay = useMemo(() => {
     const s = new Date(start).getTime();
     const e = new Date(end).getTime();
     const days = Math.max(1, Math.round((e - s) / 86400000) + 1);
     return Math.round(t.total / days);
   }, [t.total, start, end]);
+  const activeBrands = brands.filter((b) => b.total > 0).length;
+  const bestBrand = [...brands].sort((a, b) => b.total - a.total)[0];
+  const worstBrand = [...brands].filter((b) => b.total > 0).sort((a, b) => a.successRate - b.successRate)[0];
 
   // Owner check
   const rolesQ = useQuery({
@@ -76,10 +83,6 @@ function ReportsPage() {
     enabled: !!user?.id,
   });
   const isOwner = (rolesQ.data ?? []).includes("owner");
-
-
-  const t = stats.data?.totals ?? { sent: 0, failed: 0, total: 0, successRate: 0 };
-  const brands = useMemo(() => stats.data?.brands ?? [], [stats.data]);
 
   return (
     <div className="space-y-6 p-6">
