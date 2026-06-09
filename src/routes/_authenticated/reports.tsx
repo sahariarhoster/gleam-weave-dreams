@@ -88,8 +88,10 @@ function ReportsPage() {
     <div className="space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-bold">Reports</h1>
-        <p className="text-sm text-muted-foreground">Daily SMS stats by brand. Filter by date range and brand.</p>
+        <p className="text-sm text-muted-foreground">Daily SMS stats by brand (Asia/Dhaka). Filter by date range and brand.</p>
       </div>
+
+      {isOwner && <NotifyConfigCard />}
 
       <Card>
         <CardHeader><CardTitle className="text-base">Filters</CardTitle></CardHeader>
