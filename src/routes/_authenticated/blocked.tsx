@@ -56,7 +56,7 @@ function BlockedPage() {
               <SelectTrigger className="h-9 w-44"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Brands</SelectItem>
-                {(brands.data ?? []).map((b) => (
+                {(brands.data ?? []).map((b: any) => (
                   <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
                 ))}
               </SelectContent>
@@ -144,7 +144,7 @@ function BlockDialog({ brands, onDone }: { brands: { id: string; name: string }[
           <Label>Brand</Label>
           <Select value={brandId} onValueChange={setBrandId}>
             <SelectTrigger><SelectValue placeholder="Pick a brand" /></SelectTrigger>
-            <SelectContent>{brands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
+            <SelectContent>{brands.map((b: any) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <div className="space-y-1.5">
