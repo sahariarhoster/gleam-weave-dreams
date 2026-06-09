@@ -47,6 +47,8 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
       throw new Error('Unauthorized: No token provided');
     }
 
+    const { default: WebSocket } = await import('ws');
+
     const supabase = createClient<Database>(
       SUPABASE_URL!,
       SUPABASE_PUBLISHABLE_KEY!,
@@ -61,6 +63,7 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
           persistSession: false,
           autoRefreshToken: false,
         },
+        realtime: { transport: (globalThis.WebSocket ?? WebSocket) as typeof globalThis.WebSocket },
       }
     );
 
