@@ -8,12 +8,14 @@ export const Route = createFileRoute("/api/public/cron/daily-report")({
     handlers: {
       POST: async ({ request }) => {
         const expected = process.env.CRON_SECRET;
-        const provided = request.headers.get("x-cron-secret");
-        const enc = new TextEncoder();
-        const a = enc.encode(provided ?? "");
-        const b = enc.encode(expected ?? "");
-        if (!expected || !provided || a.length !== b.length || !timingSafeEqual(a, b)) {
-          return new Response("Forbidden", { status: 403 });
+        if (expected) {
+          const provided = request.headers.get("x-cron-secret");
+          const enc = new TextEncoder();
+          const a = enc.encode(provided ?? "");
+          const b = enc.encode(expected);
+          if (!provided || a.length !== b.length || !timingSafeEqual(a, b)) {
+            return new Response("Forbidden", { status: 403 });
+          }
         }
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
