@@ -26,11 +26,14 @@ type ReportStats = {
   brands: { id: string; name: string; sent: number; failed: number; total: number; successRate: number }[];
 };
 
-function todayISO(offsetDays = 0) {
-  const d = new Date();
-  d.setDate(d.getDate() + offsetDays);
-  return d.toISOString().slice(0, 10);
+function todayDhaka(offsetDays = 0) {
+  // Asia/Dhaka YYYY-MM-DD
+  const now = new Date();
+  const bd = new Date(now.getTime() + 6 * 3600 * 1000);
+  bd.setUTCDate(bd.getUTCDate() + offsetDays);
+  return bd.toISOString().slice(0, 10);
 }
+const todayISO = todayDhaka;
 
 function ReportsPage() {
   const { user } = useAuth();
