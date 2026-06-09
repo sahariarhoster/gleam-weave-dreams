@@ -43,7 +43,7 @@ function ReportsPage() {
         _user_id: user.id,
         _start: start,
         _end: end,
-        _brand_id: brandId === "all" ? null : brandId,
+        _brand_id: brandId === "all" ? undefined : brandId,
       });
       if (error) throw new Error(error.message);
       return data as ReportStats;
