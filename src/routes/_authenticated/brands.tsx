@@ -31,8 +31,8 @@ type Brand = {
 
 function BrandsPage() {
   const qc = useQueryClient();
-  const fnDelete = useServerFn(deleteBrand);
   const brands = useQuery({ queryKey: ["brands"], queryFn: listBrandsClient });
+
 
   const [editing, setEditing] = useState<Brand | null>(null);
   const [open, setOpen] = useState(false);
