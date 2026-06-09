@@ -210,6 +210,7 @@ export const Route = createFileRoute("/api/public/plugin/send")({
               brandId,
               recipient,
               parsed.data.customer_name,
+              res.status === 200 ? "success" : "failed",
             );
           }
         } catch {
