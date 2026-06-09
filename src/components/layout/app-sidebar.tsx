@@ -16,6 +16,9 @@ import {
   CreditCard,
   Wrench,
   BarChart3,
+  ShoppingBag,
+  Package,
+  Tag,
 } from "lucide-react";
 import {
   Sidebar,
