@@ -26,16 +26,14 @@ export const Route = createFileRoute("/_authenticated/blocked")({
 
 function BlockedPage() {
   const qc = useQueryClient();
-  const fnList = useServerFn(listBlocked);
-  const fnBrands = useServerFn(listBrandsLite);
   const fnRemove = useServerFn(removeBlocked);
   const [brand, setBrand] = useState("all");
   const [open, setOpen] = useState(false);
 
-  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => fnBrands() });
+  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => listBrandsLiteClient() });
   const blocked = useQuery({
     queryKey: ["blocked", brand],
-    queryFn: () => fnList({ data: { brand_id: brand === "all" ? null : brand } }),
+    queryFn: () => listBlockedClient({ brand_id: brand === "all" ? null : brand }),
   });
 
   const delMut = useMutation({
