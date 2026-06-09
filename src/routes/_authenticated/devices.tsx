@@ -26,6 +26,8 @@ import {
 import { listBrandsLite } from "@/lib/brands.functions";
 import { getMyRoles } from "@/lib/users.functions";
 import { PageHeader } from "@/components/layout/page-header";
+import { listBrandsLiteClient, listDevicesClient, listMyRolesClient } from "@/lib/client-queries";
+import { useAuth } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/devices")({
   head: () => ({ meta: [{ title: "Devices — WA Suite" }] }),
@@ -44,15 +46,13 @@ type Device = {
 
 function DevicesPage() {
   const qc = useQueryClient();
-  const fnList = useServerFn(listDevices);
-  const fnBrands = useServerFn(listBrandsLite);
   const fnTest = useServerFn(testDeviceConnection);
   const fnDelete = useServerFn(deleteDevice);
-  const fnRoles = useServerFn(getMyRoles);
+  const { user } = useAuth();
 
-  const devices = useQuery({ queryKey: ["devices"], queryFn: () => fnList() });
-  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => fnBrands() });
-  const roles = useQuery({ queryKey: ["my-roles"], queryFn: () => fnRoles() });
+  const devices = useQuery({ queryKey: ["devices"], queryFn: listDevicesClient });
+  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: listBrandsLiteClient });
+  const roles = useQuery({ queryKey: ["my-roles", user?.id ?? "anon"], queryFn: () => listMyRolesClient(user?.id), enabled: !!user?.id });
   const isOwner = (roles.data ?? []).includes("owner");
 
   const [editing, setEditing] = useState<Device | null>(null);
