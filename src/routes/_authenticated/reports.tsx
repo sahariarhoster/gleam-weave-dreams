@@ -175,3 +175,64 @@ function ReportsPage() {
     </div>
   );
 }
+
+function NotifyConfigCard() {
+  const qc = useQueryClient();
+  const get = useServerFn(getNotifySettings);
+  const save = useServerFn(saveNotifySettings);
+  const sendNow = useServerFn(sendDailyReportNow);
+  const q = useQuery({ queryKey: ["notify-settings"], queryFn: () => get({ data: undefined as any }) });
+  const [phone, setPhone] = useState("");
+  const [deviceId, setDeviceId] = useState<string>("");
+  useEffect(() => {
+    if (q.data) {
+      setPhone(q.data.notify_phone ?? "");
+      setDeviceId(q.data.notify_device_id ?? "");
+    }
+  }, [q.data]);
+
+  const saveM = useMutation({
+    mutationFn: () => save({ data: { notify_phone: phone, notify_device_id: deviceId } }),
+    onSuccess: () => { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["notify-settings"] }); },
+    onError: (e: any) => toast.error(e?.message ?? "Failed"),
+  });
+  const testM = useMutation({
+    mutationFn: () => sendNow({ data: undefined as any }),
+    onSuccess: (r: any) => r?.ok ? toast.success("Report sent to WhatsApp") : toast.error(r?.error ?? "Failed"),
+    onError: (e: any) => toast.error(e?.message ?? "Failed"),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Daily WhatsApp Report — Admin Config</CardTitle>
+        <CardDescription>Sent automatically every day at 9:00 AM (Asia/Dhaka).</CardDescription>
+      </CardHeader>
+      <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <div>
+          <Label>Admin WhatsApp number</Label>
+          <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="8801XXXXXXXXX" />
+        </div>
+        <div>
+          <Label>Send via device</Label>
+          <Select value={deviceId} onValueChange={setDeviceId}>
+            <SelectTrigger><SelectValue placeholder="Choose device" /></SelectTrigger>
+            <SelectContent>
+              {(q.data?.devices ?? []).map((d: any) => (
+                <SelectItem key={d.id} value={d.id}>{d.name} {d.status ? `(${d.status})` : ""}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-end gap-2">
+          <Button onClick={() => saveM.mutate()} disabled={saveM.isPending || !phone || !deviceId}>
+            {saveM.isPending ? "Saving…" : "Save"}
+          </Button>
+          <Button variant="outline" onClick={() => testM.mutate()} disabled={testM.isPending}>
+            {testM.isPending ? "Sending…" : "Send test now"}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
