@@ -1,3 +1,5 @@
+PassengerAppType node
+PassengerStartupFile server.cpanel.mjs
 PassengerMaxPoolSize 1
 PassengerMinInstances 1
 PassengerMaxRequests 1000
