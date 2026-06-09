@@ -58,6 +58,25 @@ function ReportsPage() {
     },
     enabled: !!user?.id,
   });
+  const avgPerDay = useMemo(() => {
+    const s = new Date(start).getTime();
+    const e = new Date(end).getTime();
+    const days = Math.max(1, Math.round((e - s) / 86400000) + 1);
+    return Math.round(t.total / days);
+  }, [t.total, start, end]);
+
+  // Owner check
+  const rolesQ = useQuery({
+    queryKey: ["my-roles", user?.id ?? "anon"],
+    queryFn: async () => {
+      if (!user?.id) return [] as string[];
+      const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+      return (data ?? []).map((r) => r.role as string);
+    },
+    enabled: !!user?.id,
+  });
+  const isOwner = (rolesQ.data ?? []).includes("owner");
+
 
   const t = stats.data?.totals ?? { sent: 0, failed: 0, total: 0, successRate: 0 };
   const brands = useMemo(() => stats.data?.brands ?? [], [stats.data]);
