@@ -423,6 +423,45 @@ export type Database = {
           },
         ]
       }
+      coupons: {
+        Row: {
+          code: string
+          created_at: string
+          discount_type: string
+          discount_value: number
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          updated_at: string
+          used_count: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          discount_type: string
+          discount_value: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          updated_at?: string
+          used_count?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          discount_type?: string
+          discount_value?: number
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          updated_at?: string
+          used_count?: number
+        }
+        Relationships: []
+      }
       device_requests: {
         Row: {
           admin_reply: string | null
@@ -519,6 +558,142 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      orders: {
+        Row: {
+          admin_notes: string | null
+          approved_at: string | null
+          approved_by: string | null
+          bkash_number: string
+          brand_id: string | null
+          coupon_id: string | null
+          created_at: string
+          discount_amount: number
+          email: string
+          final_amount: number
+          full_name: string
+          id: string
+          original_amount: number
+          package_id: string
+          phone: string | null
+          status: string
+          txid: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          bkash_number: string
+          brand_id?: string | null
+          coupon_id?: string | null
+          created_at?: string
+          discount_amount?: number
+          email: string
+          final_amount: number
+          full_name: string
+          id?: string
+          original_amount: number
+          package_id: string
+          phone?: string | null
+          status?: string
+          txid: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          bkash_number?: string
+          brand_id?: string | null
+          coupon_id?: string | null
+          created_at?: string
+          discount_amount?: number
+          email?: string
+          final_amount?: number
+          full_name?: string
+          id?: string
+          original_amount?: number
+          package_id?: string
+          phone?: string | null
+          status?: string
+          txid?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      packages: {
+        Row: {
+          created_at: string
+          description: string | null
+          device_limit: number
+          duration_days: number
+          id: string
+          is_active: boolean
+          is_trial: boolean
+          license_count: number
+          message_limit: number | null
+          name: string
+          price: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          device_limit?: number
+          duration_days?: number
+          id?: string
+          is_active?: boolean
+          is_trial?: boolean
+          license_count?: number
+          message_limit?: number | null
+          name: string
+          price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          device_limit?: number
+          duration_days?: number
+          id?: string
+          is_active?: boolean
+          is_trial?: boolean
+          license_count?: number
+          message_limit?: number | null
+          name?: string
+          price?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       plugin_licenses: {
         Row: {
@@ -716,6 +891,10 @@ export type Database = {
         Args: { _brand_id: string; _user_id: string }
         Returns: boolean
       }
+      validate_coupon: {
+        Args: { _amount: number; _code: string }
+        Returns: Json
+      }
     }
     Enums: {
       app_role:
@@ -727,7 +906,7 @@ export type Database = {
         | "brand_owner"
         | "sales_agent"
       brand_role: "brand_admin" | "sender" | "brand_member"
-      brand_status: "active" | "suspended" | "expired"
+      brand_status: "active" | "suspended" | "expired" | "pending"
       device_status: "active" | "inactive" | "disconnected"
     }
     CompositeTypes: {
@@ -866,7 +1045,7 @@ export const Constants = {
         "sales_agent",
       ],
       brand_role: ["brand_admin", "sender", "brand_member"],
-      brand_status: ["active", "suspended", "expired"],
+      brand_status: ["active", "suspended", "expired", "pending"],
       device_status: ["active", "inactive", "disconnected"],
     },
   },

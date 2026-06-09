@@ -274,7 +274,8 @@ function AuthPage() {
               </Button>
 
               <p className="pt-1 text-center text-xs text-slate-500">
-                New accounts are created by your workspace owner.
+                Don't have an account?{" "}
+                <a href="/order" className="font-medium text-emerald-600 hover:underline">Place an order</a>
               </p>
             </form>
           </div>

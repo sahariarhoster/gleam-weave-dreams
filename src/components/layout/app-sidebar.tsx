@@ -16,6 +16,9 @@ import {
   CreditCard,
   Wrench,
   BarChart3,
+  ShoppingBag,
+  Package,
+  Tag,
 } from "lucide-react";
 import {
   Sidebar,
@@ -50,6 +53,9 @@ const items = [
   { title: "Plugin Licenses", url: "/licenses", icon: KeyRound, brandOwnerOrOwner: true },
   { title: "Device Requests", url: "/device-requests", icon: Wrench, anyRole: ["owner", "brand_owner", "sales_agent"] as string[] },
   { title: "Billing (WHMCS)", url: "/billing", icon: CreditCard, ownerOnly: true },
+  { title: "Orders", url: "/orders", icon: ShoppingBag, ownerOnly: true },
+  { title: "Packages", url: "/packages", icon: Package, ownerOnly: true },
+  { title: "Coupons", url: "/coupons", icon: Tag, ownerOnly: true },
 
 ] as const;
 
