@@ -15,6 +15,7 @@ import {
   KeyRound,
   CreditCard,
   Wrench,
+  BarChart3,
 } from "lucide-react";
 import {
   Sidebar,
