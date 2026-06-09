@@ -21,10 +21,8 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-  listDevices, createDevice, updateDevice, deleteDevice, testDeviceConnection,
+  createDevice, updateDevice, deleteDevice, testDeviceConnection,
 } from "@/lib/devices.functions";
-import { listBrandsLite } from "@/lib/brands.functions";
-import { getMyRoles } from "@/lib/users.functions";
 import { PageHeader } from "@/components/layout/page-header";
 import { listBrandsLiteClient, listDevicesClient, listMyRolesClient } from "@/lib/client-queries";
 import { useAuth } from "@/hooks/use-auth";
@@ -125,7 +123,7 @@ function DevicesPage() {
                   No devices yet.
                 </TableCell></TableRow>
               )}
-              {(devices.data ?? []).map((d) => (
+              {(devices.data ?? []).map((d: any) => (
                 <TableRow key={d.id}>
                   <TableCell className="font-medium">{d.name}</TableCell>
                   {isOwner && <TableCell className="max-w-[280px] truncate font-mono text-xs">{d.device_unique_id}</TableCell>}
