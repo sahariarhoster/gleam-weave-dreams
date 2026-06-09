@@ -4,6 +4,17 @@ import { pathToFileURL } from "node:url";
 import { existsSync } from "node:fs";
 import path from "node:path";
 
+// Supabase Realtime needs a WebSocket global on Node < 22.
+if (!globalThis.WebSocket) {
+  try {
+    const { default: WS } = await import("ws");
+    globalThis.WebSocket = WS;
+  } catch {
+    console.warn("[startup] 'ws' package not installed; Supabase Realtime may fail. Run: npm i ws");
+  }
+}
+
+
 const outputEntry = path.resolve(".output/server/index.mjs");
 
 if (!existsSync(outputEntry)) {
