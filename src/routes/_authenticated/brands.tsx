@@ -38,7 +38,7 @@ function BrandsPage() {
   const [open, setOpen] = useState(false);
 
   const delMut = useMutation({
-    mutationFn: (id: string) => fnDelete({ data: { id } }),
+    mutationFn: (id: string) => deleteBrandClient(id),
     onSuccess: () => { toast.success("Brand deleted"); qc.invalidateQueries({ queryKey: ["brands"] }); },
     onError: (e) => toast.error((e as Error).message),
   });
