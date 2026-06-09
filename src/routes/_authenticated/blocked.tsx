@@ -15,8 +15,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { listBlocked, addBlocked, removeBlocked } from "@/lib/logs.functions";
-import { listBrandsLite } from "@/lib/brands.functions";
+import { addBlocked, removeBlocked } from "@/lib/logs.functions";
+import { listBlockedClient, listBrandsLiteClient } from "@/lib/client-queries";
 import { PageHeader } from "@/components/layout/page-header";
 
 export const Route = createFileRoute("/_authenticated/blocked")({
