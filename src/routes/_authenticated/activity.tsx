@@ -16,14 +16,12 @@ export const Route = createFileRoute("/_authenticated/activity")({
 });
 
 function ActivityPage() {
-  const fnList = useServerFn(listActivityLog);
-  const fnBrands = useServerFn(listBrandsLite);
   const [brand, setBrand] = useState("all");
 
-  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => fnBrands() });
+  const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => listBrandsLiteClient() });
   const logs = useQuery({
     queryKey: ["activity", brand],
-    queryFn: () => fnList({ data: { brand_id: brand === "all" ? null : brand } }),
+    queryFn: () => listActivityLogClient({ brand_id: brand === "all" ? null : brand }),
   });
 
   return (
