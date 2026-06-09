@@ -64,5 +64,6 @@ export const sendDailyReportNow = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     await assertOwner(context.supabase, context.userId);
     const { runDailyReport } = await import("./daily-report.server");
-    return runDailyReport();
+    const r = await runDailyReport();
+    return { ok: r.ok, error: r.error ?? null, message: r.message ?? null, sent: r.sent ?? false };
   });
