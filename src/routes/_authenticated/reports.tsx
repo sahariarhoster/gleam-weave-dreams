@@ -1,15 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/use-auth";
+
 import { supabase } from "@/integrations/supabase/client";
 import { listBrandsLiteClient } from "@/lib/client-queries";
+import { getNotifySettings, saveNotifySettings, sendDailyReportNow } from "@/lib/notify-settings.functions";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/reports")({
   head: () => ({ meta: [{ title: "Reports — WA Suite" }] }),
@@ -21,11 +26,14 @@ type ReportStats = {
   brands: { id: string; name: string; sent: number; failed: number; total: number; successRate: number }[];
 };
 
-function todayISO(offsetDays = 0) {
-  const d = new Date();
-  d.setDate(d.getDate() + offsetDays);
-  return d.toISOString().slice(0, 10);
+function todayDhaka(offsetDays = 0) {
+  // Asia/Dhaka YYYY-MM-DD
+  const now = new Date();
+  const bd = new Date(now.getTime() + 6 * 3600 * 1000);
+  bd.setUTCDate(bd.getUTCDate() + offsetDays);
+  return bd.toISOString().slice(0, 10);
 }
+const todayISO = todayDhaka;
 
 function ReportsPage() {
   const { user } = useAuth();
@@ -53,13 +61,37 @@ function ReportsPage() {
 
   const t = stats.data?.totals ?? { sent: 0, failed: 0, total: 0, successRate: 0 };
   const brands = useMemo(() => stats.data?.brands ?? [], [stats.data]);
+  const failureRate = t.total > 0 ? Math.round((t.failed / t.total) * 1000) / 10 : 0;
+  const avgPerDay = useMemo(() => {
+    const s = new Date(start).getTime();
+    const e = new Date(end).getTime();
+    const days = Math.max(1, Math.round((e - s) / 86400000) + 1);
+    return Math.round(t.total / days);
+  }, [t.total, start, end]);
+  const activeBrands = brands.filter((b) => b.total > 0).length;
+  const bestBrand = [...brands].sort((a, b) => b.total - a.total)[0];
+  const worstBrand = [...brands].filter((b) => b.total > 0).sort((a, b) => a.successRate - b.successRate)[0];
+
+  // Owner check
+  const rolesQ = useQuery({
+    queryKey: ["my-roles", user?.id ?? "anon"],
+    queryFn: async () => {
+      if (!user?.id) return [] as string[];
+      const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+      return (data ?? []).map((r) => r.role as string);
+    },
+    enabled: !!user?.id,
+  });
+  const isOwner = (rolesQ.data ?? []).includes("owner");
 
   return (
     <div className="space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-bold">Reports</h1>
-        <p className="text-sm text-muted-foreground">Daily SMS stats by brand. Filter by date range and brand.</p>
+        <p className="text-sm text-muted-foreground">Daily SMS stats by brand (Asia/Dhaka). Filter by date range and brand.</p>
       </div>
+
+      {isOwner && <NotifyConfigCard />}
 
       <Card>
         <CardHeader><CardTitle className="text-base">Filters</CardTitle></CardHeader>
@@ -87,11 +119,21 @@ function ReportsPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card><CardHeader><CardTitle className="text-sm text-muted-foreground">Total Messages</CardTitle></CardHeader><CardContent className="text-3xl font-bold">{t.total}</CardContent></Card>
         <Card><CardHeader><CardTitle className="text-sm text-muted-foreground">Sent</CardTitle></CardHeader><CardContent className="text-3xl font-bold text-green-600">{t.sent}</CardContent></Card>
         <Card><CardHeader><CardTitle className="text-sm text-muted-foreground">Failed</CardTitle></CardHeader><CardContent className="text-3xl font-bold text-red-600">{t.failed}</CardContent></Card>
         <Card><CardHeader><CardTitle className="text-sm text-muted-foreground">Success Rate</CardTitle></CardHeader><CardContent className="text-3xl font-bold">{t.successRate}%</CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm text-muted-foreground">Failure Rate</CardTitle></CardHeader><CardContent className="text-3xl font-bold">{failureRate}%</CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm text-muted-foreground">Avg / Day</CardTitle></CardHeader><CardContent className="text-3xl font-bold">{avgPerDay}</CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm text-muted-foreground">Brands with Activity</CardTitle></CardHeader><CardContent className="text-3xl font-bold">{activeBrands}</CardContent></Card>
+        <Card>
+          <CardHeader><CardTitle className="text-sm text-muted-foreground">Top / Lowest</CardTitle></CardHeader>
+          <CardContent className="text-xs space-y-1">
+            <div>🏆 {bestBrand?.name ?? "—"} <span className="text-muted-foreground">({bestBrand?.total ?? 0})</span></div>
+            <div>⚠️ {worstBrand?.name ?? "—"} <span className="text-muted-foreground">({worstBrand?.successRate ?? 0}%)</span></div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
@@ -131,5 +173,66 @@ function ReportsPage() {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function NotifyConfigCard() {
+  const qc = useQueryClient();
+  const get = useServerFn(getNotifySettings);
+  const save = useServerFn(saveNotifySettings);
+  const sendNow = useServerFn(sendDailyReportNow);
+  const q = useQuery({ queryKey: ["notify-settings"], queryFn: () => get({ data: undefined as any }) });
+  const [phone, setPhone] = useState("");
+  const [deviceId, setDeviceId] = useState<string>("");
+  useEffect(() => {
+    if (q.data) {
+      setPhone(q.data.notify_phone ?? "");
+      setDeviceId(q.data.notify_device_id ?? "");
+    }
+  }, [q.data]);
+
+  const saveM = useMutation({
+    mutationFn: () => save({ data: { notify_phone: phone, notify_device_id: deviceId } }),
+    onSuccess: () => { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["notify-settings"] }); },
+    onError: (e: any) => toast.error(e?.message ?? "Failed"),
+  });
+  const testM = useMutation({
+    mutationFn: () => sendNow({ data: undefined as any }),
+    onSuccess: (r: any) => r?.ok ? toast.success("Report sent to WhatsApp") : toast.error(r?.error ?? "Failed"),
+    onError: (e: any) => toast.error(e?.message ?? "Failed"),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Daily WhatsApp Report — Admin Config</CardTitle>
+        <CardDescription>Sent automatically every day at 9:00 AM (Asia/Dhaka).</CardDescription>
+      </CardHeader>
+      <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <div>
+          <Label>Admin WhatsApp number</Label>
+          <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="8801XXXXXXXXX" />
+        </div>
+        <div>
+          <Label>Send via device</Label>
+          <Select value={deviceId} onValueChange={setDeviceId}>
+            <SelectTrigger><SelectValue placeholder="Choose device" /></SelectTrigger>
+            <SelectContent>
+              {(q.data?.devices ?? []).map((d: any) => (
+                <SelectItem key={d.id} value={d.id}>{d.name} {d.status ? `(${d.status})` : ""}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-end gap-2">
+          <Button onClick={() => saveM.mutate()} disabled={saveM.isPending || !phone || !deviceId}>
+            {saveM.isPending ? "Saving…" : "Save"}
+          </Button>
+          <Button variant="outline" onClick={() => testM.mutate()} disabled={testM.isPending}>
+            {testM.isPending ? "Sending…" : "Send test now"}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
