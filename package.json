@@ -5,12 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "rm -rf .output && NODE_ENV=production GOMAXPROCS=1 GOGC=25 RAYON_NUM_THREADS=1 UV_THREADPOOL_SIZE=1 NODE_OPTIONS=--max-old-space-size=1024 vite build --mode production",
-    "build:dev": "rm -rf .output && NODE_ENV=production GOMAXPROCS=1 GOGC=25 RAYON_NUM_THREADS=1 UV_THREADPOOL_SIZE=1 NODE_OPTIONS=--max-old-space-size=1024 vite build --mode production",
-    "build:cpanel": "rm -rf .output && NODE_ENV=production GOMAXPROCS=1 GOGC=25 RAYON_NUM_THREADS=1 UV_THREADPOOL_SIZE=1 NODE_OPTIONS=--max-old-space-size=1024 vite build --mode production",
-    "start": "NODE_ENV=production UV_THREADPOOL_SIZE=1 NODE_OPTIONS=--max-old-space-size=512 node server.cpanel.mjs",
-    "start:cpanel": "NODE_ENV=production UV_THREADPOOL_SIZE=1 NODE_OPTIONS=--max-old-space-size=512 node server.cpanel.mjs",
-    "start:direct": "NODE_ENV=production UV_THREADPOOL_SIZE=1 NODE_OPTIONS=--max-old-space-size=512 node .output/server/index.mjs",
+    "build": "rm -rf .output && NODE_ENV=production GOMAXPROCS=1 GOGC=25 RAYON_NUM_THREADS=1 UV_THREADPOOL_SIZE=1 NODE_OPTIONS=--max-old-space-size=4096 vite build --mode production",
+    "build:dev": "rm -rf .output && NODE_ENV=production GOMAXPROCS=1 GOGC=25 RAYON_NUM_THREADS=1 UV_THREADPOOL_SIZE=1 NODE_OPTIONS=--max-old-space-size=4096 vite build --mode production",
+    "build:cpanel": "rm -rf .output && NODE_ENV=production GOMAXPROCS=1 GOGC=25 RAYON_NUM_THREADS=1 UV_THREADPOOL_SIZE=1 NODE_OPTIONS=--max-old-space-size=4096 vite build --mode production",
+    "start": "NODE_ENV=production UV_THREADPOOL_SIZE=1 NODE_OPTIONS=--max-old-space-size=2048 node server.cpanel.mjs",
+    "start:cpanel": "NODE_ENV=production UV_THREADPOOL_SIZE=1 NODE_OPTIONS=--max-old-space-size=2048 node server.cpanel.mjs",
+    "start:direct": "NODE_ENV=production UV_THREADPOOL_SIZE=1 NODE_OPTIONS=--max-old-space-size=2048 node .output/server/index.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write ."
