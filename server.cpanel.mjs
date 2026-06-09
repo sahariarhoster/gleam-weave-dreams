@@ -8,9 +8,10 @@ import { pathToFileURL } from "node:url";
 import path from "node:path";
 
 function loadLocalEnv() {
-  const envFile = path.resolve(".env");
-  if (!existsSync(envFile)) return;
-  for (const line of readFileSync(envFile, "utf8").split(/\r?\n/)) {
+  for (const file of [".env", ".env.local", ".env.production", ".env.production.local"]) {
+    const envFile = path.resolve(file);
+    if (!existsSync(envFile)) continue;
+    for (const line of readFileSync(envFile, "utf8").split(/\r?\n/)) {
     const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)?\s*$/);
     if (!match) continue;
     const key = match[1];
