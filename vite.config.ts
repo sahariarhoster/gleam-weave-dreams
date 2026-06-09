@@ -10,14 +10,6 @@ export default defineConfig({
   tanstackStart: {
     server: { entry: "server" },
   },
-  nitro: {
-    preset: "node-server",
-    output: {
-      dir: ".output",
-      publicDir: ".output/public",
-      serverDir: ".output/server",
-    },
-  },
   vite: {
     // Low-memory hosting: esbuild's worker pool is killed by the OOM killer
     // ("The service was stopped"). Disable minify and force a single worker.
