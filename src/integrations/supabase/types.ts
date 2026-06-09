@@ -688,6 +688,15 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Json
       }
+      get_report_stats_for_user: {
+        Args: {
+          _brand_id?: string
+          _end: string
+          _start: string
+          _user_id: string
+        }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

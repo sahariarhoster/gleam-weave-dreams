@@ -15,6 +15,7 @@ import {
   KeyRound,
   CreditCard,
   Wrench,
+  BarChart3,
 } from "lucide-react";
 import {
   Sidebar,
@@ -43,6 +44,7 @@ const items = [
   { title: "All Campaigns", url: "/campaigns", icon: Megaphone },
   { title: "Send SMS", url: "/send", icon: Send },
   { title: "Message Logs", url: "/logs", icon: ListChecks },
+  { title: "Reports", url: "/reports", icon: BarChart3 },
   { title: "Blocked Numbers", url: "/blocked", icon: Ban },
   { title: "Activity Log", url: "/activity", icon: ScrollText },
   { title: "Plugin Licenses", url: "/licenses", icon: KeyRound, brandOwnerOrOwner: true },
