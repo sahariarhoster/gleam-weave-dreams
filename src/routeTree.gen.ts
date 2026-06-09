@@ -41,6 +41,7 @@ import { Route as ApiPublicPluginHeartbeatRouteImport } from './routes/api/publi
 import { Route as ApiPublicPluginDevicesRouteImport } from './routes/api/public/plugin/devices'
 import { Route as ApiPublicPluginActivateRouteImport } from './routes/api/public/plugin/activate'
 import { Route as ApiPublicCronTickRouteImport } from './routes/api/public/cron/tick'
+import { Route as ApiPublicCronDailyReportRouteImport } from './routes/api/public/cron/daily-report'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -205,6 +206,12 @@ const ApiPublicCronTickRoute = ApiPublicCronTickRouteImport.update({
   path: '/api/public/cron/tick',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCronDailyReportRoute =
+  ApiPublicCronDailyReportRouteImport.update({
+    id: '/api/public/cron/daily-report',
+    path: '/api/public/cron/daily-report',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -225,6 +232,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof AuthenticatedReportsRoute
   '/send': typeof AuthenticatedSendRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/api/public/cron/daily-report': typeof ApiPublicCronDailyReportRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
   '/api/public/plugin/activate': typeof ApiPublicPluginActivateRoute
   '/api/public/plugin/devices': typeof ApiPublicPluginDevicesRoute
@@ -258,6 +266,7 @@ export interface FileRoutesByTo {
   '/reports': typeof AuthenticatedReportsRoute
   '/send': typeof AuthenticatedSendRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/api/public/cron/daily-report': typeof ApiPublicCronDailyReportRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
   '/api/public/plugin/activate': typeof ApiPublicPluginActivateRoute
   '/api/public/plugin/devices': typeof ApiPublicPluginDevicesRoute
@@ -293,6 +302,7 @@ export interface FileRoutesById {
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/send': typeof AuthenticatedSendRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
+  '/api/public/cron/daily-report': typeof ApiPublicCronDailyReportRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
   '/api/public/plugin/activate': typeof ApiPublicPluginActivateRoute
   '/api/public/plugin/devices': typeof ApiPublicPluginDevicesRoute
@@ -328,6 +338,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/send'
     | '/users'
+    | '/api/public/cron/daily-report'
     | '/api/public/cron/tick'
     | '/api/public/plugin/activate'
     | '/api/public/plugin/devices'
@@ -361,6 +372,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/send'
     | '/users'
+    | '/api/public/cron/daily-report'
     | '/api/public/cron/tick'
     | '/api/public/plugin/activate'
     | '/api/public/plugin/devices'
@@ -395,6 +407,7 @@ export interface FileRouteTypes {
     | '/_authenticated/reports'
     | '/_authenticated/send'
     | '/_authenticated/users'
+    | '/api/public/cron/daily-report'
     | '/api/public/cron/tick'
     | '/api/public/plugin/activate'
     | '/api/public/plugin/devices'
@@ -414,6 +427,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ApiPublicCronDailyReportRoute: typeof ApiPublicCronDailyReportRoute
   ApiPublicCronTickRoute: typeof ApiPublicCronTickRoute
   ApiPublicPluginActivateRoute: typeof ApiPublicPluginActivateRoute
   ApiPublicPluginDevicesRoute: typeof ApiPublicPluginDevicesRoute
@@ -655,6 +669,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCronTickRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/daily-report': {
+      id: '/api/public/cron/daily-report'
+      path: '/api/public/cron/daily-report'
+      fullPath: '/api/public/cron/daily-report'
+      preLoaderRoute: typeof ApiPublicCronDailyReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -703,6 +724,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ApiPublicCronDailyReportRoute: ApiPublicCronDailyReportRoute,
   ApiPublicCronTickRoute: ApiPublicCronTickRoute,
   ApiPublicPluginActivateRoute: ApiPublicPluginActivateRoute,
   ApiPublicPluginDevicesRoute: ApiPublicPluginDevicesRoute,
@@ -720,3 +742,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
