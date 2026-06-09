@@ -116,12 +116,12 @@ export const createOrder = createServerFn({ method: "POST" })
       .from("brands")
       .insert({
         name: data.brand_name,
-        status: "pending",
+        status: "pending" as any,
         message_limit: pkg.message_limit,
         device_limit: pkg.device_limit,
         license_limit: pkg.license_count,
         created_by: userId,
-      })
+      } as any)
       .select("id")
       .single();
     if (bErr || !brand) throw new Error(bErr?.message ?? "Could not create brand");
