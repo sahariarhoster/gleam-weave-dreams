@@ -119,11 +119,21 @@ function ReportsPage() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <Card><CardHeader><CardTitle className="text-sm text-muted-foreground">Total Messages</CardTitle></CardHeader><CardContent className="text-3xl font-bold">{t.total}</CardContent></Card>
         <Card><CardHeader><CardTitle className="text-sm text-muted-foreground">Sent</CardTitle></CardHeader><CardContent className="text-3xl font-bold text-green-600">{t.sent}</CardContent></Card>
         <Card><CardHeader><CardTitle className="text-sm text-muted-foreground">Failed</CardTitle></CardHeader><CardContent className="text-3xl font-bold text-red-600">{t.failed}</CardContent></Card>
         <Card><CardHeader><CardTitle className="text-sm text-muted-foreground">Success Rate</CardTitle></CardHeader><CardContent className="text-3xl font-bold">{t.successRate}%</CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm text-muted-foreground">Failure Rate</CardTitle></CardHeader><CardContent className="text-3xl font-bold">{failureRate}%</CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm text-muted-foreground">Avg / Day</CardTitle></CardHeader><CardContent className="text-3xl font-bold">{avgPerDay}</CardContent></Card>
+        <Card><CardHeader><CardTitle className="text-sm text-muted-foreground">Brands with Activity</CardTitle></CardHeader><CardContent className="text-3xl font-bold">{activeBrands}</CardContent></Card>
+        <Card>
+          <CardHeader><CardTitle className="text-sm text-muted-foreground">Top / Lowest</CardTitle></CardHeader>
+          <CardContent className="text-xs space-y-1">
+            <div>🏆 {bestBrand?.name ?? "—"} <span className="text-muted-foreground">({bestBrand?.total ?? 0})</span></div>
+            <div>⚠️ {worstBrand?.name ?? "—"} <span className="text-muted-foreground">({worstBrand?.successRate ?? 0}%)</span></div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
