@@ -198,9 +198,9 @@ function OrderPage() {
                 <div className="border-t pt-4">
                   <h3 className="font-semibold mb-2">bKash payment</h3>
                   <div className="rounded-lg bg-pink-50 border border-pink-200 p-3 text-sm">
-                    <p className="font-medium text-pink-900">Send Money to (Merchant)</p>
+                    <p className="font-medium text-pink-900">Payment to Merchant</p>
                     <p className="text-2xl font-bold text-pink-700 mt-1">{BKASH_NUMBER}</p>
-                    <p className="text-xs text-pink-900/70 mt-1">Send <strong>৳{final.toFixed(0)}</strong> using bKash → "Send Money", then enter the TXID below.</p>
+                    <p className="text-xs text-pink-900/70 mt-1">Pay <strong>৳{final.toFixed(0)}</strong> using bKash → "Payment", then enter the TXID below.</p>
                   </div>
                   <div className="grid sm:grid-cols-2 gap-3 mt-3">
                     <div>
