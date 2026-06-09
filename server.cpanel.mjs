@@ -25,6 +25,21 @@ if (!existsSync(outputEntry)) {
 const outputModule = await import(pathToFileURL(outputEntry).href);
 const serverEntry = outputModule.default ?? outputModule;
 
+function firstHeader(value) {
+  return Array.isArray(value) ? value[0] : value;
+}
+
+function getConfiguredOrigin() {
+  const raw = process.env.APP_ORIGIN || process.env.PUBLIC_ORIGIN || process.env.SITE_URL;
+  if (!raw) return {};
+  try {
+    const url = new URL(raw);
+    return { host: url.host, protocol: url.protocol.replace(":", "") };
+  } catch {
+    return {};
+  }
+}
+
 if (typeof serverEntry?.fetch !== "function") {
   console.log("Started node-server build from .output/server/index.mjs.");
 } else {
@@ -33,8 +48,12 @@ if (typeof serverEntry?.fetch !== "function") {
 
   const server = http.createServer(async (incomingMessage, serverResponse) => {
     try {
-      const host = incomingMessage.headers.host || `localhost:${port}`;
-      const protocol = incomingMessage.headers["x-forwarded-proto"] || "http";
+      const configuredOrigin = getConfiguredOrigin();
+      const forwardedHost = firstHeader(incomingMessage.headers["x-forwarded-host"])?.split(",")[0]?.trim();
+      const forwardedProto = firstHeader(incomingMessage.headers["x-forwarded-proto"])?.split(",")[0]?.trim();
+      const forwardedSsl = firstHeader(incomingMessage.headers["x-forwarded-ssl"]);
+      const host = configuredOrigin.host || forwardedHost || incomingMessage.headers.host || `localhost:${port}`;
+      const protocol = configuredOrigin.protocol || forwardedProto || (forwardedSsl === "on" ? "https" : "http");
       const requestUrl = `${protocol}://${host}${incomingMessage.url || "/"}`;
       const headers = new Headers();
 
@@ -45,6 +64,9 @@ if (typeof serverEntry?.fetch !== "function") {
           headers.set(key, value);
         }
       }
+      headers.set("host", host);
+      headers.set("x-forwarded-host", host);
+      headers.set("x-forwarded-proto", protocol);
 
       const hasRequestBody = !["GET", "HEAD"].includes(incomingMessage.method || "GET");
       const request = new Request(requestUrl, {
