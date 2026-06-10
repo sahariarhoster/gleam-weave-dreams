@@ -211,6 +211,33 @@ export const resetUserPassword = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const deleteUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ user_id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertOwner(context.supabase, context.userId);
+    if (data.user_id === context.userId) throw new Error("You cannot delete your own account");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Prevent deleting the last owner
+    const { data: targetRoles } = await supabaseAdmin
+      .from("user_roles").select("role").eq("user_id", data.user_id);
+    if ((targetRoles ?? []).some((r: any) => r.role === "owner")) {
+      const { count } = await supabaseAdmin
+        .from("user_roles")
+        .select("user_id", { count: "exact", head: true })
+        .eq("role", "owner");
+      if ((count ?? 0) <= 1) throw new Error("Cannot delete the last owner");
+    }
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.user_id);
+    if (error) throw new Error(error.message);
+    await context.supabase.from("activity_log").insert({
+      user_id: context.userId,
+      action: "delete_user",
+      details: { target_user_id: data.user_id },
+    });
+    return { ok: true };
+  });
+
 // ============ Brand-owner: manage members of own brands ============
 
 async function isOwner(supabase: any, userId: string): Promise<boolean> {

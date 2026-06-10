@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Users, ShieldCheck, UserPlus, X, LogIn, KeyRound } from "lucide-react";
+import { Users, ShieldCheck, UserPlus, X, LogIn, KeyRound, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +12,9 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogT
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { setUserRole, addBrandMember, removeBrandMember, impersonateUser, createUser, resetUserPassword } from "@/lib/users.functions";
+import { setUserRole, addBrandMember, removeBrandMember, impersonateUser, createUser, resetUserPassword, deleteUser } from "@/lib/users.functions";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/layout/page-header";
 import { listBrandsLiteClient, listUsersClient } from "@/lib/client-queries";
@@ -27,8 +29,16 @@ function UsersPage() {
   const fnSetRole = useServerFn(setUserRole);
   const fnRemove = useServerFn(removeBrandMember);
   const fnImpersonate = useServerFn(impersonateUser);
+  const fnDelete = useServerFn(deleteUser);
+  const { user: me } = useAuth();
   const users = useQuery({ queryKey: ["users"], queryFn: listUsersClient });
   const brands = useQuery({ queryKey: ["brands-lite"], queryFn: listBrandsLiteClient });
+
+  const deleteMut = useMutation({
+    mutationFn: (user_id: string) => fnDelete({ data: { user_id } }),
+    onSuccess: () => { toast.success("User deleted"); qc.invalidateQueries({ queryKey: ["users"] }); },
+    onError: (e) => toast.error((e as Error).message),
+  });
 
   const roleMut = useMutation({
     mutationFn: (v: { user_id: string; role: "owner" | "admin" | "manager" | "brand_owner" | "support_agent" | "sales_agent" | "member" }) => fnSetRole({ data: v }),
@@ -141,6 +151,27 @@ function UsersPage() {
                         </DialogTrigger>
                         <AddBrandDialog userId={u.id} brands={brands.data ?? []} onDone={() => { setOpenFor(null); qc.invalidateQueries({ queryKey: ["users"] }); }} />
                       </Dialog>
+                      {me?.id !== u.id && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="icon" variant="ghost" className="text-rose-600 hover:bg-rose-50 hover:text-rose-700" title="Delete user">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete this user?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This permanently removes <span className="font-medium">{u.email}</span> and all their access. This cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteMut.mutate(u.id)} className="bg-rose-600 hover:bg-rose-700">Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
