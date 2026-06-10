@@ -371,8 +371,8 @@ export const deleteCoupon = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     const { data: roleRow } = await context.supabase
-      .from("user_roles").select("role").eq("user_id", context.userId).eq("role", "owner").maybeSingle();
-    if (!roleRow) throw new Error("Owner only");
+      .from("user_roles").select("role").eq("user_id", context.userId).in("role", ["owner", "support_agent"]);
+    if (!roleRow || roleRow.length === 0) throw new Error("Owner only");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("coupons").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
