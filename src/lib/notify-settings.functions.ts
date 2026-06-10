@@ -19,7 +19,7 @@ export const getNotifySettings = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await supabaseAdmin
       .from("system_settings")
-      .select("notify_phone, notify_device_id")
+      .select("notify_phone, notify_device_id, admin_notify_numbers")
       .limit(1)
       .maybeSingle();
     const { data: devices } = await supabaseAdmin
@@ -29,6 +29,7 @@ export const getNotifySettings = createServerFn({ method: "GET" })
     return {
       notify_phone: (data?.notify_phone ?? "") as string,
       notify_device_id: (data?.notify_device_id ?? null) as string | null,
+      admin_notify_numbers: ((data as any)?.admin_notify_numbers ?? "") as string,
       devices: devices ?? [],
     };
   });
@@ -39,6 +40,7 @@ export const saveNotifySettings = createServerFn({ method: "POST" })
     z.object({
       notify_phone: z.string().trim().min(8).max(30),
       notify_device_id: z.string().uuid(),
+      admin_notify_numbers: z.string().trim().max(2000).optional().default(""),
     }).parse(d),
   )
   .handler(async ({ context, data }) => {
@@ -46,15 +48,15 @@ export const saveNotifySettings = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: existing } = await supabaseAdmin
       .from("system_settings").select("id").limit(1).maybeSingle();
+    const payload: any = {
+      notify_phone: data.notify_phone,
+      notify_device_id: data.notify_device_id,
+      admin_notify_numbers: data.admin_notify_numbers ?? "",
+    };
     if (existing) {
-      await supabaseAdmin.from("system_settings")
-        .update({ notify_phone: data.notify_phone, notify_device_id: data.notify_device_id })
-        .eq("id", existing.id);
+      await supabaseAdmin.from("system_settings").update(payload).eq("id", existing.id);
     } else {
-      await supabaseAdmin.from("system_settings").insert({
-        notify_phone: data.notify_phone,
-        notify_device_id: data.notify_device_id,
-      });
+      await supabaseAdmin.from("system_settings").insert(payload);
     }
     return { ok: true };
   });
