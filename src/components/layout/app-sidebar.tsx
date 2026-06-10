@@ -19,6 +19,7 @@ import {
   ShoppingBag,
   Package,
   Tag,
+  Repeat,
 } from "lucide-react";
 import {
   Sidebar,

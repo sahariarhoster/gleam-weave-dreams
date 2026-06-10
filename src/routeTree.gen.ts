@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
+import { Route as AuthenticatedSubscriptionsRouteImport } from './routes/_authenticated/subscriptions'
 import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/send'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedPackagesRouteImport } from './routes/_authenticated/packages'
@@ -71,6 +72,12 @@ const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
   path: '/users',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSubscriptionsRoute =
+  AuthenticatedSubscriptionsRouteImport.update({
+    id: '/subscriptions',
+    path: '/subscriptions',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedSendRoute = AuthenticatedSendRouteImport.update({
   id: '/send',
   path: '/send',
@@ -259,6 +266,7 @@ export interface FileRoutesByFullPath {
   '/packages': typeof AuthenticatedPackagesRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/send': typeof AuthenticatedSendRoute
+  '/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/users': typeof AuthenticatedUsersRoute
   '/api/public/cron/daily-report': typeof ApiPublicCronDailyReportRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
@@ -297,6 +305,7 @@ export interface FileRoutesByTo {
   '/packages': typeof AuthenticatedPackagesRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/send': typeof AuthenticatedSendRoute
+  '/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/users': typeof AuthenticatedUsersRoute
   '/api/public/cron/daily-report': typeof ApiPublicCronDailyReportRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
@@ -337,6 +346,7 @@ export interface FileRoutesById {
   '/_authenticated/packages': typeof AuthenticatedPackagesRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/send': typeof AuthenticatedSendRoute
+  '/_authenticated/subscriptions': typeof AuthenticatedSubscriptionsRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/api/public/cron/daily-report': typeof ApiPublicCronDailyReportRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
@@ -377,6 +387,7 @@ export interface FileRouteTypes {
     | '/packages'
     | '/reports'
     | '/send'
+    | '/subscriptions'
     | '/users'
     | '/api/public/cron/daily-report'
     | '/api/public/cron/tick'
@@ -415,6 +426,7 @@ export interface FileRouteTypes {
     | '/packages'
     | '/reports'
     | '/send'
+    | '/subscriptions'
     | '/users'
     | '/api/public/cron/daily-report'
     | '/api/public/cron/tick'
@@ -454,6 +466,7 @@ export interface FileRouteTypes {
     | '/_authenticated/packages'
     | '/_authenticated/reports'
     | '/_authenticated/send'
+    | '/_authenticated/subscriptions'
     | '/_authenticated/users'
     | '/api/public/cron/daily-report'
     | '/api/public/cron/tick'
@@ -527,6 +540,13 @@ declare module '@tanstack/react-router' {
       path: '/users'
       fullPath: '/users'
       preLoaderRoute: typeof AuthenticatedUsersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/subscriptions': {
+      id: '/_authenticated/subscriptions'
+      path: '/subscriptions'
+      fullPath: '/subscriptions'
+      preLoaderRoute: typeof AuthenticatedSubscriptionsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/send': {
@@ -775,6 +795,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPackagesRoute: typeof AuthenticatedPackagesRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSendRoute: typeof AuthenticatedSendRoute
+  AuthenticatedSubscriptionsRoute: typeof AuthenticatedSubscriptionsRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
 }
 
@@ -797,6 +818,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPackagesRoute: AuthenticatedPackagesRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSendRoute: AuthenticatedSendRoute,
+  AuthenticatedSubscriptionsRoute: AuthenticatedSubscriptionsRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
 }
 
