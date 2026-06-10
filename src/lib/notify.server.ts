@@ -24,6 +24,31 @@ function normalize(num: string): string {
   return num.replace(/[^0-9+]/g, "");
 }
 
+const DEFAULTS = {
+  tpl_order_placed:
+    "Hi {name},\n\n✅ Your order for *{package}* has been received.\n\nAmount: {amount} BDT\nTXID: {txid}\n\nYour account is *pending approval*. You'll get another message as soon as it's activated.\n\nThank you!",
+  tpl_order_approved:
+    "🎉 Hi {name},\n\nYour account has been *activated*!\nPackage: {package}\nValid for: {days} days\n\nYou can now log in and start using the service.",
+  tpl_order_admin:
+    "🆕 *New Order*\n\nCustomer: {name} ({email})\nPhone: {phone}\nBrand: {brand}\nPackage: {package}\nAmount: {amount} BDT\nbKash: {bkash}\nTXID: {txid}",
+};
+
+export function fillTemplate(tpl: string, vars: Record<string, string | number | null | undefined>): string {
+  return tpl.replace(/\{(\w+)\}/g, (_, k) => {
+    const v = vars[k];
+    return v === undefined || v === null ? "" : String(v);
+  });
+}
+
+export async function getOrderTemplate(key: "tpl_order_placed" | "tpl_order_approved" | "tpl_order_admin"): Promise<string> {
+  const { data } = await supabaseAdmin
+    .from("system_settings")
+    .select(key)
+    .limit(1)
+    .maybeSingle();
+  return ((data as any)?.[key] as string | null) || DEFAULTS[key];
+}
+
 export async function sendWhatsApp(recipient: string, message: string): Promise<boolean> {
   try {
     const s = await getSender();
