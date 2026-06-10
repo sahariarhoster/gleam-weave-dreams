@@ -4,9 +4,14 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 function genKey(): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const group = () =>
-    Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
-  return `HS-${group()}-${group()}-${group()}-${group()}`;
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  const groups: string[] = [];
+  for (let g = 0; g < 4; g++) {
+    groups.push(
+      Array.from(bytes.slice(g * 4, g * 4 + 4), (b) => chars[b % chars.length]).join(""),
+    );
+  }
+  return `HS-${groups.join("-")}`;
 }
 
 async function isOwner(supabase: any, userId: string) {
