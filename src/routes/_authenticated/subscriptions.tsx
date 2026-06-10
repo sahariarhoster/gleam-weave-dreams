@@ -156,12 +156,19 @@ function AdminView() {
                   )}
                 </TableCell>
                 <TableCell className="space-x-2 text-right">
-                  {s.status !== "suspended" ? (
-                    <Button size="sm" variant="outline"
-                      onClick={() => m.mutate({ brand_id: s.id, action: "suspend" })}>
-                      Suspend
-                    </Button>
-                  ) : (
+                  {s.status === "active" && (
+                    <>
+                      <Button size="sm" variant="outline"
+                        onClick={() => m.mutate({ brand_id: s.id, action: "suspend" })}>
+                        Suspend
+                      </Button>
+                      <Button size="sm" variant="outline"
+                        onClick={() => m.mutate({ brand_id: s.id, action: "hold" })}>
+                        Hold
+                      </Button>
+                    </>
+                  )}
+                  {(s.status === "suspended" || s.status === "on_hold") && (
                     <Button size="sm"
                       onClick={() => m.mutate({ brand_id: s.id, action: "activate" })}>
                       Activate
