@@ -118,8 +118,10 @@ export type Database = {
       }
       brands: {
         Row: {
+          cancel_requested_at: string | null
           created_at: string
           created_by: string | null
+          current_package_id: string | null
           device_limit: number
           expires_at: string | null
           id: string
@@ -132,8 +134,10 @@ export type Database = {
           whmcs_service_id: string | null
         }
         Insert: {
+          cancel_requested_at?: string | null
           created_at?: string
           created_by?: string | null
+          current_package_id?: string | null
           device_limit?: number
           expires_at?: string | null
           id?: string
@@ -146,8 +150,10 @@ export type Database = {
           whmcs_service_id?: string | null
         }
         Update: {
+          cancel_requested_at?: string | null
           created_at?: string
           created_by?: string | null
+          current_package_id?: string | null
           device_limit?: number
           expires_at?: string | null
           id?: string
@@ -159,7 +165,15 @@ export type Database = {
           whmcs_product_id?: string | null
           whmcs_service_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "brands_current_package_id_fkey"
+            columns: ["current_package_id"]
+            isOneToOne: false
+            referencedRelation: "packages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       campaign_messages: {
         Row: {
