@@ -97,11 +97,12 @@ function UsersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.isLoading && <TableRow><TableCell colSpan={5} className="py-10 text-center text-sm text-muted-foreground">Loading…</TableCell></TableRow>}
+              {users.isLoading && <TableRow><TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">Loading…</TableCell></TableRow>}
               {(users.data ?? []).map((u: any) => (
                 <TableRow key={u.id}>
                   <TableCell className="font-medium">{u.full_name || "—"}</TableCell>
                   <TableCell className="text-sm">{u.email}</TableCell>
+                  <TableCell className="text-sm">{u.phone ? <a href={`tel:${u.phone}`} className="hover:underline">{u.phone}</a> : <span className="text-muted-foreground">—</span>}</TableCell>
                   <TableCell>
                     <Select
                       value={u.roles?.[0] ?? "member"}
