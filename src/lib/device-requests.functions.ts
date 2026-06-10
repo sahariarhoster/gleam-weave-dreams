@@ -106,7 +106,7 @@ export const updateDeviceRequest = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     // Only owner/sales_agent or the brand owner can update.
-    const isStaff = await hasAnyRole(context.supabase, context.userId, ["owner", "sales_agent"]);
+    const isStaff = await hasAnyRole(context.supabase, context.userId, ["owner", "sales_agent", "support_agent"]);
     if (!isStaff) {
       // brand owners may only cancel their own request
       const { data: req } = await context.supabase
