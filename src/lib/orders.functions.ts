@@ -255,6 +255,26 @@ export const decideOrder = createServerFn({ method: "POST" })
           admin_notes: data.notes ?? null,
         })
         .eq("id", data.id);
+
+      // Notify customer that account is activated
+      try {
+        const { data: full } = await supabaseAdmin
+          .from("orders")
+          .select("full_name, phone, packages(name)")
+          .eq("id", data.id)
+          .maybeSingle();
+        if (full?.phone) {
+          const { sendWhatsApp } = await import("@/lib/notify.server");
+          await sendWhatsApp(
+            full.phone,
+            `🎉 Hi ${full.full_name},\n\n` +
+              `Your account has been *activated*!\n` +
+              `Package: ${(full as any)?.packages?.name ?? ""}\n` +
+              `Valid for: ${days} days\n\n` +
+              `You can now log in and start using the service.`,
+          );
+        }
+      } catch { /* ignore */ }
     } else {
       // reject: keep brand as pending (or could delete). We'll mark brand suspended.
       if (order.brand_id) {
