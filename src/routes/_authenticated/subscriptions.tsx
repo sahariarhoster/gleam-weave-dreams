@@ -111,6 +111,7 @@ function AdminView() {
             <SelectItem value="active">Active</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
             <SelectItem value="suspended">Suspended</SelectItem>
+            <SelectItem value="on_hold">On hold</SelectItem>
             <SelectItem value="cancel_requested">Cancellation requested</SelectItem>
           </SelectContent>
         </Select>
