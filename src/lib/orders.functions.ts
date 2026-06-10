@@ -39,7 +39,7 @@ export const createOrder = createServerFn({ method: "POST" })
         full_name: z.string().trim().min(2).max(100),
         email: z.string().trim().email().max(255),
         password: z.string().min(6).max(72),
-        phone: z.string().trim().max(30).optional().nullable(),
+        phone: z.string().trim().min(6).max(30),
         brand_name: z.string().trim().min(1).max(100),
         bkash_number: z.string().trim().max(30).optional().nullable(),
         txid: z.string().trim().max(64).optional().nullable(),
