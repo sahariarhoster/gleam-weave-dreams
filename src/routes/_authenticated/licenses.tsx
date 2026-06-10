@@ -44,6 +44,8 @@ function LicensesPage() {
   const roles = useQuery({ queryKey: ["my-roles", user?.id], queryFn: () => listMyRolesClient(user?.id), enabled: !!user?.id });
   const release = useQuery({ queryKey: ["plugin-release"], queryFn: () => fnGetRelease() });
   const isOwner = (roles.data ?? []).includes("owner");
+  const isSupport = (roles.data ?? []).includes("support_agent");
+  const canManage = isOwner || isSupport;
 
   const [brandId, setBrandId] = useState<string>("");
   const [editing, setEditing] = useState<string | null>(null);
