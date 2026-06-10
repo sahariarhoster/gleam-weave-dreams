@@ -233,7 +233,7 @@ function LicensesPage() {
                       <span>{b.license_limit ?? 1}</span>
                     )}
                   </TableCell>
-                  {isOwner && (
+                  {canManage && (
                     <TableCell className="text-right">
                       {editing === b.id ? (
                         <>
