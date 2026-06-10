@@ -435,19 +435,22 @@ export const deleteCoupon = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-// User: check if my brands are pending → show locked screen
+// User: check if my brands are pending/suspended/on_hold/expired → lock the panel
 export const getMyAccountStatus = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    // If user is owner, never locked
     const { data: roleRow } = await context.supabase
       .from("user_roles").select("role").eq("user_id", context.userId);
     const roles = (roleRow ?? []).map((r: any) => r.role);
-    if (roles.includes("owner")) return { locked: false, roles, brands: [] };
+    if (roles.includes("owner")) return { locked: false, roles, brands: [], reason: null as string | null };
 
     const { data: brands } = await context.supabase
       .from("brands").select("id, name, status").eq("created_by", context.userId);
     const list = brands ?? [];
-    const allPending = list.length > 0 && list.every((b: any) => b.status === "pending");
-    return { locked: allPending, roles, brands: list };
+    if (list.length === 0) return { locked: false, roles, brands: list, reason: null };
+    const hasActive = list.some((b: any) => b.status === "active");
+    if (hasActive) return { locked: false, roles, brands: list, reason: null };
+    const order = ["on_hold", "suspended", "expired", "pending"];
+    const reason = order.find((s) => list.some((b: any) => b.status === s)) ?? list[0].status;
+    return { locked: true, roles, brands: list, reason };
   });
