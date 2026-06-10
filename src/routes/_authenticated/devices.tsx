@@ -85,7 +85,7 @@ function DevicesPage() {
         title="Devices"
         description="Connect Android phones to send WhatsApp messages."
         actions={
-          isOwner && (
+          canManage && (
             <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-1"><Plus className="h-4 w-4" /> Add Device</Button>
