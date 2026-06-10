@@ -7,8 +7,18 @@ async function assertOwner(supabase: any, userId: string) {
     .from("user_roles")
     .select("role")
     .eq("user_id", userId)
-    .in("role", ["owner", "brand_owner"]);
+    .in("role", ["owner", "brand_owner", "support_agent"]);
   if (!data || data.length === 0) throw new Error("You don't have permission to manage devices");
+}
+
+async function assertStrictOwner(supabase: any, userId: string) {
+  const { data } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "owner")
+    .maybeSingle();
+  if (!data) throw new Error("Owner only");
 }
 
 type Stats = {
@@ -97,7 +107,7 @@ export const updateDevice = createServerFn({ method: "POST" })
     deviceInput.partial({ api_secret: true }).extend({ id: z.string().uuid() }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertOwner(context.supabase, context.userId);
+    await assertStrictOwner(context.supabase, context.userId);
     const { id, api_secret, ...rest } = data;
     const patch = { ...rest, ...(api_secret && api_secret.length > 0 ? { api_secret } : {}) };
     const { error } = await context.supabase.from("devices").update(patch).eq("id", id);

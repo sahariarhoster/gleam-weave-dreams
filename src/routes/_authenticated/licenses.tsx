@@ -44,6 +44,8 @@ function LicensesPage() {
   const roles = useQuery({ queryKey: ["my-roles", user?.id], queryFn: () => listMyRolesClient(user?.id), enabled: !!user?.id });
   const release = useQuery({ queryKey: ["plugin-release"], queryFn: () => fnGetRelease() });
   const isOwner = (roles.data ?? []).includes("owner");
+  const isSupport = (roles.data ?? []).includes("support_agent");
+  const canManage = isOwner || isSupport;
 
   const [brandId, setBrandId] = useState<string>("");
   const [editing, setEditing] = useState<string | null>(null);
@@ -210,7 +212,7 @@ function LicensesPage() {
               <TableRow>
                 <TableHead>Brand</TableHead>
                 <TableHead>Active License Limit</TableHead>
-                {isOwner && <TableHead className="text-right">Actions</TableHead>}
+                {canManage && <TableHead className="text-right">Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -231,7 +233,7 @@ function LicensesPage() {
                       <span>{b.license_limit ?? 1}</span>
                     )}
                   </TableCell>
-                  {isOwner && (
+                  {canManage && (
                     <TableCell className="text-right">
                       {editing === b.id ? (
                         <>
@@ -262,7 +264,7 @@ function LicensesPage() {
                 </TableRow>
               ))}
               {(brands.data ?? []).length === 0 && (
-                <TableRow><TableCell colSpan={isOwner ? 3 : 2} className="text-center text-muted-foreground">No brands</TableCell></TableRow>
+                <TableRow><TableCell colSpan={canManage ? 3 : 2} className="text-center text-muted-foreground">No brands</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -305,9 +307,11 @@ function LicensesPage() {
                         <Ban className="h-3.5 w-3.5" /> Revoke
                       </Button>
                     )}
-                    <Button size="sm" variant="ghost" onClick={() => delMut.mutate(l.id)} className="gap-1 text-destructive">
-                      <Trash2 className="h-3.5 w-3.5" /> Delete
-                    </Button>
+                    {isOwner && (
+                      <Button size="sm" variant="ghost" onClick={() => delMut.mutate(l.id)} className="gap-1 text-destructive">
+                        <Trash2 className="h-3.5 w-3.5" /> Delete
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

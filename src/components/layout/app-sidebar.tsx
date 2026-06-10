@@ -39,23 +39,23 @@ import { supabase } from "@/integrations/supabase/client";
 const items = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Devices", url: "/devices", icon: Smartphone },
-  { title: "Brands", url: "/brands", icon: Building2, ownerOnly: true },
+  { title: "Brands", url: "/brands", icon: Building2, anyRole: ["owner", "support_agent"] as string[] },
   { title: "Users", url: "/users", icon: Users, ownerOnly: true },
   { title: "Members", url: "/members", icon: Users, brandOwnerOnly: true },
-  { title: "Contacts", url: "/contacts", icon: Contact },
-  { title: "Groups", url: "/groups", icon: FolderOpen },
+  { title: "Contacts", url: "/contacts", icon: Contact, hideForRoles: ["support_agent"] as string[] },
+  { title: "Groups", url: "/groups", icon: FolderOpen, hideForRoles: ["support_agent"] as string[] },
   { title: "All Campaigns", url: "/campaigns", icon: Megaphone },
   { title: "Send SMS", url: "/send", icon: Send },
   { title: "Message Logs", url: "/logs", icon: ListChecks },
   { title: "Reports", url: "/reports", icon: BarChart3 },
   { title: "Blocked Numbers", url: "/blocked", icon: Ban },
   { title: "Activity Log", url: "/activity", icon: ScrollText },
-  { title: "Plugin Licenses", url: "/licenses", icon: KeyRound, brandOwnerOrOwner: true },
-  { title: "Device Requests", url: "/device-requests", icon: Wrench, anyRole: ["owner", "brand_owner", "sales_agent"] as string[] },
+  { title: "Plugin Licenses", url: "/licenses", icon: KeyRound, anyRole: ["owner", "brand_owner", "support_agent"] as string[] },
+  { title: "Device Requests", url: "/device-requests", icon: Wrench, anyRole: ["owner", "brand_owner", "sales_agent", "support_agent"] as string[] },
   { title: "Billing (WHMCS)", url: "/billing", icon: CreditCard, ownerOnly: true },
-  { title: "Orders", url: "/orders", icon: ShoppingBag, ownerOnly: true },
+  { title: "Orders", url: "/orders", icon: ShoppingBag, anyRole: ["owner", "support_agent"] as string[] },
   { title: "Packages", url: "/packages", icon: Package, ownerOnly: true },
-  { title: "Coupons", url: "/coupons", icon: Tag, ownerOnly: true },
+  { title: "Coupons", url: "/coupons", icon: Tag, anyRole: ["owner", "support_agent"] as string[] },
 
 ] as const;
 
@@ -83,6 +83,8 @@ export function AppSidebar() {
     const b = "brandOwnerOnly" in i && (i as any).brandOwnerOnly;
     const bo = "brandOwnerOrOwner" in i && (i as any).brandOwnerOrOwner;
     const ar = "anyRole" in i ? ((i as any).anyRole as string[] | undefined) : undefined;
+    const hide = "hideForRoles" in i ? ((i as any).hideForRoles as string[] | undefined) : undefined;
+    if (hide && hide.some((r) => userRoles.includes(r)) && !isOwner) return false;
     if (o) return isOwner;
     if (b) return isBrandOwner;
     if (bo) return isOwner || isBrandOwner;

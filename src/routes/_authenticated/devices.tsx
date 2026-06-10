@@ -52,6 +52,8 @@ function DevicesPage() {
   const brands = useQuery({ queryKey: ["brands-lite"], queryFn: listBrandsLiteClient });
   const roles = useQuery({ queryKey: ["my-roles", user?.id ?? "anon"], queryFn: () => listMyRolesClient(user?.id), enabled: !!user?.id });
   const isOwner = (roles.data ?? []).includes("owner");
+  const isSupport = (roles.data ?? []).includes("support_agent");
+  const canManage = isOwner || isSupport;
 
   const [editing, setEditing] = useState<Device | null>(null);
   const [open, setOpen] = useState(false);
@@ -83,7 +85,7 @@ function DevicesPage() {
         title="Devices"
         description="Connect Android phones to send WhatsApp messages."
         actions={
-          isOwner && (
+          canManage && (
             <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
               <DialogTrigger asChild>
                 <Button size="sm" className="gap-1"><Plus className="h-4 w-4" /> Add Device</Button>
@@ -143,29 +145,29 @@ function DevicesPage() {
                       <Button size="sm" variant="outline" className="h-8 gap-1" onClick={() => setTesting(d as Device)} title="Send test message">
                         <Link2 className="h-3.5 w-3.5" /> Test
                       </Button>
+                      {canManage && (
+                        <Button size="icon" variant="ghost" onClick={() => { setEditing(d as Device); setOpen(true); }} title="Edit">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      )}
                       {isOwner && (
-                        <>
-                          <Button size="icon" variant="ghost" onClick={() => { setEditing(d as Device); setOpen(true); }} title="Edit">
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button size="icon" variant="ghost" className="text-rose-600 hover:bg-rose-50 hover:text-rose-700" title="Delete">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete this device?</AlertDialogTitle>
-                                <AlertDialogDescription>This cannot be undone. Campaigns linked to this device may fail.</AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => deleteMut.mutate(d.id)} className="bg-rose-600 hover:bg-rose-700">Delete</AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="icon" variant="ghost" className="text-rose-600 hover:bg-rose-50 hover:text-rose-700" title="Delete">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete this device?</AlertDialogTitle>
+                              <AlertDialogDescription>This cannot be undone. Campaigns linked to this device may fail.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteMut.mutate(d.id)} className="bg-rose-600 hover:bg-rose-700">Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       )}
                     </div>
                   </TableCell>

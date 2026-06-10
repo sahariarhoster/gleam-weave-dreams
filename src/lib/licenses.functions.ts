@@ -15,6 +15,12 @@ async function isOwner(supabase: any, userId: string) {
   return !!data;
 }
 
+async function isElevated(supabase: any, userId: string) {
+  const { data } = await supabase
+    .from("user_roles").select("role").eq("user_id", userId).in("role", ["owner", "support_agent"]);
+  return (data ?? []).length > 0;
+}
+
 export const listMyLicenses = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -37,7 +43,7 @@ export const setBrandLicenseLimit = createServerFn({ method: "POST" })
     z.object({ brand_id: z.string().uuid(), limit: z.number().int().min(1).max(1000) }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    if (!(await isOwner(context.supabase, context.userId))) throw new Error("Owner only");
+    if (!(await isElevated(context.supabase, context.userId))) throw new Error("Owner only");
     const { error } = await context.supabase
       .from("brands")
       .update({ license_limit: data.limit })
@@ -53,8 +59,8 @@ export const generateLicense = createServerFn({ method: "POST" })
     const { data: brand, error: bErr } = await context.supabase
       .from("brands").select("id, created_by, license_limit").eq("id", data.brand_id).maybeSingle();
     if (bErr || !brand) throw new Error("Brand not found");
-    const owner = await isOwner(context.supabase, context.userId);
-    if (!owner && brand.created_by !== context.userId) throw new Error("Only the brand owner can generate licenses");
+    const elevated = await isElevated(context.supabase, context.userId);
+    if (!elevated && brand.created_by !== context.userId) throw new Error("Only the brand owner can generate licenses");
 
     const limit = brand.license_limit ?? 1;
     const { count } = await context.supabase
@@ -74,6 +80,17 @@ export const generateLicense = createServerFn({ method: "POST" })
   });
 
 async function assertLicenseManager(supabase: any, userId: string, licenseId: string) {
+  const { data: lic } = await supabase
+    .from("plugin_licenses").select("brand_id").eq("id", licenseId).maybeSingle();
+  if (!lic) throw new Error("License not found");
+  if (await isElevated(supabase, userId)) return;
+  const { data: brand } = await supabase
+    .from("brands").select("created_by").eq("id", lic.brand_id).maybeSingle();
+  if (brand?.created_by !== userId) throw new Error("Forbidden: not your license");
+}
+
+async function assertLicenseDeleter(supabase: any, userId: string, licenseId: string) {
+  // delete remains owner-only (support_agent cannot delete licenses)
   const { data: lic } = await supabase
     .from("plugin_licenses").select("brand_id").eq("id", licenseId).maybeSingle();
   if (!lic) throw new Error("License not found");
@@ -98,7 +115,7 @@ export const deleteLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertLicenseManager(context.supabase, context.userId, data.id);
+    await assertLicenseDeleter(context.supabase, context.userId, data.id);
     const { error } = await context.supabase
       .from("plugin_licenses").delete().eq("id", data.id);
     if (error) throw new Error(error.message);

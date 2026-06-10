@@ -106,7 +106,7 @@ export const updateDeviceRequest = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     // Only owner/sales_agent or the brand owner can update.
-    const isStaff = await hasAnyRole(context.supabase, context.userId, ["owner", "sales_agent"]);
+    const isStaff = await hasAnyRole(context.supabase, context.userId, ["owner", "sales_agent", "support_agent"]);
     if (!isStaff) {
       // brand owners may only cancel their own request
       const { data: req } = await context.supabase
@@ -143,7 +143,7 @@ export const deleteDeviceRequest = createServerFn({ method: "POST" })
 export const getNotifySettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const isOwner = await hasAnyRole(context.supabase, context.userId, ["owner"]);
+    const isOwner = await hasAnyRole(context.supabase, context.userId, ["owner", "support_agent"]);
     if (!isOwner) throw new Error("Owner only");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await supabaseAdmin
@@ -163,7 +163,7 @@ export const setNotifySettings = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const isOwner = await hasAnyRole(context.supabase, context.userId, ["owner"]);
+    const isOwner = await hasAnyRole(context.supabase, context.userId, ["owner", "support_agent"]);
     if (!isOwner) throw new Error("Owner only");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
