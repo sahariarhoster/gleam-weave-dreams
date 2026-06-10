@@ -48,6 +48,7 @@ function OrdersPage() {
               <TableRow>
                 <TableHead>Date</TableHead>
                 <TableHead>Customer</TableHead>
+                <TableHead>Phone</TableHead>
                 <TableHead>Package</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>bKash</TableHead>
