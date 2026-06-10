@@ -587,6 +587,7 @@ export type Database = {
           final_amount: number
           full_name: string
           id: string
+          ip_address: string | null
           original_amount: number
           package_id: string
           phone: string | null
@@ -608,6 +609,7 @@ export type Database = {
           final_amount: number
           full_name: string
           id?: string
+          ip_address?: string | null
           original_amount: number
           package_id: string
           phone?: string | null
@@ -629,6 +631,7 @@ export type Database = {
           final_amount?: number
           full_name?: string
           id?: string
+          ip_address?: string | null
           original_amount?: number
           package_id?: string
           phone?: string | null
