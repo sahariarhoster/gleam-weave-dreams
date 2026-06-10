@@ -264,7 +264,7 @@ function LicensesPage() {
                 </TableRow>
               ))}
               {(brands.data ?? []).length === 0 && (
-                <TableRow><TableCell colSpan={isOwner ? 3 : 2} className="text-center text-muted-foreground">No brands</TableCell></TableRow>
+                <TableRow><TableCell colSpan={canManage ? 3 : 2} className="text-center text-muted-foreground">No brands</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
