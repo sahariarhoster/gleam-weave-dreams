@@ -238,7 +238,56 @@ function ChangePackageDialog({
   );
 }
 
+function RenewDialog({
+  brandName, defaultDays, onSubmit,
+}: {
+  brandName: string;
+  defaultDays: number;
+  onSubmit: (days: number) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [days, setDays] = useState<string>(String(defaultDays || 30));
+  const n = parseInt(days, 10);
+  const valid = Number.isFinite(n) && n >= 1 && n <= 3650;
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline">Renew</Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Renew {brandName}</DialogTitle>
+          <DialogDescription>
+            Extends the current expiry (or starts from today if already expired) by the chosen number of days.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-2">
+          <Label>Days to extend</Label>
+          <Input
+            type="number" min={1} max={3650}
+            value={days}
+            onChange={(e) => setDays(e.target.value)}
+          />
+          <div className="flex flex-wrap gap-2 pt-1">
+            {[7, 30, 90, 180, 365].map((d) => (
+              <Button key={d} type="button" size="sm" variant="ghost"
+                onClick={() => setDays(String(d))}>+{d}d</Button>
+            ))}
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => setOpen(false)}>Cancel</Button>
+          <Button disabled={!valid} onClick={() => { onSubmit(n); setOpen(false); }}>
+            Renew
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 /* ---------------- Customer View ---------------- */
+
 
 function CustomerView() {
   const qc = useQueryClient();
