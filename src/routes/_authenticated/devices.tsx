@@ -52,6 +52,8 @@ function DevicesPage() {
   const brands = useQuery({ queryKey: ["brands-lite"], queryFn: listBrandsLiteClient });
   const roles = useQuery({ queryKey: ["my-roles", user?.id ?? "anon"], queryFn: () => listMyRolesClient(user?.id), enabled: !!user?.id });
   const isOwner = (roles.data ?? []).includes("owner");
+  const isSupport = (roles.data ?? []).includes("support_agent");
+  const canManage = isOwner || isSupport;
 
   const [editing, setEditing] = useState<Device | null>(null);
   const [open, setOpen] = useState(false);
