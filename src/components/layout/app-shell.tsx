@@ -54,7 +54,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
-function PendingScreen({ reason }: { reason: string }) {
+function PendingScreen({ reason, note }: { reason: string; note?: string | null }) {
   const cfg: Record<string, { title: string; body: string; tone: string }> = {
     pending: {
       title: "Account Pending",
@@ -87,6 +87,12 @@ function PendingScreen({ reason }: { reason: string }) {
         </div>
         <h1 className="text-xl font-bold">{c.title}</h1>
         <p className="text-sm text-muted-foreground">{c.body}</p>
+        {note ? (
+          <div className="text-left text-sm rounded-md border border-amber-200 bg-amber-50 text-amber-900 p-3">
+            <div className="font-medium mb-1">Message from support</div>
+            <div className="whitespace-pre-wrap">{note}</div>
+          </div>
+        ) : null}
         <div className="text-xs text-muted-foreground rounded-md bg-muted p-3">
           Need help? Contact support and we'll get you back online quickly.
         </div>
