@@ -85,10 +85,13 @@ function OrdersPage() {
                   <TableCell className="text-right">
                     {o.status === "pending" ? (
                       <div className="flex justify-end gap-1">
-                        <Button size="sm" onClick={() => { setEditing({ id: o.id, action: "approve" }); setNotes(""); }}>
+                        <Button size="sm" onClick={() => { setEditing({ id: o.id, action: "approve" }); setNotes(""); }} title="Approve">
                           <Check className="h-3.5 w-3.5" />
                         </Button>
-                        <Button size="sm" variant="destructive" onClick={() => { setEditing({ id: o.id, action: "reject" }); setNotes(""); }}>
+                        <Button size="sm" variant="outline" onClick={() => { setEditing({ id: o.id, action: "cancel" }); setNotes(""); }} title="Cancel">
+                          <Ban className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => { setEditing({ id: o.id, action: "reject" }); setNotes(""); }} title="Reject">
                           <X className="h-3.5 w-3.5" />
                         </Button>
                       </div>
