@@ -464,8 +464,18 @@ export const getMyAccountStatus = createServerFn({ method: "GET" })
     const list = brands ?? [];
     if (list.length === 0) return { locked: false, roles, brands: list, reason: null };
     const hasActive = list.some((b: any) => b.status === "active");
-    if (hasActive) return { locked: false, roles, brands: list, reason: null };
+    if (hasActive) return { locked: false, roles, brands: list, reason: null, note: null as string | null };
     const order = ["on_hold", "suspended", "expired", "pending"];
     const reason = order.find((s) => list.some((b: any) => b.status === s)) ?? list[0].status;
-    return { locked: true, roles, brands: list, reason };
+    // Pull latest admin note from the user's most recent order so rejection/cancel
+    // reasons surface on the lock screen.
+    const { data: lastOrder } = await context.supabase
+      .from("orders")
+      .select("admin_notes, status")
+      .eq("user_id", context.userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return { locked: true, roles, brands: list, reason, note: lastOrder?.admin_notes ?? null };
   });
+
