@@ -143,7 +143,7 @@ export const deleteDeviceRequest = createServerFn({ method: "POST" })
 export const getNotifySettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const isOwner = await hasAnyRole(context.supabase, context.userId, ["owner"]);
+    const isOwner = await hasAnyRole(context.supabase, context.userId, ["owner", "support_agent"]);
     if (!isOwner) throw new Error("Owner only");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data } = await supabaseAdmin
