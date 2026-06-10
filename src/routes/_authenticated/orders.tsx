@@ -66,6 +66,7 @@ function OrdersPage() {
                     <div className="text-xs text-muted-foreground">{o.email}</div>
                     <div className="text-xs text-muted-foreground">{o.brand_name}</div>
                   </TableCell>
+                  <TableCell className="text-sm">{o.phone ? <a href={`tel:${o.phone}`} className="hover:underline">{o.phone}</a> : <span className="text-muted-foreground">—</span>}</TableCell>
                   <TableCell>
                     <div>{o.package_name}</div>
                     <div className="text-xs text-muted-foreground">{o.duration_days} days</div>
