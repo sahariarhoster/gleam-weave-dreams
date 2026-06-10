@@ -394,6 +394,10 @@ export const setMyBrandMemberActive = createServerFn({ method: "POST" })
     const ids = await getMyBrandIds(context.supabase, context.userId);
     if (!ids.includes(data.brand_id)) throw new Error("Forbidden: not your brand");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: mem } = await supabaseAdmin
+      .from("brand_members").select("user_id")
+      .eq("brand_id", data.brand_id).eq("user_id", data.user_id).maybeSingle();
+    if (!mem) throw new Error("User is not a member of this brand");
     const { error } = await supabaseAdmin.auth.admin.updateUserById(data.user_id, {
       ban_duration: data.inactive ? "876000h" : "none",
     } as any);
