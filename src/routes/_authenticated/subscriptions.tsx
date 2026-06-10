@@ -165,10 +165,13 @@ function AdminView() {
                       Activate
                     </Button>
                   )}
-                  <Button size="sm" variant="outline"
-                    onClick={() => m.mutate({ brand_id: s.id, action: "renew" })}>
-                    Renew
-                  </Button>
+                  <RenewDialog
+                    brandName={s.brand_name}
+                    defaultDays={s.package?.duration_days ?? 30}
+                    onSubmit={(extend_days) =>
+                      m.mutate({ brand_id: s.id, action: "renew", extend_days })
+                    }
+                  />
                   <ChangePackageDialog
                     brandId={s.id}
                     currentPkgId={s.package?.id ?? null}
