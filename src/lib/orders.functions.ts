@@ -41,8 +41,8 @@ export const createOrder = createServerFn({ method: "POST" })
         password: z.string().min(6).max(72),
         phone: z.string().trim().max(30).optional().nullable(),
         brand_name: z.string().trim().min(1).max(100),
-        bkash_number: z.string().trim().min(8).max(30),
-        txid: z.string().trim().min(4).max(64),
+        bkash_number: z.string().trim().max(30).optional().nullable(),
+        txid: z.string().trim().max(64).optional().nullable(),
         coupon_code: z.string().trim().max(64).optional().nullable(),
       })
       .parse(d),
