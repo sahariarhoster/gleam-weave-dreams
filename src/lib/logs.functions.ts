@@ -67,9 +67,8 @@ export const listActivityLog = createServerFn({ method: "POST" })
       .from("user_roles")
       .select("role")
       .eq("user_id", context.userId)
-      .eq("role", "owner")
-      .maybeSingle();
-    const isOwner = !!ownerRow;
+      .in("role", ["owner", "support_agent"]);
+    const isOwner = !!(ownerRow && ownerRow.length > 0);
     let memberBrandIds: string[] = [];
     if (!isOwner) {
       const { data: mems } = await context.supabase
