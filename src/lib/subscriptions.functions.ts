@@ -149,7 +149,7 @@ export const adminUpdateSubscription = createServerFn({ method: "POST" })
       patch.cancel_requested_at = null;
     }
 
-    const { error } = await supabaseAdmin.from("brands").update(patch).eq("id", data.brand_id);
+    const { error } = await supabaseAdmin.from("brands").update(patch as any).eq("id", data.brand_id);
     if (error) throw new Error(error.message);
 
     await supabaseAdmin.from("activity_log").insert({
