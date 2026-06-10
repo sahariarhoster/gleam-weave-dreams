@@ -170,6 +170,9 @@ function OrderPage() {
             {/* Form */}
             <Card className="lg:col-span-2">
               <CardContent className="pt-6 space-y-4">
+                <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-900 dark:text-amber-200">
+                  <strong>Important:</strong> After your account is activated, you must link your own WhatsApp number as a device from the Devices page. Messages are sent from your linked WhatsApp — we do not send on your behalf.
+                </div>
                 <div>
                   <h3 className="font-semibold mb-3">Your account</h3>
                   <div className="grid sm:grid-cols-2 gap-3">
