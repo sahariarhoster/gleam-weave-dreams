@@ -83,6 +83,17 @@ async function assertLicenseManager(supabase: any, userId: string, licenseId: st
   const { data: lic } = await supabase
     .from("plugin_licenses").select("brand_id").eq("id", licenseId).maybeSingle();
   if (!lic) throw new Error("License not found");
+  if (await isElevated(supabase, userId)) return;
+  const { data: brand } = await supabase
+    .from("brands").select("created_by").eq("id", lic.brand_id).maybeSingle();
+  if (brand?.created_by !== userId) throw new Error("Forbidden: not your license");
+}
+
+async function assertLicenseDeleter(supabase: any, userId: string, licenseId: string) {
+  // delete remains owner-only (support_agent cannot delete licenses)
+  const { data: lic } = await supabase
+    .from("plugin_licenses").select("brand_id").eq("id", licenseId).maybeSingle();
+  if (!lic) throw new Error("License not found");
   if (await isOwner(supabase, userId)) return;
   const { data: brand } = await supabase
     .from("brands").select("created_by").eq("id", lic.brand_id).maybeSingle();
