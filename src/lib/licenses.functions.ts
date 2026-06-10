@@ -59,8 +59,8 @@ export const generateLicense = createServerFn({ method: "POST" })
     const { data: brand, error: bErr } = await context.supabase
       .from("brands").select("id, created_by, license_limit").eq("id", data.brand_id).maybeSingle();
     if (bErr || !brand) throw new Error("Brand not found");
-    const owner = await isOwner(context.supabase, context.userId);
-    if (!owner && brand.created_by !== context.userId) throw new Error("Only the brand owner can generate licenses");
+    const elevated = await isElevated(context.supabase, context.userId);
+    if (!elevated && brand.created_by !== context.userId) throw new Error("Only the brand owner can generate licenses");
 
     const limit = brand.license_limit ?? 1;
     const { count } = await context.supabase
