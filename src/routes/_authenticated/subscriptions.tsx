@@ -39,6 +39,7 @@ function StatusBadge({ s }: { s: string | null }) {
   const color =
     s === "active" ? "default" :
     s === "suspended" ? "destructive" :
+    s === "on_hold" ? "destructive" :
     s === "pending" ? "secondary" : "outline";
   return <Badge variant={color as any}>{s ?? "—"}</Badge>;
 }
