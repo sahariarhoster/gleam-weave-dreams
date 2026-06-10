@@ -23,11 +23,11 @@ function OrdersPage() {
   const fnList = useServerFn(listOrders);
   const fnDecide = useServerFn(decideOrder);
   const list = useQuery({ queryKey: ["admin-orders"], queryFn: () => fnList() });
-  const [editing, setEditing] = useState<{ id: string; action: "approve" | "reject" } | null>(null);
+  const [editing, setEditing] = useState<{ id: string; action: "approve" | "reject" | "cancel" } | null>(null);
   const [notes, setNotes] = useState("");
 
   const decide = useMutation({
-    mutationFn: (v: { id: string; action: "approve" | "reject"; notes?: string }) =>
+    mutationFn: (v: { id: string; action: "approve" | "reject" | "cancel"; notes?: string }) =>
       fnDecide({ data: { id: v.id, action: v.action, notes: v.notes ?? null } }),
     onSuccess: () => {
       toast.success("Done");
