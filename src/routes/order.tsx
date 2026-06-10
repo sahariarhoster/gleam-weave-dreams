@@ -186,8 +186,8 @@ function OrderPage() {
                       <Input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
                     </div>
                     <div>
-                      <Label>Phone (optional)</Label>
-                      <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+                      <Label>Phone (WhatsApp)</Label>
+                      <Input required type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="01XXXXXXXXX" />
                     </div>
                     <div className="sm:col-span-2">
                       <Label>Password</Label>
