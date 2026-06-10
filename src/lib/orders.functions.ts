@@ -155,6 +155,30 @@ export const createOrder = createServerFn({ method: "POST" })
       .single();
     if (oErr || !order) throw new Error(oErr?.message ?? "Could not create order");
 
+    // Best-effort WhatsApp notifications (never break the order flow)
+    try {
+      const { sendWhatsApp, notifyAdmins } = await import("@/lib/notify.server");
+      if (data.phone) {
+        await sendWhatsApp(
+          data.phone,
+          `Hi ${data.full_name},\n\n` +
+            `✅ Your order for *${pkg.name}* has been received.\n\n` +
+            `Amount: ${final} BDT\nTXID: ${data.txid}\n\n` +
+            `Your account is *pending approval*. You'll get another message as soon as it's activated.\n\nThank you!`,
+        );
+      }
+      await notifyAdmins(
+        `🆕 *New Order*\n\n` +
+          `Customer: ${data.full_name} (${data.email})\n` +
+          `Phone: ${data.phone ?? "—"}\n` +
+          `Brand: ${data.brand_name}\n` +
+          `Package: ${pkg.name}\n` +
+          `Amount: ${final} BDT\nbKash: ${data.bkash_number}\nTXID: ${data.txid}`,
+      );
+    } catch {
+      // ignore
+    }
+
     return { ok: true, order_id: order.id };
   });
 
@@ -231,6 +255,26 @@ export const decideOrder = createServerFn({ method: "POST" })
           admin_notes: data.notes ?? null,
         })
         .eq("id", data.id);
+
+      // Notify customer that account is activated
+      try {
+        const { data: full } = await supabaseAdmin
+          .from("orders")
+          .select("full_name, phone, packages(name)")
+          .eq("id", data.id)
+          .maybeSingle();
+        if (full?.phone) {
+          const { sendWhatsApp } = await import("@/lib/notify.server");
+          await sendWhatsApp(
+            full.phone,
+            `🎉 Hi ${full.full_name},\n\n` +
+              `Your account has been *activated*!\n` +
+              `Package: ${(full as any)?.packages?.name ?? ""}\n` +
+              `Valid for: ${days} days\n\n` +
+              `You can now log in and start using the service.`,
+          );
+        }
+      } catch { /* ignore */ }
     } else {
       // reject: keep brand as pending (or could delete). We'll mark brand suspended.
       if (order.brand_id) {

@@ -781,6 +781,7 @@ export type Database = {
       }
       system_settings: {
         Row: {
+          admin_notify_numbers: string | null
           id: boolean
           licenses_per_brand: number
           notify_device_id: string | null
@@ -795,6 +796,7 @@ export type Database = {
           whmcs_api_token: string | null
         }
         Insert: {
+          admin_notify_numbers?: string | null
           id?: boolean
           licenses_per_brand?: number
           notify_device_id?: string | null
@@ -809,6 +811,7 @@ export type Database = {
           whmcs_api_token?: string | null
         }
         Update: {
+          admin_notify_numbers?: string | null
           id?: boolean
           licenses_per_brand?: number
           notify_device_id?: string | null

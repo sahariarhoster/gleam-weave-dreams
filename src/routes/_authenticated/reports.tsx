@@ -184,15 +184,17 @@ function NotifyConfigCard() {
   const q = useQuery({ queryKey: ["notify-settings"], queryFn: () => get({ data: undefined as any }) });
   const [phone, setPhone] = useState("");
   const [deviceId, setDeviceId] = useState<string>("");
+  const [adminNumbers, setAdminNumbers] = useState<string>("");
   useEffect(() => {
     if (q.data) {
       setPhone(q.data.notify_phone ?? "");
       setDeviceId(q.data.notify_device_id ?? "");
+      setAdminNumbers((q.data as any).admin_notify_numbers ?? "");
     }
   }, [q.data]);
 
   const saveM = useMutation({
-    mutationFn: () => save({ data: { notify_phone: phone, notify_device_id: deviceId } }),
+    mutationFn: () => save({ data: { notify_phone: phone, notify_device_id: deviceId, admin_notify_numbers: adminNumbers } }),
     onSuccess: () => { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["notify-settings"] }); },
     onError: (e: any) => toast.error(e?.message ?? "Failed"),
   });
@@ -205,8 +207,10 @@ function NotifyConfigCard() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Daily WhatsApp Report — Admin Config</CardTitle>
-        <CardDescription>Sent automatically every day at 9:00 AM (Asia/Dhaka).</CardDescription>
+        <CardTitle className="text-base">WhatsApp Notifications — Admin Config</CardTitle>
+        <CardDescription>
+          Daily report sent at 9:00 AM (Asia/Dhaka). The same device is used for order &amp; device-request notifications.
+        </CardDescription>
       </CardHeader>
       <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <div>
@@ -231,6 +235,17 @@ function NotifyConfigCard() {
           <Button variant="outline" onClick={() => testM.mutate()} disabled={testM.isPending}>
             {testM.isPending ? "Sending…" : "Send test now"}
           </Button>
+        </div>
+        <div className="md:col-span-3">
+          <Label>Sales / Support WhatsApp numbers</Label>
+          <Input
+            value={adminNumbers}
+            onChange={(e) => setAdminNumbers(e.target.value)}
+            placeholder="8801XXXXXXXXX, 8801YYYYYYYYY"
+          />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Comma-separated. These numbers also receive new-order and new device-request alerts.
+          </p>
         </div>
       </CardContent>
     </Card>

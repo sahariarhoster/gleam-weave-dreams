@@ -54,40 +54,21 @@ export const createDeviceRequest = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
-    // best-effort WhatsApp notification to admin
+    // best-effort WhatsApp notification to admin + sales/support
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-      const { data: settings } = await supabaseAdmin
-        .from("system_settings")
-        .select("notify_phone, notify_device_id")
-        .eq("id", true)
-        .maybeSingle();
-      if (settings?.notify_phone && settings?.notify_device_id) {
-        const { data: device } = await supabaseAdmin
-          .from("devices")
-          .select("api_secret, device_unique_id, status")
-          .eq("id", settings.notify_device_id)
-          .maybeSingle();
-        if (device && device.status !== "disconnected" && device.status !== "inactive") {
-          const { data: profile } = await supabaseAdmin
-            .from("profiles").select("email, full_name").eq("id", context.userId).maybeSingle();
-          const who = profile?.full_name || profile?.email || context.userId;
-          const brandName = (row as any)?.brands?.name ?? "—";
-          const msg =
-            `🆕 New device config request\n\n` +
-            `Brand: ${brandName}\n` +
-            `From: ${who}\n` +
-            `Device: ${data.device_name}\n` +
-            (data.notes ? `Notes: ${data.notes}\n` : "");
-          const { bdwebs } = await import("@/lib/bdwebs.server");
-          await bdwebs.sendWhatsApp({
-            secret: device.api_secret,
-            account: device.device_unique_id,
-            recipient: settings.notify_phone,
-            message: msg,
-          });
-        }
-      }
+      const { data: profile } = await supabaseAdmin
+        .from("profiles").select("email, full_name").eq("id", context.userId).maybeSingle();
+      const who = profile?.full_name || profile?.email || context.userId;
+      const brandName = (row as any)?.brands?.name ?? "—";
+      const msg =
+        `🆕 New device config request\n\n` +
+        `Brand: ${brandName}\n` +
+        `From: ${who}\n` +
+        `Device: ${data.device_name}\n` +
+        (data.notes ? `Notes: ${data.notes}\n` : "");
+      const { notifyAdmins } = await import("@/lib/notify.server");
+      await notifyAdmins(msg);
     } catch {
       // never fail the request because of notification problems
     }
