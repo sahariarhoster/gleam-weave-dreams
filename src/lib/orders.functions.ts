@@ -216,7 +216,7 @@ export const decideOrder = createServerFn({ method: "POST" })
     z
       .object({
         id: z.string().uuid(),
-        action: z.enum(["approve", "reject"]),
+        action: z.enum(["approve", "reject", "cancel"]),
         notes: z.string().max(500).optional().nullable(),
       })
       .parse(d),
