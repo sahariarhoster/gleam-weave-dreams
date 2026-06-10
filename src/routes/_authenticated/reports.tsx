@@ -186,16 +186,22 @@ function NotifyConfigCard() {
   const [phone, setPhone] = useState("");
   const [deviceId, setDeviceId] = useState<string>("");
   const [adminNumbers, setAdminNumbers] = useState<string>("");
+  const [tplPlaced, setTplPlaced] = useState("");
+  const [tplApproved, setTplApproved] = useState("");
+  const [tplAdmin, setTplAdmin] = useState("");
   useEffect(() => {
     if (q.data) {
       setPhone(q.data.notify_phone ?? "");
       setDeviceId(q.data.notify_device_id ?? "");
       setAdminNumbers((q.data as any).admin_notify_numbers ?? "");
+      setTplPlaced((q.data as any).tpl_order_placed ?? "");
+      setTplApproved((q.data as any).tpl_order_approved ?? "");
+      setTplAdmin((q.data as any).tpl_order_admin ?? "");
     }
   }, [q.data]);
 
   const saveM = useMutation({
-    mutationFn: () => save({ data: { notify_phone: phone, notify_device_id: deviceId, admin_notify_numbers: adminNumbers } }),
+    mutationFn: () => save({ data: { notify_phone: phone, notify_device_id: deviceId, admin_notify_numbers: adminNumbers, tpl_order_placed: tplPlaced, tpl_order_approved: tplApproved, tpl_order_admin: tplAdmin } }),
     onSuccess: () => { toast.success("Saved"); qc.invalidateQueries({ queryKey: ["notify-settings"] }); },
     onError: (e: any) => toast.error(e?.message ?? "Failed"),
   });
@@ -247,6 +253,27 @@ function NotifyConfigCard() {
           <p className="mt-1 text-xs text-muted-foreground">
             Comma-separated. These numbers also receive new-order and new device-request alerts.
           </p>
+        </div>
+
+        <div className="md:col-span-3 border-t pt-3">
+          <h4 className="font-medium text-sm mb-1">Order message templates</h4>
+          <p className="text-xs text-muted-foreground mb-3">
+            Variables: <code>{"{name}"}</code> <code>{"{email}"}</code> <code>{"{phone}"}</code> <code>{"{brand}"}</code> <code>{"{package}"}</code> <code>{"{amount}"}</code> <code>{"{bkash}"}</code> <code>{"{txid}"}</code> <code>{"{days}"}</code>. Leave blank to use the default.
+          </p>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+            <div>
+              <Label>Order placed (to customer)</Label>
+              <Textarea rows={6} value={tplPlaced} onChange={(e) => setTplPlaced(e.target.value)} />
+            </div>
+            <div>
+              <Label>Order approved (to customer)</Label>
+              <Textarea rows={6} value={tplApproved} onChange={(e) => setTplApproved(e.target.value)} />
+            </div>
+            <div>
+              <Label>New order (to admin / agents)</Label>
+              <Textarea rows={6} value={tplAdmin} onChange={(e) => setTplAdmin(e.target.value)} />
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
