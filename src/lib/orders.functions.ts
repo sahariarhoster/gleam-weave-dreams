@@ -53,14 +53,12 @@ export const createOrder = createServerFn({ method: "POST" })
     // Capture client IP from request headers
     let ip: string | null = null;
     try {
-      const { getWebRequest } = await import("@tanstack/react-start/server");
-      const req = getWebRequest();
-      const h = req?.headers;
-      const fwd = h?.get("x-forwarded-for") ?? "";
-      ip = (fwd.split(",")[0]?.trim() || h?.get("cf-connecting-ip") || h?.get("x-real-ip") || null) as string | null;
+      const { getRequestIP } = await import("@tanstack/react-start/server");
+      ip = getRequestIP({ xForwardedFor: true }) ?? null;
     } catch {
       ip = null;
     }
+
 
     // Rate limit: same phone or IP can only order once per 7 days
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
