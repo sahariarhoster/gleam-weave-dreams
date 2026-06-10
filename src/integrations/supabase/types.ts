@@ -809,6 +809,9 @@ export type Database = {
           plugin_requires_wp: string | null
           plugin_tested_wp: string | null
           plugin_version: string
+          tpl_order_admin: string | null
+          tpl_order_approved: string | null
+          tpl_order_placed: string | null
           updated_at: string
           whmcs_api_token: string | null
         }
@@ -824,6 +827,9 @@ export type Database = {
           plugin_requires_wp?: string | null
           plugin_tested_wp?: string | null
           plugin_version?: string
+          tpl_order_admin?: string | null
+          tpl_order_approved?: string | null
+          tpl_order_placed?: string | null
           updated_at?: string
           whmcs_api_token?: string | null
         }
@@ -839,6 +845,9 @@ export type Database = {
           plugin_requires_wp?: string | null
           plugin_tested_wp?: string | null
           plugin_version?: string
+          tpl_order_admin?: string | null
+          tpl_order_approved?: string | null
+          tpl_order_placed?: string | null
           updated_at?: string
           whmcs_api_token?: string | null
         }
