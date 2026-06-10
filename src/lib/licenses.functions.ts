@@ -43,7 +43,7 @@ export const setBrandLicenseLimit = createServerFn({ method: "POST" })
     z.object({ brand_id: z.string().uuid(), limit: z.number().int().min(1).max(1000) }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    if (!(await isOwner(context.supabase, context.userId))) throw new Error("Owner only");
+    if (!(await isElevated(context.supabase, context.userId))) throw new Error("Owner only");
     const { error } = await context.supabase
       .from("brands")
       .update({ license_limit: data.limit })
