@@ -15,6 +15,12 @@ async function isOwner(supabase: any, userId: string) {
   return !!data;
 }
 
+async function isElevated(supabase: any, userId: string) {
+  const { data } = await supabase
+    .from("user_roles").select("role").eq("user_id", userId).in("role", ["owner", "support_agent"]);
+  return (data ?? []).length > 0;
+}
+
 export const listMyLicenses = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
