@@ -113,7 +113,7 @@ export const createOrder = createServerFn({ method: "POST" })
     // Ensure profile + brand_owner role
     await supabaseAdmin
       .from("profiles")
-      .upsert({ id: userId, email: data.email, full_name: data.full_name }, { onConflict: "id" });
+      .upsert({ id: userId, email: data.email, full_name: data.full_name, phone: data.phone } as any, { onConflict: "id" });
     await supabaseAdmin
       .from("user_roles")
       .upsert({ user_id: userId, role: "brand_owner" }, { onConflict: "user_id,role" });
