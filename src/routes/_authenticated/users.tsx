@@ -183,13 +183,6 @@ function UsersPage() {
     </div>
   );
 }
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
 
 function AddBrandDialog({ userId, brands, onDone }: { userId: string; brands: { id: string; name: string }[]; onDone: () => void }) {
   const fn = useServerFn(addBrandMember);
