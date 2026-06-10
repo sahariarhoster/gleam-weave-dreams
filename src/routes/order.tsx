@@ -63,6 +63,8 @@ function OrderPage() {
     }
   }
 
+  const requirePayment = final > 0;
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!selected) return toast.error("Pick a package");
@@ -76,8 +78,8 @@ function OrderPage() {
           password: form.password,
           phone: form.phone || null,
           brand_name: form.brand_name,
-          bkash_number: form.bkash_number,
-          txid: form.txid,
+          bkash_number: requirePayment ? form.bkash_number : null,
+          txid: requirePayment ? form.txid : null,
           coupon_code: form.coupon_code || null,
         },
       });
