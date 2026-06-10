@@ -107,7 +107,7 @@ export const updateDevice = createServerFn({ method: "POST" })
     deviceInput.partial({ api_secret: true }).extend({ id: z.string().uuid() }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertOwner(context.supabase, context.userId);
+    await assertStrictOwner(context.supabase, context.userId);
     const { id, api_secret, ...rest } = data;
     const patch = { ...rest, ...(api_secret && api_secret.length > 0 ? { api_secret } : {}) };
     const { error } = await context.supabase.from("devices").update(patch).eq("id", id);
