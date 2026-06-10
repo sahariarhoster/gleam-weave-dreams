@@ -58,7 +58,7 @@ function DeviceRequestsPage() {
   const fnSetNotify = useServerFn(setNotifySettings);
 
   const roles = useQuery({ queryKey: ["my-roles"], queryFn: () => fnRoles() });
-  const isOwner = (roles.data ?? []).includes("owner");
+  const isOwner = (roles.data ?? []).includes("owner") || (roles.data ?? []).includes("support_agent");
   const isStaff = isOwner || (roles.data ?? []).includes("sales_agent");
   const isBrandOwner = (roles.data ?? []).includes("brand_owner");
 
