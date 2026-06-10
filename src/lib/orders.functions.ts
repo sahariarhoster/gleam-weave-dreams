@@ -194,7 +194,9 @@ export const createOrder = createServerFn({ method: "POST" })
         discount_amount: discount,
         final_amount: final,
         status: "pending",
+        ip_address: ip,
       })
+
       .select("id")
       .single();
     if (oErr || !order) throw new Error(oErr?.message ?? "Could not create order");
