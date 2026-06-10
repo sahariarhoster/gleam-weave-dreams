@@ -32,7 +32,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const status = useQuery({ queryKey: ["my-account-status"], queryFn: () => fnStatus(), staleTime: 30_000 });
 
   if (status.data?.locked) {
-    return <PendingScreen reason={status.data.reason ?? "pending"} />;
+    return <PendingScreen reason={status.data.reason ?? "pending"} note={status.data.note ?? null} />;
   }
 
   return (
