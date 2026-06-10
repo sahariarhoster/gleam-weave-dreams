@@ -163,7 +163,7 @@ export const setNotifySettings = createServerFn({ method: "POST" })
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const isOwner = await hasAnyRole(context.supabase, context.userId, ["owner"]);
+    const isOwner = await hasAnyRole(context.supabase, context.userId, ["owner", "support_agent"]);
     if (!isOwner) throw new Error("Owner only");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin
