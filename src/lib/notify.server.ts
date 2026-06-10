@@ -50,7 +50,7 @@ export async function getOrderTemplate(key: "tpl_order_placed" | "tpl_order_appr
 }
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-const jitter = () => 500 + Math.floor(Math.random() * 1500); // 0.5–2s
+const jitter = () => 10000 + Math.floor(Math.random() * 13000); // 10–23s
 
 async function logSend(recipient: string, ok: boolean, info: any) {
   try {
