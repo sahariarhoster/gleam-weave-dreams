@@ -287,7 +287,7 @@ function CustomerView() {
             )}
             {s.is_owner && (
               <div className="flex gap-2 pt-2">
-                <Link to="/order" search={{ package: s.package?.id } as any} className="flex-1">
+                <Link to="/order" className="flex-1">
                   <Button className="w-full" size="sm">Renew</Button>
                 </Link>
                 {!s.cancel_requested_at && (
