@@ -158,6 +158,24 @@ function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-3">
+      {!isLoading && stats.devices === 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 shadow-sm">
+          <div className="flex items-start gap-3">
+            <MessageSquare className="mt-0.5 h-5 w-5 text-amber-600 dark:text-amber-400" />
+            <div className="text-sm">
+              <div className="font-semibold text-amber-900 dark:text-amber-200">
+                Link your WhatsApp number to start using the software
+              </div>
+              <div className="text-amber-800/80 dark:text-amber-200/80">
+                You must connect your own WhatsApp number before you can send messages, run campaigns or receive notifications.
+              </div>
+            </div>
+          </div>
+          <Button asChild size="sm" className="bg-amber-600 hover:bg-amber-700 text-white">
+            <Link to="/devices">Link WhatsApp</Link>
+          </Button>
+        </div>
+      )}
       {/* Filter bar */}
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border/60 bg-card px-3 py-2 shadow-sm">
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
