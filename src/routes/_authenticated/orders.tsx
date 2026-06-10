@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { ShoppingBag, Check, X, Loader2 } from "lucide-react";
+import { ShoppingBag, Check, X, Loader2, Ban } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,11 +23,11 @@ function OrdersPage() {
   const fnList = useServerFn(listOrders);
   const fnDecide = useServerFn(decideOrder);
   const list = useQuery({ queryKey: ["admin-orders"], queryFn: () => fnList() });
-  const [editing, setEditing] = useState<{ id: string; action: "approve" | "reject" } | null>(null);
+  const [editing, setEditing] = useState<{ id: string; action: "approve" | "reject" | "cancel" } | null>(null);
   const [notes, setNotes] = useState("");
 
   const decide = useMutation({
-    mutationFn: (v: { id: string; action: "approve" | "reject"; notes?: string }) =>
+    mutationFn: (v: { id: string; action: "approve" | "reject" | "cancel"; notes?: string }) =>
       fnDecide({ data: { id: v.id, action: v.action, notes: v.notes ?? null } }),
     onSuccess: () => {
       toast.success("Done");
@@ -85,10 +85,13 @@ function OrdersPage() {
                   <TableCell className="text-right">
                     {o.status === "pending" ? (
                       <div className="flex justify-end gap-1">
-                        <Button size="sm" onClick={() => { setEditing({ id: o.id, action: "approve" }); setNotes(""); }}>
+                        <Button size="sm" onClick={() => { setEditing({ id: o.id, action: "approve" }); setNotes(""); }} title="Approve">
                           <Check className="h-3.5 w-3.5" />
                         </Button>
-                        <Button size="sm" variant="destructive" onClick={() => { setEditing({ id: o.id, action: "reject" }); setNotes(""); }}>
+                        <Button size="sm" variant="outline" onClick={() => { setEditing({ id: o.id, action: "cancel" }); setNotes(""); }} title="Cancel">
+                          <Ban className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => { setEditing({ id: o.id, action: "reject" }); setNotes(""); }} title="Reject">
                           <X className="h-3.5 w-3.5" />
                         </Button>
                       </div>
@@ -109,7 +112,7 @@ function OrdersPage() {
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editing?.action === "approve" ? "Approve order" : "Reject order"}</DialogTitle>
+            <DialogTitle>{editing?.action === "approve" ? "Approve order" : editing?.action === "cancel" ? "Cancel order" : "Reject order"}</DialogTitle>
           </DialogHeader>
           <Textarea placeholder="Notes (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} />
           <DialogFooter>

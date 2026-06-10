@@ -41,8 +41,8 @@ export const createOrder = createServerFn({ method: "POST" })
         password: z.string().min(6).max(72),
         phone: z.string().trim().max(30).optional().nullable(),
         brand_name: z.string().trim().min(1).max(100),
-        bkash_number: z.string().trim().min(8).max(30),
-        txid: z.string().trim().min(4).max(64),
+        bkash_number: z.string().trim().max(30).optional().nullable(),
+        txid: z.string().trim().max(64).optional().nullable(),
         coupon_code: z.string().trim().max(64).optional().nullable(),
       })
       .parse(d),
@@ -75,14 +75,21 @@ export const createOrder = createServerFn({ method: "POST" })
     }
     const original = Number(pkg.price);
     const final = Math.max(original - discount, 0);
+    const requirePayment = final > 0;
+    if (requirePayment) {
+      if (!data.bkash_number || data.bkash_number.trim().length < 8) throw new Error("bKash number required");
+      if (!data.txid || data.txid.trim().length < 4) throw new Error("Transaction ID required");
+    }
 
     // Duplicate TXID guard
-    const { data: dup } = await supabaseAdmin
-      .from("orders")
-      .select("id")
-      .eq("txid", data.txid)
-      .maybeSingle();
-    if (dup) throw new Error("This bKash TXID has already been submitted.");
+    if (data.txid && data.txid.trim()) {
+      const { data: dup } = await supabaseAdmin
+        .from("orders")
+        .select("id")
+        .eq("txid", data.txid)
+        .maybeSingle();
+      if (dup) throw new Error("This bKash TXID has already been submitted.");
+    }
 
     // Create or reuse auth user
     let userId: string;
@@ -144,8 +151,8 @@ export const createOrder = createServerFn({ method: "POST" })
         full_name: data.full_name,
         email: data.email,
         phone: data.phone ?? null,
-        bkash_number: data.bkash_number,
-        txid: data.txid,
+        bkash_number: data.bkash_number ?? "",
+        txid: data.txid ?? "",
         original_amount: original,
         discount_amount: discount,
         final_amount: final,
@@ -209,24 +216,31 @@ export const decideOrder = createServerFn({ method: "POST" })
     z
       .object({
         id: z.string().uuid(),
-        action: z.enum(["approve", "reject"]),
+        action: z.enum(["approve", "reject", "cancel"]),
         notes: z.string().max(500).optional().nullable(),
       })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { data: roleRow } = await context.supabase
-      .from("user_roles").select("role").eq("user_id", context.userId).in("role", ["owner", "support_agent"]);
-    if (!roleRow || roleRow.length === 0) throw new Error("Owner only");
-
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: order, error: oErr } = await supabaseAdmin
       .from("orders")
-      .select("id, brand_id, coupon_id, status, package_id, packages(duration_days)")
+      .select("id, brand_id, coupon_id, status, package_id, user_id, packages(duration_days)")
       .eq("id", data.id)
       .maybeSingle();
     if (oErr || !order) throw new Error("Order not found");
     if (order.status !== "pending") throw new Error("Order already decided");
+
+    const { data: roleRow } = await context.supabase
+      .from("user_roles").select("role").eq("user_id", context.userId).in("role", ["owner", "support_agent"]);
+    const isStaff = !!roleRow && roleRow.length > 0;
+    const isOwnerOfOrder = order.user_id === context.userId;
+
+    if (data.action === "cancel") {
+      if (!isStaff && !isOwnerOfOrder) throw new Error("Not allowed");
+    } else if (!isStaff) {
+      throw new Error("Owner only");
+    }
 
     if (data.action === "approve") {
       const days = (order as any).packages?.duration_days ?? 30;
@@ -238,7 +252,6 @@ export const decideOrder = createServerFn({ method: "POST" })
           .eq("id", order.brand_id);
       }
       if (order.coupon_id) {
-        // increment used_count
         const { data: c } = await supabaseAdmin
           .from("coupons").select("used_count").eq("id", order.coupon_id).maybeSingle();
         await supabaseAdmin
@@ -256,7 +269,6 @@ export const decideOrder = createServerFn({ method: "POST" })
         })
         .eq("id", data.id);
 
-      // Notify customer that account is activated
       try {
         const { data: full } = await supabaseAdmin
           .from("orders")
@@ -276,14 +288,14 @@ export const decideOrder = createServerFn({ method: "POST" })
         }
       } catch { /* ignore */ }
     } else {
-      // reject: keep brand as pending (or could delete). We'll mark brand suspended.
+      const newStatus = data.action === "cancel" ? "cancelled" : "rejected";
       if (order.brand_id) {
         await supabaseAdmin.from("brands").update({ status: "suspended" }).eq("id", order.brand_id);
       }
       await supabaseAdmin
         .from("orders")
         .update({
-          status: "rejected",
+          status: newStatus,
           approved_at: new Date().toISOString(),
           approved_by: context.userId,
           admin_notes: data.notes ?? null,

@@ -63,6 +63,8 @@ function OrderPage() {
     }
   }
 
+  const requirePayment = final > 0;
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!selected) return toast.error("Pick a package");
@@ -76,8 +78,8 @@ function OrderPage() {
           password: form.password,
           phone: form.phone || null,
           brand_name: form.brand_name,
-          bkash_number: form.bkash_number,
-          txid: form.txid,
+          bkash_number: requirePayment ? form.bkash_number : null,
+          txid: requirePayment ? form.txid : null,
           coupon_code: form.coupon_code || null,
         },
       });
@@ -195,24 +197,33 @@ function OrderPage() {
                   </div>
                 </div>
 
-                <div className="border-t pt-4">
-                  <h3 className="font-semibold mb-2">bKash payment</h3>
-                  <div className="rounded-lg bg-pink-50 border border-pink-200 p-3 text-sm">
-                    <p className="font-medium text-pink-900">Payment to Merchant</p>
-                    <p className="text-2xl font-bold text-pink-700 mt-1">{BKASH_NUMBER}</p>
-                    <p className="text-xs text-pink-900/70 mt-1">Pay <strong>৳{final.toFixed(0)}</strong> using bKash → "Payment", then enter the TXID below.</p>
-                  </div>
-                  <div className="grid sm:grid-cols-2 gap-3 mt-3">
-                    <div>
-                      <Label>Your bKash number</Label>
-                      <Input required value={form.bkash_number} onChange={(e) => setForm({ ...form, bkash_number: e.target.value })} placeholder="01XXXXXXXXX" />
+                {requirePayment ? (
+                  <div className="border-t pt-4">
+                    <h3 className="font-semibold mb-2">bKash payment</h3>
+                    <div className="rounded-lg bg-pink-50 border border-pink-200 p-3 text-sm">
+                      <p className="font-medium text-pink-900">Payment to Merchant</p>
+                      <p className="text-2xl font-bold text-pink-700 mt-1">{BKASH_NUMBER}</p>
+                      <p className="text-xs text-pink-900/70 mt-1">Pay <strong>৳{final.toFixed(0)}</strong> using bKash → "Payment", then enter the TXID below.</p>
                     </div>
-                    <div>
-                      <Label>Transaction ID (TrxID)</Label>
-                      <Input required value={form.txid} onChange={(e) => setForm({ ...form, txid: e.target.value })} placeholder="e.g. AB12CD34EF" />
+                    <div className="grid sm:grid-cols-2 gap-3 mt-3">
+                      <div>
+                        <Label>Your bKash number</Label>
+                        <Input required value={form.bkash_number} onChange={(e) => setForm({ ...form, bkash_number: e.target.value })} placeholder="01XXXXXXXXX" />
+                      </div>
+                      <div>
+                        <Label>Transaction ID (TrxID)</Label>
+                        <Input required value={form.txid} onChange={(e) => setForm({ ...form, txid: e.target.value })} placeholder="e.g. AB12CD34EF" />
+                      </div>
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="border-t pt-4">
+                    <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-3 text-sm">
+                      <p className="font-medium text-emerald-900">No payment required</p>
+                      <p className="text-xs text-emerald-900/70 mt-1">Your total is ৳0 — just place the order and we'll activate your account shortly.</p>
+                    </div>
+                  </div>
+                )}
 
                 <div className="border-t pt-4">
                   <Label className="flex items-center gap-1.5"><Tag className="h-3.5 w-3.5" /> Coupon code (optional)</Label>
