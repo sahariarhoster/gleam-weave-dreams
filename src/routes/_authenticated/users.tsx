@@ -29,8 +29,16 @@ function UsersPage() {
   const fnSetRole = useServerFn(setUserRole);
   const fnRemove = useServerFn(removeBrandMember);
   const fnImpersonate = useServerFn(impersonateUser);
+  const fnDelete = useServerFn(deleteUser);
+  const { user: me } = useAuth();
   const users = useQuery({ queryKey: ["users"], queryFn: listUsersClient });
   const brands = useQuery({ queryKey: ["brands-lite"], queryFn: listBrandsLiteClient });
+
+  const deleteMut = useMutation({
+    mutationFn: (user_id: string) => fnDelete({ data: { user_id } }),
+    onSuccess: () => { toast.success("User deleted"); qc.invalidateQueries({ queryKey: ["users"] }); },
+    onError: (e) => toast.error((e as Error).message),
+  });
 
   const roleMut = useMutation({
     mutationFn: (v: { user_id: string; role: "owner" | "admin" | "manager" | "brand_owner" | "support_agent" | "sales_agent" | "member" }) => fnSetRole({ data: v }),
@@ -143,10 +151,38 @@ function UsersPage() {
                         </DialogTrigger>
                         <AddBrandDialog userId={u.id} brands={brands.data ?? []} onDone={() => { setOpenFor(null); qc.invalidateQueries({ queryKey: ["users"] }); }} />
                       </Dialog>
+                      {me?.id !== u.id && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button size="icon" variant="ghost" className="text-rose-600 hover:bg-rose-50 hover:text-rose-700" title="Delete user">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete this user?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This permanently removes <span className="font-medium">{u.email}</span> and all their access. This cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteMut.mutate(u.id)} className="bg-rose-600 hover:bg-rose-700">Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
               ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
             </TableBody>
           </Table>
         </CardContent>
