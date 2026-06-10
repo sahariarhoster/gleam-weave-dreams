@@ -222,18 +222,25 @@ export const decideOrder = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    const { data: roleRow } = await context.supabase
-      .from("user_roles").select("role").eq("user_id", context.userId).in("role", ["owner", "support_agent"]);
-    if (!roleRow || roleRow.length === 0) throw new Error("Owner only");
-
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: order, error: oErr } = await supabaseAdmin
       .from("orders")
-      .select("id, brand_id, coupon_id, status, package_id, packages(duration_days)")
+      .select("id, brand_id, coupon_id, status, package_id, user_id, packages(duration_days)")
       .eq("id", data.id)
       .maybeSingle();
     if (oErr || !order) throw new Error("Order not found");
     if (order.status !== "pending") throw new Error("Order already decided");
+
+    const { data: roleRow } = await context.supabase
+      .from("user_roles").select("role").eq("user_id", context.userId).in("role", ["owner", "support_agent"]);
+    const isStaff = !!roleRow && roleRow.length > 0;
+    const isOwnerOfOrder = order.user_id === context.userId;
+
+    if (data.action === "cancel") {
+      if (!isStaff && !isOwnerOfOrder) throw new Error("Not allowed");
+    } else if (!isStaff) {
+      throw new Error("Owner only");
+    }
 
     if (data.action === "approve") {
       const days = (order as any).packages?.duration_days ?? 30;
@@ -245,7 +252,6 @@ export const decideOrder = createServerFn({ method: "POST" })
           .eq("id", order.brand_id);
       }
       if (order.coupon_id) {
-        // increment used_count
         const { data: c } = await supabaseAdmin
           .from("coupons").select("used_count").eq("id", order.coupon_id).maybeSingle();
         await supabaseAdmin
@@ -263,7 +269,6 @@ export const decideOrder = createServerFn({ method: "POST" })
         })
         .eq("id", data.id);
 
-      // Notify customer that account is activated
       try {
         const { data: full } = await supabaseAdmin
           .from("orders")
@@ -283,14 +288,14 @@ export const decideOrder = createServerFn({ method: "POST" })
         }
       } catch { /* ignore */ }
     } else {
-      // reject: keep brand as pending (or could delete). We'll mark brand suspended.
+      const newStatus = data.action === "cancel" ? "cancelled" : "rejected";
       if (order.brand_id) {
         await supabaseAdmin.from("brands").update({ status: "suspended" }).eq("id", order.brand_id);
       }
       await supabaseAdmin
         .from("orders")
         .update({
-          status: "rejected",
+          status: newStatus,
           approved_at: new Date().toISOString(),
           approved_by: context.userId,
           admin_notes: data.notes ?? null,
