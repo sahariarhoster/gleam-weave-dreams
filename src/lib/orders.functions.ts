@@ -275,14 +275,15 @@ export const decideOrder = createServerFn({ method: "POST" })
           .eq("id", data.id)
           .maybeSingle();
         if (full?.phone) {
-          const { sendWhatsApp } = await import("@/lib/notify.server");
+          const { sendWhatsApp, getOrderTemplate, fillTemplate } = await import("@/lib/notify.server");
+          const tpl = await getOrderTemplate("tpl_order_approved");
           await sendWhatsApp(
             full.phone,
-            `🎉 Hi ${full.full_name},\n\n` +
-              `Your account has been *activated*!\n` +
-              `Package: ${(full as any)?.packages?.name ?? ""}\n` +
-              `Valid for: ${days} days\n\n` +
-              `You can now log in and start using the service.`,
+            fillTemplate(tpl, {
+              name: full.full_name,
+              package: (full as any)?.packages?.name ?? "",
+              days,
+            }),
           );
         }
       } catch { /* ignore */ }
