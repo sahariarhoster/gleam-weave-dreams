@@ -125,12 +125,16 @@ function OrdersPage() {
           <DialogHeader>
             <DialogTitle>{editing?.action === "approve" ? "Approve order" : editing?.action === "cancel" ? "Cancel order" : "Reject order"}</DialogTitle>
           </DialogHeader>
-          <Textarea placeholder="Notes (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} />
+          <Textarea
+            placeholder={editing?.action === "reject" ? "Reason shown to the customer (required)" : "Notes (optional)"}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
             <Button
               variant={editing?.action === "reject" ? "destructive" : "default"}
-              disabled={decide.isPending}
+              disabled={decide.isPending || (editing?.action === "reject" && notes.trim().length < 3)}
               onClick={() => editing && decide.mutate({ id: editing.id, action: editing.action, notes: notes || undefined })}
             >
               {decide.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm"}
