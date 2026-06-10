@@ -212,7 +212,7 @@ function LicensesPage() {
               <TableRow>
                 <TableHead>Brand</TableHead>
                 <TableHead>Active License Limit</TableHead>
-                {isOwner && <TableHead className="text-right">Actions</TableHead>}
+                {canManage && <TableHead className="text-right">Actions</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
