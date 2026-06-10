@@ -345,8 +345,8 @@ export const upsertCoupon = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { data: roleRow } = await context.supabase
-      .from("user_roles").select("role").eq("user_id", context.userId).eq("role", "owner").maybeSingle();
-    if (!roleRow) throw new Error("Owner only");
+      .from("user_roles").select("role").eq("user_id", context.userId).in("role", ["owner", "support_agent"]);
+    if (!roleRow || roleRow.length === 0) throw new Error("Owner only");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const payload = {
       code: data.code.toUpperCase(),
