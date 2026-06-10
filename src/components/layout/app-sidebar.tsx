@@ -57,6 +57,9 @@ const items = [
   { title: "Orders", url: "/orders", icon: ShoppingBag, anyRole: ["owner", "support_agent"] as string[] },
   { title: "Packages", url: "/packages", icon: Package, ownerOnly: true },
   { title: "Coupons", url: "/coupons", icon: Tag, anyRole: ["owner", "support_agent"] as string[] },
+  { title: "Subscriptions", url: "/subscriptions", icon: Repeat },
+
+
 
 ] as const;
 
