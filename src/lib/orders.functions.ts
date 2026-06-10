@@ -164,24 +164,23 @@ export const createOrder = createServerFn({ method: "POST" })
 
     // Best-effort WhatsApp notifications (never break the order flow)
     try {
-      const { sendWhatsApp, notifyAdmins } = await import("@/lib/notify.server");
+      const { sendWhatsApp, notifyAdmins, getOrderTemplate, fillTemplate } = await import("@/lib/notify.server");
+      const vars = {
+        name: data.full_name,
+        email: data.email,
+        phone: data.phone ?? "—",
+        brand: data.brand_name,
+        package: pkg.name,
+        amount: final,
+        bkash: data.bkash_number ?? "—",
+        txid: data.txid ?? "—",
+      };
       if (data.phone) {
-        await sendWhatsApp(
-          data.phone,
-          `Hi ${data.full_name},\n\n` +
-            `✅ Your order for *${pkg.name}* has been received.\n\n` +
-            `Amount: ${final} BDT\nTXID: ${data.txid}\n\n` +
-            `Your account is *pending approval*. You'll get another message as soon as it's activated.\n\nThank you!`,
-        );
+        const tpl = await getOrderTemplate("tpl_order_placed");
+        await sendWhatsApp(data.phone, fillTemplate(tpl, vars));
       }
-      await notifyAdmins(
-        `🆕 *New Order*\n\n` +
-          `Customer: ${data.full_name} (${data.email})\n` +
-          `Phone: ${data.phone ?? "—"}\n` +
-          `Brand: ${data.brand_name}\n` +
-          `Package: ${pkg.name}\n` +
-          `Amount: ${final} BDT\nbKash: ${data.bkash_number}\nTXID: ${data.txid}`,
-      );
+      const adminTpl = await getOrderTemplate("tpl_order_admin");
+      await notifyAdmins(fillTemplate(adminTpl, vars));
     } catch {
       // ignore
     }
@@ -276,14 +275,15 @@ export const decideOrder = createServerFn({ method: "POST" })
           .eq("id", data.id)
           .maybeSingle();
         if (full?.phone) {
-          const { sendWhatsApp } = await import("@/lib/notify.server");
+          const { sendWhatsApp, getOrderTemplate, fillTemplate } = await import("@/lib/notify.server");
+          const tpl = await getOrderTemplate("tpl_order_approved");
           await sendWhatsApp(
             full.phone,
-            `🎉 Hi ${full.full_name},\n\n` +
-              `Your account has been *activated*!\n` +
-              `Package: ${(full as any)?.packages?.name ?? ""}\n` +
-              `Valid for: ${days} days\n\n` +
-              `You can now log in and start using the service.`,
+            fillTemplate(tpl, {
+              name: full.full_name,
+              package: (full as any)?.packages?.name ?? "",
+              days,
+            }),
           );
         }
       } catch { /* ignore */ }
