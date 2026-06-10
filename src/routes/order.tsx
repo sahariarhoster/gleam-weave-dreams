@@ -197,6 +197,17 @@ function OrderPage() {
                   </div>
                 </div>
 
+                <div className="border-t pt-4">
+                  <Label className="flex items-center gap-1.5"><Tag className="h-3.5 w-3.5" /> Coupon code (optional)</Label>
+                  <div className="flex gap-2 mt-1">
+                    <Input value={form.coupon_code} onChange={(e) => { setForm({ ...form, coupon_code: e.target.value }); setDiscount(null); }} placeholder="ENTER CODE" />
+                    <Button type="button" variant="outline" onClick={checkCoupon} disabled={couponChecking || !form.coupon_code.trim()}>
+                      {couponChecking ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
+                    </Button>
+                  </div>
+                  {discount?.valid && <p className="text-xs text-emerald-600 mt-1">✓ Coupon applied — saved ৳{discount.discount}</p>}
+                </div>
+
                 {requirePayment ? (
                   <div className="border-t pt-4">
                     <h3 className="font-semibold mb-2">bKash payment</h3>
@@ -224,17 +235,6 @@ function OrderPage() {
                     </div>
                   </div>
                 )}
-
-                <div className="border-t pt-4">
-                  <Label className="flex items-center gap-1.5"><Tag className="h-3.5 w-3.5" /> Coupon code (optional)</Label>
-                  <div className="flex gap-2 mt-1">
-                    <Input value={form.coupon_code} onChange={(e) => { setForm({ ...form, coupon_code: e.target.value }); setDiscount(null); }} placeholder="ENTER CODE" />
-                    <Button type="button" variant="outline" onClick={checkCoupon} disabled={couponChecking || !form.coupon_code.trim()}>
-                      {couponChecking ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
-                    </Button>
-                  </div>
-                  {discount?.valid && <p className="text-xs text-emerald-600 mt-1">✓ Coupon applied — saved ৳{discount.discount}</p>}
-                </div>
               </CardContent>
             </Card>
 
