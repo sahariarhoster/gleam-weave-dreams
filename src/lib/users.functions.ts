@@ -30,7 +30,7 @@ export const listUsers = createServerFn({ method: "GET" })
     await assertOwner(context.supabase, context.userId);
     const { data: profiles, error } = await context.supabase
       .from("profiles")
-      .select("id, email, full_name, created_at")
+      .select("id, email, full_name, phone, created_at")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
 

@@ -72,7 +72,7 @@ export async function listDevicesClient() {
 export async function listUsersClient() {
   const { data: profiles, error } = await db
     .from("profiles")
-    .select("id, email, full_name, created_at")
+    .select("id, email, full_name, phone, created_at")
     .order("created_at", { ascending: false });
   assertOk(error);
   const [rolesRes, membersRes] = await Promise.all([

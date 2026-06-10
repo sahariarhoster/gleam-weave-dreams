@@ -48,6 +48,7 @@ function OrdersPage() {
               <TableRow>
                 <TableHead>Date</TableHead>
                 <TableHead>Customer</TableHead>
+                <TableHead>Phone</TableHead>
                 <TableHead>Package</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>bKash</TableHead>
@@ -65,6 +66,7 @@ function OrdersPage() {
                     <div className="text-xs text-muted-foreground">{o.email}</div>
                     <div className="text-xs text-muted-foreground">{o.brand_name}</div>
                   </TableCell>
+                  <TableCell className="text-sm">{o.phone ? <a href={`tel:${o.phone}`} className="hover:underline">{o.phone}</a> : <span className="text-muted-foreground">—</span>}</TableCell>
                   <TableCell>
                     <div>{o.package_name}</div>
                     <div className="text-xs text-muted-foreground">{o.duration_days} days</div>
@@ -102,7 +104,7 @@ function OrdersPage() {
                 </TableRow>
               ))}
               {!list.isLoading && (list.data ?? []).length === 0 && (
-                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">No orders yet.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">No orders yet.</TableCell></TableRow>
               )}
             </TableBody>
           </Table>

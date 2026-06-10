@@ -39,7 +39,7 @@ export const createOrder = createServerFn({ method: "POST" })
         full_name: z.string().trim().min(2).max(100),
         email: z.string().trim().email().max(255),
         password: z.string().min(6).max(72),
-        phone: z.string().trim().max(30).optional().nullable(),
+        phone: z.string().trim().min(6).max(30),
         brand_name: z.string().trim().min(1).max(100),
         bkash_number: z.string().trim().max(30).optional().nullable(),
         txid: z.string().trim().max(64).optional().nullable(),
@@ -113,7 +113,7 @@ export const createOrder = createServerFn({ method: "POST" })
     // Ensure profile + brand_owner role
     await supabaseAdmin
       .from("profiles")
-      .upsert({ id: userId, email: data.email, full_name: data.full_name }, { onConflict: "id" });
+      .upsert({ id: userId, email: data.email, full_name: data.full_name, phone: data.phone } as any, { onConflict: "id" });
     await supabaseAdmin
       .from("user_roles")
       .upsert({ user_id: userId, role: "brand_owner" }, { onConflict: "user_id,role" });
