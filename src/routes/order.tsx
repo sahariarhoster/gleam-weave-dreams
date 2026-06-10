@@ -76,7 +76,7 @@ function OrderPage() {
           full_name: form.full_name,
           email: form.email,
           password: form.password,
-          phone: form.phone || null,
+          phone: form.phone,
           brand_name: form.brand_name,
           bkash_number: requirePayment ? form.bkash_number : null,
           txid: requirePayment ? form.txid : null,
