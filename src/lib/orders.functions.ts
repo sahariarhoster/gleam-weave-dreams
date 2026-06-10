@@ -155,6 +155,30 @@ export const createOrder = createServerFn({ method: "POST" })
       .single();
     if (oErr || !order) throw new Error(oErr?.message ?? "Could not create order");
 
+    // Best-effort WhatsApp notifications (never break the order flow)
+    try {
+      const { sendWhatsApp, notifyAdmins } = await import("@/lib/notify.server");
+      if (data.phone) {
+        await sendWhatsApp(
+          data.phone,
+          `Hi ${data.full_name},\n\n` +
+            `✅ Your order for *${pkg.name}* has been received.\n\n` +
+            `Amount: ${final} BDT\nTXID: ${data.txid}\n\n` +
+            `Your account is *pending approval*. You'll get another message as soon as it's activated.\n\nThank you!`,
+        );
+      }
+      await notifyAdmins(
+        `🆕 *New Order*\n\n` +
+          `Customer: ${data.full_name} (${data.email})\n` +
+          `Phone: ${data.phone ?? "—"}\n` +
+          `Brand: ${data.brand_name}\n` +
+          `Package: ${pkg.name}\n` +
+          `Amount: ${final} BDT\nbKash: ${data.bkash_number}\nTXID: ${data.txid}`,
+      );
+    } catch {
+      // ignore
+    }
+
     return { ok: true, order_id: order.id };
   });
 
