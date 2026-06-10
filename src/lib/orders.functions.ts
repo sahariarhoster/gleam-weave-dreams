@@ -50,6 +50,44 @@ export const createOrder = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    // Capture client IP from request headers
+    let ip: string | null = null;
+    try {
+      const { getWebRequest } = await import("@tanstack/react-start/server");
+      const req = getWebRequest();
+      const h = req?.headers;
+      const fwd = h?.get("x-forwarded-for") ?? "";
+      ip = (fwd.split(",")[0]?.trim() || h?.get("cf-connecting-ip") || h?.get("x-real-ip") || null) as string | null;
+    } catch {
+      ip = null;
+    }
+
+    // Rate limit: same phone or IP can only order once per 7 days
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const normPhone = data.phone.replace(/\D/g, "");
+    if (normPhone) {
+      const { data: recentPhone } = await supabaseAdmin
+        .from("orders")
+        .select("id, created_at")
+        .eq("phone", data.phone)
+        .gte("created_at", sevenDaysAgo)
+        .limit(1);
+      if (recentPhone && recentPhone.length > 0) {
+        throw new Error("You've already placed an order with this phone number in the last 7 days. Please wait or contact support.");
+      }
+    }
+    if (ip) {
+      const { data: recentIp } = await supabaseAdmin
+        .from("orders")
+        .select("id, created_at")
+        .eq("ip_address", ip)
+        .gte("created_at", sevenDaysAgo)
+        .limit(1);
+      if (recentIp && recentIp.length > 0) {
+        throw new Error("An order was already placed from this network in the last 7 days. Please wait or contact support.");
+      }
+    }
+
     // Fetch package
     const { data: pkg, error: pErr } = await supabaseAdmin
       .from("packages")
@@ -90,6 +128,7 @@ export const createOrder = createServerFn({ method: "POST" })
         .maybeSingle();
       if (dup) throw new Error("This bKash TXID has already been submitted.");
     }
+
 
     // Create or reuse auth user
     let userId: string;
