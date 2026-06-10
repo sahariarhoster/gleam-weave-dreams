@@ -112,6 +112,8 @@ export const adminUpdateSubscription = createServerFn({ method: "POST" })
 
     if (data.action === "suspend") {
       patch.status = "suspended";
+    } else if (data.action === "hold") {
+      patch.status = "on_hold";
     } else if (data.action === "activate") {
       patch.status = "active";
       patch.cancel_requested_at = null;
