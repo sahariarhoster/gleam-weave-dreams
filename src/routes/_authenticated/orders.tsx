@@ -112,7 +112,7 @@ function OrdersPage() {
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editing?.action === "approve" ? "Approve order" : "Reject order"}</DialogTitle>
+            <DialogTitle>{editing?.action === "approve" ? "Approve order" : editing?.action === "cancel" ? "Cancel order" : "Reject order"}</DialogTitle>
           </DialogHeader>
           <Textarea placeholder="Notes (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} />
           <DialogFooter>
