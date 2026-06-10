@@ -220,6 +220,9 @@ function NotifyConfigCard() {
         </CardDescription>
       </CardHeader>
       <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <div className="md:col-span-3 rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-900 dark:text-amber-200">
+          Notice: You must link your own WhatsApp account as a device (Devices page) before notifications can be sent. Messages are dispatched from the device selected below.
+        </div>
         <div>
           <Label>Admin WhatsApp number</Label>
           <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="8801XXXXXXXXX" />
