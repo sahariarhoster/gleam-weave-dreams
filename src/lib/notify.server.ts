@@ -49,20 +49,43 @@ export async function getOrderTemplate(key: "tpl_order_placed" | "tpl_order_appr
   return ((data as any)?.[key] as string | null) || DEFAULTS[key];
 }
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+const jitter = () => 500 + Math.floor(Math.random() * 1500); // 0.5–2s
+
+async function logSend(recipient: string, ok: boolean, info: any) {
+  try {
+    await supabaseAdmin.from("activity_log").insert({
+      action: "admin_notify",
+      details: { recipient, status: ok ? 200 : 500, ...info },
+    });
+  } catch { /* ignore */ }
+}
+
 export async function sendWhatsApp(recipient: string, message: string): Promise<boolean> {
   try {
     const s = await getSender();
-    if (!s) return false;
+    if (!s) {
+      await logSend(recipient, false, { error: "no_sender_device", jitter_ms: 0 });
+      return false;
+    }
     const to = normalize(recipient);
-    if (!to) return false;
+    if (!to) {
+      await logSend(recipient, false, { error: "invalid_recipient", jitter_ms: 0 });
+      return false;
+    }
+    const j = jitter();
+    await sleep(j);
     const res = await bdwebs.sendWhatsApp({
       secret: s.device.api_secret,
       account: s.device.device_unique_id,
       recipient: to,
       message,
     });
-    return res.status === 200;
-  } catch {
+    const ok = res.status === 200;
+    await logSend(to, ok, { jitter_ms: j, response: res?.message ?? null, status: res?.status });
+    return ok;
+  } catch (e: any) {
+    await logSend(recipient, false, { error: String(e?.message ?? e), jitter_ms: 0 });
     return false;
   }
 }
@@ -80,15 +103,18 @@ export async function notifyAdmins(message: string): Promise<void> {
       .filter((x: string) => x.length >= 8);
     for (const n of list) recipients.add(n);
     for (const r of recipients) {
+      const j = jitter();
+      await sleep(j);
       try {
-        await bdwebs.sendWhatsApp({
+        const res = await bdwebs.sendWhatsApp({
           secret: s.device.api_secret,
           account: s.device.device_unique_id,
           recipient: r,
           message,
         });
-      } catch {
-        // continue
+        await logSend(r, res.status === 200, { jitter_ms: j, response: res?.message ?? null, status: res?.status, admin: true });
+      } catch (e: any) {
+        await logSend(r, false, { jitter_ms: j, error: String(e?.message ?? e), admin: true });
       }
     }
   } catch {
