@@ -90,6 +90,7 @@ function UsersPage() {
               <TableRow>
                 <TableHead>User</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Brand Access</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
