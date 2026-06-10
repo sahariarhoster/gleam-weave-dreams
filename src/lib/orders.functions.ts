@@ -75,14 +75,21 @@ export const createOrder = createServerFn({ method: "POST" })
     }
     const original = Number(pkg.price);
     const final = Math.max(original - discount, 0);
+    const requirePayment = final > 0;
+    if (requirePayment) {
+      if (!data.bkash_number || data.bkash_number.trim().length < 8) throw new Error("bKash number required");
+      if (!data.txid || data.txid.trim().length < 4) throw new Error("Transaction ID required");
+    }
 
     // Duplicate TXID guard
-    const { data: dup } = await supabaseAdmin
-      .from("orders")
-      .select("id")
-      .eq("txid", data.txid)
-      .maybeSingle();
-    if (dup) throw new Error("This bKash TXID has already been submitted.");
+    if (data.txid && data.txid.trim()) {
+      const { data: dup } = await supabaseAdmin
+        .from("orders")
+        .select("id")
+        .eq("txid", data.txid)
+        .maybeSingle();
+      if (dup) throw new Error("This bKash TXID has already been submitted.");
+    }
 
     // Create or reuse auth user
     let userId: string;
