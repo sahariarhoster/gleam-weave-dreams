@@ -54,20 +54,41 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 }
 
-function PendingScreen() {
+function PendingScreen({ reason }: { reason: string }) {
+  const cfg: Record<string, { title: string; body: string; tone: string }> = {
+    pending: {
+      title: "Account Pending",
+      body: "Your order is being reviewed. We're verifying your bKash payment — your account will be activated within a few hours.",
+      tone: "amber",
+    },
+    suspended: {
+      title: "Account Suspended",
+      body: "Your subscription has been suspended. Please contact support to restore access. Your WordPress plugin license is also inactive until reactivation.",
+      tone: "red",
+    },
+    on_hold: {
+      title: "Account On Hold",
+      body: "Your subscription is currently on hold. All services — including your WordPress plugin license — are paused. Contact support to resume.",
+      tone: "amber",
+    },
+    expired: {
+      title: "Subscription Expired",
+      body: "Your subscription has expired. Renew from your billing page or contact support to continue using the panel and your WordPress plugin.",
+      tone: "red",
+    },
+  };
+  const c = cfg[reason] ?? cfg.pending;
+  const ring = c.tone === "red" ? "bg-red-100 text-red-600" : "bg-amber-100 text-amber-600";
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-sm border p-6 text-center space-y-4">
-        <div className="mx-auto w-14 h-14 rounded-full bg-amber-100 grid place-content-center">
-          <Clock className="h-7 w-7 text-amber-600" />
+        <div className={`mx-auto w-14 h-14 rounded-full grid place-content-center ${ring}`}>
+          <Clock className="h-7 w-7" />
         </div>
-        <h1 className="text-xl font-bold">Account Pending</h1>
-        <p className="text-sm text-muted-foreground">
-          Your order is being reviewed. We're verifying your bKash payment — your account will be
-          activated within a few hours. You'll get access automatically once approved.
-        </p>
+        <h1 className="text-xl font-bold">{c.title}</h1>
+        <p className="text-sm text-muted-foreground">{c.body}</p>
         <div className="text-xs text-muted-foreground rounded-md bg-muted p-3">
-          Need help? Contact support with your bKash TXID and we'll fast-track verification.
+          Need help? Contact support and we'll get you back online quickly.
         </div>
         <Button
           variant="outline"
