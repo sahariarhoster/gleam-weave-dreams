@@ -307,9 +307,11 @@ function LicensesPage() {
                         <Ban className="h-3.5 w-3.5" /> Revoke
                       </Button>
                     )}
-                    <Button size="sm" variant="ghost" onClick={() => delMut.mutate(l.id)} className="gap-1 text-destructive">
-                      <Trash2 className="h-3.5 w-3.5" /> Delete
-                    </Button>
+                    {isOwner && (
+                      <Button size="sm" variant="ghost" onClick={() => delMut.mutate(l.id)} className="gap-1 text-destructive">
+                        <Trash2 className="h-3.5 w-3.5" /> Delete
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
