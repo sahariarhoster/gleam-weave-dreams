@@ -85,21 +85,30 @@ function OrdersPage() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    {o.status === "pending" ? (
+                    <div className="flex flex-col items-end gap-1">
                       <div className="flex justify-end gap-1">
-                        <Button size="sm" onClick={() => { setEditing({ id: o.id, action: "approve" }); setNotes(""); }} title="Approve">
-                          <Check className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => { setEditing({ id: o.id, action: "cancel" }); setNotes(""); }} title="Cancel">
-                          <Ban className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button size="sm" variant="destructive" onClick={() => { setEditing({ id: o.id, action: "reject" }); setNotes(""); }} title="Reject">
-                          <X className="h-3.5 w-3.5" />
-                        </Button>
+                        {o.status !== "approved" && (
+                          <Button size="sm" onClick={() => { setEditing({ id: o.id, action: "approve" }); setNotes(o.admin_notes ?? ""); }} title="Approve">
+                            <Check className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                        {o.status !== "cancelled" && (
+                          <Button size="sm" variant="outline" onClick={() => { setEditing({ id: o.id, action: "cancel" }); setNotes(o.admin_notes ?? ""); }} title="Cancel">
+                            <Ban className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                        {o.status !== "rejected" && (
+                          <Button size="sm" variant="destructive" onClick={() => { setEditing({ id: o.id, action: "reject" }); setNotes(o.admin_notes ?? ""); }} title="Reject">
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
                       </div>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">{o.admin_notes ?? "—"}</span>
-                    )}
+                      {o.admin_notes && o.status !== "pending" && (
+                        <span className="text-[11px] text-muted-foreground max-w-[220px] truncate" title={o.admin_notes}>
+                          {o.admin_notes}
+                        </span>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -116,12 +125,16 @@ function OrdersPage() {
           <DialogHeader>
             <DialogTitle>{editing?.action === "approve" ? "Approve order" : editing?.action === "cancel" ? "Cancel order" : "Reject order"}</DialogTitle>
           </DialogHeader>
-          <Textarea placeholder="Notes (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} />
+          <Textarea
+            placeholder={editing?.action === "reject" ? "Reason shown to the customer (required)" : "Notes (optional)"}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditing(null)}>Cancel</Button>
             <Button
               variant={editing?.action === "reject" ? "destructive" : "default"}
-              disabled={decide.isPending}
+              disabled={decide.isPending || (editing?.action === "reject" && notes.trim().length < 3)}
               onClick={() => editing && decide.mutate({ id: editing.id, action: editing.action, notes: notes || undefined })}
             >
               {decide.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm"}

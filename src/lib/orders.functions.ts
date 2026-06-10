@@ -228,7 +228,6 @@ export const decideOrder = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .maybeSingle();
     if (oErr || !order) throw new Error("Order not found");
-    if (order.status !== "pending") throw new Error("Order already decided");
 
     const { data: roleRow } = await context.supabase
       .from("user_roles").select("role").eq("user_id", context.userId).in("role", ["owner", "support_agent"]);
@@ -241,6 +240,12 @@ export const decideOrder = createServerFn({ method: "POST" })
       throw new Error("Owner only");
     }
 
+    if (data.action === "reject" && (!data.notes || data.notes.trim().length < 3)) {
+      throw new Error("A reason is required when rejecting an order.");
+    }
+
+    const wasApproved = order.status === "approved";
+
     if (data.action === "approve") {
       const days = (order as any).packages?.duration_days ?? 30;
       const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
@@ -250,7 +255,7 @@ export const decideOrder = createServerFn({ method: "POST" })
           .update({ status: "active", expires_at: expires })
           .eq("id", order.brand_id);
       }
-      if (order.coupon_id) {
+      if (order.coupon_id && !wasApproved) {
         const { data: c } = await supabaseAdmin
           .from("coupons").select("used_count").eq("id", order.coupon_id).maybeSingle();
         await supabaseAdmin
@@ -292,6 +297,15 @@ export const decideOrder = createServerFn({ method: "POST" })
       if (order.brand_id) {
         await supabaseAdmin.from("brands").update({ status: "suspended" }).eq("id", order.brand_id);
       }
+      // If we're reversing a previously-approved order, decrement coupon usage.
+      if (wasApproved && order.coupon_id) {
+        const { data: c } = await supabaseAdmin
+          .from("coupons").select("used_count").eq("id", order.coupon_id).maybeSingle();
+        await supabaseAdmin
+          .from("coupons")
+          .update({ used_count: Math.max((c?.used_count ?? 1) - 1, 0) })
+          .eq("id", order.coupon_id);
+      }
       await supabaseAdmin
         .from("orders")
         .update({
@@ -304,6 +318,7 @@ export const decideOrder = createServerFn({ method: "POST" })
     }
     return { ok: true };
   });
+
 
 // Owner: packages CRUD
 export const listAllPackages = createServerFn({ method: "GET" })
@@ -449,8 +464,18 @@ export const getMyAccountStatus = createServerFn({ method: "GET" })
     const list = brands ?? [];
     if (list.length === 0) return { locked: false, roles, brands: list, reason: null };
     const hasActive = list.some((b: any) => b.status === "active");
-    if (hasActive) return { locked: false, roles, brands: list, reason: null };
+    if (hasActive) return { locked: false, roles, brands: list, reason: null, note: null as string | null };
     const order = ["on_hold", "suspended", "expired", "pending"];
     const reason = order.find((s) => list.some((b: any) => b.status === s)) ?? list[0].status;
-    return { locked: true, roles, brands: list, reason };
+    // Pull latest admin note from the user's most recent order so rejection/cancel
+    // reasons surface on the lock screen.
+    const { data: lastOrder } = await context.supabase
+      .from("orders")
+      .select("admin_notes, status")
+      .eq("user_id", context.userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return { locked: true, roles, brands: list, reason, note: lastOrder?.admin_notes ?? null };
   });
+
