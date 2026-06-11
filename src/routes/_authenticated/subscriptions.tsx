@@ -84,12 +84,21 @@ function AdminView() {
   const pkgs = useQuery({ queryKey: ["all-packages"], queryFn: () => fnPkgs({ data: undefined as any }) });
 
   const [filter, setFilter] = useState<string>("all");
+  const [search, setSearch] = useState("");
   const rows = useMemo(() => {
-    const list = q.data ?? [];
+    let list = q.data ?? [];
+    if (search.trim()) {
+      const s = search.toLowerCase();
+      list = list.filter((x: any) =>
+        (x.brand_name ?? "").toLowerCase().includes(s) ||
+        (x.owner?.full_name ?? "").toLowerCase().includes(s) ||
+        (x.owner?.email ?? "").toLowerCase().includes(s),
+      );
+    }
     if (filter === "all") return list;
     if (filter === "cancel_requested") return list.filter((x: any) => x.cancel_requested_at);
     return list.filter((x: any) => x.status === filter);
-  }, [q.data, filter]);
+  }, [q.data, filter, search]);
 
   const m = useMutation({
     mutationFn: (args: any) => fnUpdate({ data: args }),
