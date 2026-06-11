@@ -277,6 +277,32 @@ export const runCampaignChunk = createServerFn({ method: "POST" })
 
     let sent = 0;
     let failed = 0;
+    let requeued = 0;
+
+    // Transient errors keep the message queued so it retries on the next tick,
+    // rather than being counted as a hard failure.
+    const isTransient = (msg: string | undefined | null) => {
+      const s = String(msg ?? "").toLowerCase();
+      return (
+        s.includes("offline") ||
+        s.includes("disconnect") ||
+        s.includes("not connected") ||
+        s.includes("timeout") ||
+        s.includes("timed out") ||
+        s.includes("network") ||
+        s.includes("econn") ||
+        s.includes("fetch") ||
+        s.includes("rate") ||
+        s.includes("too many") ||
+        s.includes("429") ||
+        s.startsWith("http 5") ||
+        s.includes("500") ||
+        s.includes("502") ||
+        s.includes("503") ||
+        s.includes("504")
+      );
+    };
+
     for (let i = 0; i < batch.length; i++) {
       const msg = batch[i];
       let recipient = msg.phone.trim();
@@ -293,6 +319,11 @@ export const runCampaignChunk = createServerFn({ method: "POST" })
           await context.supabase.from("campaign_messages").update({
             status: "sent", sent_at: new Date().toISOString(), gateway_response: res as any,
           }).eq("id", msg.id);
+        } else if (isTransient(res.message)) {
+          requeued++;
+          await context.supabase.from("campaign_messages").update({
+            status: "queued", error_message: res.message, gateway_response: res as any,
+          }).eq("id", msg.id);
         } else {
           failed++;
           await context.supabase.from("campaign_messages").update({
@@ -300,9 +331,10 @@ export const runCampaignChunk = createServerFn({ method: "POST" })
           }).eq("id", msg.id);
         }
       } catch (e) {
-        failed++;
+        // Network / fetch errors are transient — keep the row queued.
+        requeued++;
         await context.supabase.from("campaign_messages").update({
-          status: "failed", error_message: (e as Error).message,
+          status: "queued", error_message: (e as Error).message,
         }).eq("id", msg.id);
       }
 
