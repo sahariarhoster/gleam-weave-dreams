@@ -95,7 +95,17 @@ function LogsPage() {
       />
       <Card className="border-border/60 shadow-sm">
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 pb-3">
-          <div className="text-sm font-medium text-muted-foreground">All messages</div>
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <span>All messages</span>
+            {campaign && (
+              <Badge variant="secondary" className="gap-1">
+                Campaign: {campaignInfo.data?.name ?? "…"}
+                <Link to="/logs" search={{}}>
+                  <X className="h-3 w-3 cursor-pointer" />
+                </Link>
+              </Badge>
+            )}
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
