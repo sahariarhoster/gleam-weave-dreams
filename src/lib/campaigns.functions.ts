@@ -356,5 +356,5 @@ export const runCampaignChunk = createServerFn({ method: "POST" })
     if (total >= 20 && failRate > 0.2) patch.status = "paused";
     await context.supabase.from("campaigns").update(patch as never).eq("id", camp.id);
 
-    return { ran: batch.length, sent, failed, paused: patch.status === "paused" };
+    return { ran: batch.length, sent, failed, requeued, paused: patch.status === "paused" };
   });
