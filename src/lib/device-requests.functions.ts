@@ -113,6 +113,15 @@ export const deleteDeviceRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
+    const isStaff = await hasAnyRole(context.supabase, context.userId, ["owner", "sales_agent", "support_agent"]);
+    if (!isStaff) {
+      const { data: req } = await context.supabase
+        .from("device_requests").select("brand_id").eq("id", data.id).maybeSingle();
+      if (!req) throw new Error("Not found");
+      const { data: brand } = await context.supabase
+        .from("brands").select("created_by").eq("id", req.brand_id).maybeSingle();
+      if (!brand || brand.created_by !== context.userId) throw new Error("Forbidden");
+    }
     const { error } = await context.supabase
       .from("device_requests").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
