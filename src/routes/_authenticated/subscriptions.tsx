@@ -84,12 +84,21 @@ function AdminView() {
   const pkgs = useQuery({ queryKey: ["all-packages"], queryFn: () => fnPkgs({ data: undefined as any }) });
 
   const [filter, setFilter] = useState<string>("all");
+  const [search, setSearch] = useState("");
   const rows = useMemo(() => {
-    const list = q.data ?? [];
+    let list = q.data ?? [];
+    if (search.trim()) {
+      const s = search.toLowerCase();
+      list = list.filter((x: any) =>
+        (x.brand_name ?? "").toLowerCase().includes(s) ||
+        (x.owner?.full_name ?? "").toLowerCase().includes(s) ||
+        (x.owner?.email ?? "").toLowerCase().includes(s),
+      );
+    }
     if (filter === "all") return list;
     if (filter === "cancel_requested") return list.filter((x: any) => x.cancel_requested_at);
     return list.filter((x: any) => x.status === filter);
-  }, [q.data, filter]);
+  }, [q.data, filter, search]);
 
   const m = useMutation({
     mutationFn: (args: any) => fnUpdate({ data: args }),
@@ -104,17 +113,25 @@ function AdminView() {
           <CardTitle className="text-base">All Subscriptions</CardTitle>
           <CardDescription>Suspend, activate, renew, or change package.</CardDescription>
         </div>
-        <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="suspended">Suspended</SelectItem>
-            <SelectItem value="on_hold">On hold</SelectItem>
-            <SelectItem value="cancel_requested">Cancellation requested</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="Search brand or owner…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-9 w-56"
+          />
+          <Select value={filter} onValueChange={setFilter}>
+            <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="suspended">Suspended</SelectItem>
+              <SelectItem value="on_hold">On hold</SelectItem>
+              <SelectItem value="cancel_requested">Cancellation requested</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
       <CardContent className="overflow-x-auto">
         <Table>
