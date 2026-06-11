@@ -1,8 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { ListChecks, Search, AlertCircle, Eye } from "lucide-react";
+import { ListChecks, Search, AlertCircle, Eye, X } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
+import { z } from "zod";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -12,11 +14,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { listMessageLogsClient, listBrandsLiteClient } from "@/lib/client-queries";
 import { PageHeader } from "@/components/layout/page-header";
+import { supabase } from "@/integrations/supabase/client";
+
+const logsSearchSchema = z.object({
+  campaign: fallback(z.string().optional(), undefined),
+});
 
 export const Route = createFileRoute("/_authenticated/logs")({
   head: () => ({ meta: [{ title: "Message Logs — WA Suite" }] }),
+  validateSearch: zodValidator(logsSearchSchema),
   component: LogsPage,
 });
+
 
 const statusColor: Record<string, string> = {
   sent: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
@@ -48,6 +57,7 @@ function friendlyReason(raw: string | null | undefined): string {
 }
 
 function LogsPage() {
+  const { campaign } = Route.useSearch();
   const [brand, setBrand] = useState("all");
   const [status, setStatus] = useState("all");
   const [source, setSource] = useState("all");
@@ -55,16 +65,26 @@ function LogsPage() {
   const [detail, setDetail] = useState<any>(null);
 
   const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => listBrandsLiteClient() });
+  const campaignInfo = useQuery({
+    queryKey: ["campaign-info", campaign],
+    enabled: !!campaign,
+    queryFn: async () => {
+      const { data } = await supabase.from("campaigns").select("id, name").eq("id", campaign!).maybeSingle();
+      return data;
+    },
+  });
   const logs = useQuery({
-    queryKey: ["logs", brand, status, source, search],
+    queryKey: ["logs", brand, status, source, search, campaign],
     queryFn: () =>
       listMessageLogsClient({
         brand_id: brand === "all" ? null : brand,
         status: status === "all" ? null : status,
-        source: source === "all" ? null : source,
+        source: campaign ? "campaign" : source === "all" ? null : source,
         search: search || null,
+        campaign_id: campaign ?? null,
       }),
   });
+
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -75,7 +95,17 @@ function LogsPage() {
       />
       <Card className="border-border/60 shadow-sm">
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-2 pb-3">
-          <div className="text-sm font-medium text-muted-foreground">All messages</div>
+          <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <span>All messages</span>
+            {campaign && (
+              <Badge variant="secondary" className="gap-1">
+                Campaign: {campaignInfo.data?.name ?? "…"}
+                <Link to="/logs" search={{}}>
+                  <X className="h-3 w-3 cursor-pointer" />
+                </Link>
+              </Badge>
+            )}
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
