@@ -113,23 +113,26 @@ function AdminView() {
           <CardTitle className="text-base">All Subscriptions</CardTitle>
           <CardDescription>Suspend, activate, renew, or change package.</CardDescription>
         </div>
-        <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
-            <SelectItem value="suspended">Suspended</SelectItem>
-            <SelectItem value="on_hold">On hold</SelectItem>
-            <SelectItem value="cancel_requested">Cancellation requested</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2">
+          <Input
+            placeholder="Search brand or owner…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-9 w-56"
+          />
+          <Select value={filter} onValueChange={setFilter}>
+            <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="suspended">Suspended</SelectItem>
+              <SelectItem value="on_hold">On hold</SelectItem>
+              <SelectItem value="cancel_requested">Cancellation requested</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
-      <CardContent className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Brand</TableHead>
               <TableHead>Owner</TableHead>
               <TableHead>Package</TableHead>
               <TableHead>Status</TableHead>
