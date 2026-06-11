@@ -296,13 +296,45 @@ function ImportDialog({ brands, onDone }: { brands: { id: string; name: string }
   const fn = useServerFn(importContacts);
   const [brandId, setBrandId] = useState("");
   const [text, setText] = useState("");
+  const [fileName, setFileName] = useState("");
+
+  const parseRows = (raw: string) => {
+    const lines = raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    if (lines.length === 0) return [] as { phone: string; name?: string; email?: string }[];
+    const first = lines[0].split(/[,\t;]/)[0]?.trim().replace(/^"|"$/g, "") ?? "";
+    const startIdx = /^[+0-9]/.test(first) ? 0 : 1;
+    return lines.slice(startIdx).map((line) => {
+      const [phone, name, email] = line.split(/[,\t;]/).map((s) => s?.trim().replace(/^"|"$/g, ""));
+      return { phone, name: name || undefined, email: email || undefined };
+    }).filter((r) => r && r.phone);
+  };
+
+  const onFile = async (file: File) => {
+    setFileName(file.name);
+    const ext = file.name.toLowerCase().split(".").pop();
+    if (ext === "csv" || ext === "txt" || ext === "tsv") {
+      setText(await file.text());
+      return;
+    }
+    const XLSX = await import("xlsx");
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type: "array" });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    setText(XLSX.utils.sheet_to_csv(ws));
+  };
+
+  const downloadSample = () => {
+    const sample = "phone,name,email\n+8801711000111,Karim,karim@example.com\n+8801822000222,Rahim,\n+8801933000333,,sumi@example.com\n";
+    const blob = new Blob([sample], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "contacts-sample.csv";
+    a.click(); URL.revokeObjectURL(url);
+  };
+
   const mut = useMutation({
     mutationFn: async () => {
-      const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
-      const rows = lines.map((line) => {
-        const [phone, name, email] = line.split(",").map((s) => s?.trim());
-        return { phone, name: name || undefined, email: email || undefined };
-      }).filter((r) => r.phone);
+      const rows = parseRows(text);
       if (rows.length === 0) throw new Error("Add at least one row");
       return fn({ data: { brand_id: brandId, rows } });
     },
@@ -320,9 +352,21 @@ function ImportDialog({ brands, onDone }: { brands: { id: string; name: string }
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>Paste rows (phone, name, email — one per line)</Label>
-          <Textarea rows={8} value={text} onChange={(e) => setText(e.target.value)} placeholder="+8801711000111, Karim, karim@example.com" className="font-mono text-xs" />
-          <p className="text-xs text-muted-foreground">Existing phones are skipped.</p>
+          <div className="flex items-center justify-between">
+            <Label>Upload file (CSV, XLSX, XLS, TSV, TXT)</Label>
+            <Button type="button" size="sm" variant="ghost" onClick={downloadSample}>Download sample</Button>
+          </div>
+          <Input
+            type="file"
+            accept=".csv,.tsv,.txt,.xlsx,.xls,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); }}
+          />
+          {fileName && <p className="text-xs text-muted-foreground">Loaded: {fileName}</p>}
+        </div>
+        <div className="space-y-1.5">
+          <Label>Or paste rows (phone, name, email)</Label>
+          <Textarea rows={6} value={text} onChange={(e) => setText(e.target.value)} placeholder="+8801711000111, Karim, karim@example.com" className="font-mono text-xs" />
+          <p className="text-xs text-muted-foreground">First column must be the phone. Header row optional. Existing phones are skipped.</p>
         </div>
       </div>
       <DialogFooter>
