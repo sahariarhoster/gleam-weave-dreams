@@ -57,6 +57,7 @@ function friendlyReason(raw: string | null | undefined): string {
 }
 
 function LogsPage() {
+  const { campaign } = Route.useSearch();
   const [brand, setBrand] = useState("all");
   const [status, setStatus] = useState("all");
   const [source, setSource] = useState("all");
@@ -64,16 +65,26 @@ function LogsPage() {
   const [detail, setDetail] = useState<any>(null);
 
   const brands = useQuery({ queryKey: ["brands-lite"], queryFn: () => listBrandsLiteClient() });
+  const campaignInfo = useQuery({
+    queryKey: ["campaign-info", campaign],
+    enabled: !!campaign,
+    queryFn: async () => {
+      const { data } = await supabase.from("campaigns").select("id, name").eq("id", campaign!).maybeSingle();
+      return data;
+    },
+  });
   const logs = useQuery({
-    queryKey: ["logs", brand, status, source, search],
+    queryKey: ["logs", brand, status, source, search, campaign],
     queryFn: () =>
       listMessageLogsClient({
         brand_id: brand === "all" ? null : brand,
         status: status === "all" ? null : status,
-        source: source === "all" ? null : source,
+        source: campaign ? "campaign" : source === "all" ? null : source,
         search: search || null,
+        campaign_id: campaign ?? null,
       }),
   });
+
 
   return (
     <div className="mx-auto max-w-7xl">
