@@ -1,8 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { ListChecks, Search, AlertCircle, Eye } from "lucide-react";
+import { ListChecks, Search, AlertCircle, Eye, X } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
+import { z } from "zod";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -12,11 +14,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { listMessageLogsClient, listBrandsLiteClient } from "@/lib/client-queries";
 import { PageHeader } from "@/components/layout/page-header";
+import { supabase } from "@/integrations/supabase/client";
+
+const logsSearchSchema = z.object({
+  campaign: fallback(z.string().optional(), undefined),
+});
 
 export const Route = createFileRoute("/_authenticated/logs")({
   head: () => ({ meta: [{ title: "Message Logs — WA Suite" }] }),
+  validateSearch: zodValidator(logsSearchSchema),
   component: LogsPage,
 });
+
 
 const statusColor: Record<string, string> = {
   sent: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
