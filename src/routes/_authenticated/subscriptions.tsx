@@ -133,6 +133,11 @@ function AdminView() {
           </Select>
         </div>
       </CardHeader>
+      <CardContent className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Brand</TableHead>
               <TableHead>Owner</TableHead>
               <TableHead>Package</TableHead>
               <TableHead>Status</TableHead>
