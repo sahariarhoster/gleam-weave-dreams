@@ -190,6 +190,10 @@ function AddBrandDialog({ userId, brands, onDone }: { userId: string; brands: { 
   const fn = useServerFn(addBrandMember);
   const [brandId, setBrandId] = useState("");
   const [role, setRole] = useState<"brand_admin" | "brand_member" | "sender">("brand_member");
+  const [brandSearch, setBrandSearch] = useState("");
+  const filteredBrands = brands.filter((b) =>
+    b.name.toLowerCase().includes(brandSearch.toLowerCase()),
+  );
   const mut = useMutation({
     mutationFn: () => fn({ data: { user_id: userId, brand_id: brandId, role } }),
     onSuccess: () => { toast.success("Added"); onDone(); },
@@ -203,7 +207,19 @@ function AddBrandDialog({ userId, brands, onDone }: { userId: string; brands: { 
           <Select value={brandId} onValueChange={setBrandId}>
             <SelectTrigger><SelectValue placeholder="Pick a brand" /></SelectTrigger>
             <SelectContent>
-              {brands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+              <div className="sticky top-0 z-10 bg-popover p-1.5 border-b">
+                <Input
+                  placeholder="Search brands…"
+                  value={brandSearch}
+                  onChange={(e) => setBrandSearch(e.target.value)}
+                  onKeyDown={(e) => e.stopPropagation()}
+                  className="h-8"
+                />
+              </div>
+              {filteredBrands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+              {filteredBrands.length === 0 && (
+                <div className="px-2 py-3 text-center text-xs text-muted-foreground">No matches</div>
+              )}
             </SelectContent>
           </Select>
         </div>
