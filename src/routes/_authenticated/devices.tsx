@@ -229,6 +229,10 @@ function DeviceDialog({
     api_secret: "",
     brand_id: editing?.brand_id ?? "",
   });
+  const [brandSearch, setBrandSearch] = useState("");
+  const filteredBrands = brands.filter((b) =>
+    b.name.toLowerCase().includes(brandSearch.toLowerCase()),
+  );
 
   const mut = useMutation({
     mutationFn: async () => {
