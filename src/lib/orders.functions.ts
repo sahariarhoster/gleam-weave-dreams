@@ -231,6 +231,10 @@ export const createOrder = createServerFn({ method: "POST" })
 export const listOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { data: roleRow } = await context.supabase
+      .from("user_roles").select("role").eq("user_id", context.userId)
+      .in("role", ["owner", "support_agent"]);
+    if (!roleRow || roleRow.length === 0) throw new Error("Forbidden");
     const { data, error } = await context.supabase
       .from("orders")
       .select(
