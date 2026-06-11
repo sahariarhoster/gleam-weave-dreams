@@ -923,6 +923,10 @@ export type Database = {
         Args: { _brand_id: string; _user_id: string }
         Returns: boolean
       }
+      is_brand_staff_member: {
+        Args: { _brand_id: string; _user_id: string }
+        Returns: boolean
+      }
       validate_coupon: {
         Args: { _amount: number; _code: string }
         Returns: Json
