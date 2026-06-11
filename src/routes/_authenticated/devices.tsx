@@ -284,8 +284,20 @@ function DeviceDialog({
           <Select value={form.brand_id || "none"} onValueChange={(v) => setForm({ ...form, brand_id: v === "none" ? "" : v })}>
             <SelectTrigger><SelectValue placeholder="No brand" /></SelectTrigger>
             <SelectContent>
+              <div className="sticky top-0 z-10 bg-popover p-1.5 border-b">
+                <Input
+                  placeholder="Search brands…"
+                  value={brandSearch}
+                  onChange={(e) => setBrandSearch(e.target.value)}
+                  onKeyDown={(e) => e.stopPropagation()}
+                  className="h-8"
+                />
+              </div>
               <SelectItem value="none">No brand</SelectItem>
-              {brands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+              {filteredBrands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+              {filteredBrands.length === 0 && (
+                <div className="px-2 py-3 text-center text-xs text-muted-foreground">No matches</div>
+              )}
             </SelectContent>
           </Select>
         </div>
