@@ -208,6 +208,21 @@ export const setCampaignStatus = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const setCampaignIgnoreFailurePause = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid(), ignore: z.boolean() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertCampaignManager(context.supabase, context.userId, data.id);
+    const { error } = await context.supabase
+      .from("campaigns")
+      .update({ ignore_failure_pause: data.ignore } as never)
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 // ============ SEND ENGINE ============
 // Runs synchronously; sends a chunk of queued messages respecting delays/window/daily limit.
 
