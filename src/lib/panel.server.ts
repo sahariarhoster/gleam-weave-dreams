@@ -364,12 +364,17 @@ export async function panelEditWhatsApp(args: {
     const r = await panelAjaxPost(p, fields);
     last = r;
     attempts.push(`${p} → ${r.status}${r.location ? ` (→ ${r.location})` : ""}`);
-    let accepted = r.status >= 200 && r.status < 300 && !/login|sign[\s-]?in/i.test(r.body.slice(0, 200));
-    try {
-      const json = JSON.parse(r.body);
-      accepted = accepted && [200, 301].includes(Number(json?.status));
-    } catch {
-      /* non-json success responses are allowed */
+    let accepted = false;
+    if (r.status >= 200 && r.status < 300) {
+      try {
+        const json = JSON.parse(r.body);
+        const code = Number(json?.status);
+        accepted = [200, 301].includes(code);
+        attempts[attempts.length - 1] += ` json.status=${code}${json?.message ? ` "${String(json.message).slice(0, 80)}"` : ""}`;
+      } catch {
+        // Non-JSON 200 means we hit a page route, not the AJAX handler — NOT success.
+        attempts[attempts.length - 1] += " (html, not ajax)";
+      }
     }
     if (accepted) {
       return { ok: true, status: r.status, body: r.body, endpoint: p, attempts };
