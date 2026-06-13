@@ -69,7 +69,8 @@ function DevicesPage() {
   const roles = useQuery({ queryKey: ["my-roles", user?.id ?? "anon"], queryFn: () => listMyRolesClient(user?.id), enabled: !!user?.id });
   const isOwner = (roles.data ?? []).includes("owner");
   const isSupport = (roles.data ?? []).includes("support_agent");
-  const canManage = isOwner || isSupport;
+  const isBrandOwner = (roles.data ?? []).includes("brand_owner");
+  const canManage = isOwner || isSupport || isBrandOwner;
 
   const [editing, setEditing] = useState<Device | null>(null);
   const [open, setOpen] = useState(false);
@@ -220,7 +221,7 @@ function DevicesPage() {
                           <Pencil className="h-4 w-4" />
                         </Button>
                       )}
-                      {isOwner && (
+                      {canManage && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button size="icon" variant="ghost" className="text-rose-600 hover:bg-rose-50 hover:text-rose-700" title="Delete">
