@@ -545,6 +545,11 @@ export const pollDeviceLink = createServerFn({ method: "POST" })
 
     let deviceId: string;
     if (existing) {
+      // Re-link path — enforce limit but exclude this device from the count.
+      await assertCanAddDeviceToBrand(context.userId, data.brand_id ?? null, {
+        existingDeviceUnique: unique,
+      });
+
       const { error: updErr } = await supabaseAdmin
         .from("devices")
         .update({
