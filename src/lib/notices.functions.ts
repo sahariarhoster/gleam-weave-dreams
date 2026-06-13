@@ -160,7 +160,7 @@ export const sendBrandAdminNotice = createServerFn({ method: "POST" })
 
     const rows = queue.map((q) => ({
       campaign_id: camp.id,
-      phone: q.phone,
+      phone: "+" + q.phone,
       rendered_message: data.message.replace(/\{name\}/g, q.name || ""),
       status: "queued",
     }));
