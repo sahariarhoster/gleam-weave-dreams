@@ -223,7 +223,7 @@ function DevicesPage() {
                           <QrCode className="h-3.5 w-3.5" /> Link QR
                         </Button>
                       )}
-                      {canManage && (
+                      {isOwner && (
                         <Button
                           size="sm" variant="outline" className="h-8 gap-1"
                           onClick={() => applyMut.mutate(d.id)}
