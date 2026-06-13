@@ -239,6 +239,7 @@ export type Database = {
           device_id: string
           failed_count: number
           id: string
+          ignore_failure_pause: boolean
           max_delay_seconds: number
           media_url: string | null
           message: string
@@ -263,6 +264,7 @@ export type Database = {
           device_id: string
           failed_count?: number
           id?: string
+          ignore_failure_pause?: boolean
           max_delay_seconds?: number
           media_url?: string | null
           message: string
@@ -287,6 +289,7 @@ export type Database = {
           device_id?: string
           failed_count?: number
           id?: string
+          ignore_failure_pause?: boolean
           max_delay_seconds?: number
           media_url?: string | null
           message?: string
