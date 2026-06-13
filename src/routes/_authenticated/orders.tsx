@@ -43,7 +43,10 @@ function OrdersPage() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-4">
-      <PageHeader icon={ShoppingBag} title="Orders" description="Review and approve customer orders." />
+      <div className="flex items-center justify-between gap-3">
+        <PageHeader icon={ShoppingBag} title="Orders" description="Review and approve customer orders." />
+        <CreateOrderDialog onCreated={() => qc.invalidateQueries({ queryKey: ["admin-orders"] })} />
+      </div>
       <Card>
         <CardContent className="p-0">
           <Table>
