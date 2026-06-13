@@ -92,7 +92,10 @@ function BrandsPage() {
               {!brands.isLoading && (brands.data?.length ?? 0) === 0 && (
                 <TableRow><TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">No brands yet.</TableCell></TableRow>
               )}
-              {(brands.data ?? []).map((b: any) => (
+              {!brands.isLoading && filtered.length === 0 && (brands.data?.length ?? 0) > 0 && (
+                <TableRow><TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">No brands match "{query}".</TableCell></TableRow>
+              )}
+              {filtered.map((b: any) => (
                 <TableRow key={b.id}>
                   <TableCell className="font-medium">{b.name}</TableCell>
                   <TableCell>
