@@ -36,10 +36,14 @@ export const Route = createFileRoute("/_authenticated/devices")({
 
 function formatSim(v: string | null | undefined): string {
   if (!v) return "—";
-  const digits = v.replace(/\D+/g, "");
+  let digits = v.replace(/\D+/g, "");
   if (!digits) return "—";
+  // Strip trailing WhatsApp port suffix (e.g. ...:24).
+  // BD MSISDN = 880 + 10 digits = 13. Anything beyond is the port.
+  if (digits.startsWith("880") && digits.length > 13) digits = digits.slice(0, 13);
   return "+" + digits;
 }
+
 
 
 type Device = {
