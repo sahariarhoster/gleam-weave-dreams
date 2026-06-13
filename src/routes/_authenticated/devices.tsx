@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import {
   createDevice, updateDevice, deleteDevice, testDeviceConnection,
+  listWaServers, linkDeviceQR,
 } from "@/lib/devices.functions";
 import { PageHeader } from "@/components/layout/page-header";
 import { listBrandsLiteClient, listDevicesClient, listMyRolesClient } from "@/lib/client-queries";
