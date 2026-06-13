@@ -467,17 +467,31 @@ export const pollDeviceLink = createServerFn({ method: "POST" })
       }
 
       if (waAccountId !== undefined && waAccountId !== null) {
-        await bdwebs.editWhatsApp({
+        const payload = {
           secret: key.secret,
           id: waAccountId,
           receive_chats: 2,
           random_send: 2,
           random_min: 1,
           random_max: 5,
-        });
+        };
+        const attempts = [
+          "/api/edit/whatsapp",
+          "/api/edit/wa.account",
+          "/api/update/whatsapp",
+          "/api/update/wa.account",
+          "/api/whatsapp/edit",
+          "/api/set/whatsapp",
+        ];
+        for (const path of attempts) {
+          const r = await bdwebs.rawPost(path, payload);
+          console.log(`editWhatsApp try ${path} → status=${r?.status} msg=${r?.message}`);
+          if (r?.status === 200) break;
+        }
       } else {
         console.warn("editWhatsApp defaults: no WA account id found for", unique);
       }
+
     } catch (e) {
       console.warn("editWhatsApp defaults failed", e);
     }
