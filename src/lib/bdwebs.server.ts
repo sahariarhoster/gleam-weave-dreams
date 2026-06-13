@@ -64,4 +64,21 @@ export const bdwebs = {
       priority: args.priority ?? 1,
     });
   },
+  getWaServers(secret: string) {
+    return call<Array<{ id: number; name?: string; status?: string }>>(
+      "/api/get/wa.servers", { secret }, "GET",
+    );
+  },
+  linkWhatsApp(args: { secret: string; sid: number }) {
+    return call<{ qrstring: string; qrimagelink: string; infolink?: string }>(
+      "/api/create/wa.link", { secret: args.secret, sid: args.sid }, "GET",
+    );
+  },
+  relinkWhatsApp(args: { secret: string; sid: number; unique: string }) {
+    return call<{ qrstring: string; qrimagelink: string; infolink?: string }>(
+      "/api/create/wa.relink",
+      { secret: args.secret, sid: args.sid, unique: args.unique },
+      "GET",
+    );
+  },
 };

@@ -125,6 +125,53 @@ export const deleteDevice = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// ============ WhatsApp QR Linking ============
+
+export const listWaServers = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ device_id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: own } = await context.supabase
+      .from("devices").select("id").eq("id", data.device_id).maybeSingle();
+    if (!own) throw new Error("Device not found");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: device } = await supabaseAdmin
+      .from("devices").select("api_secret").eq("id", data.device_id).single();
+    if (!device?.api_secret) throw new Error("Device API secret missing");
+    const { bdwebs } = await import("@/lib/bdwebs.server");
+    const res = await bdwebs.getWaServers(device.api_secret);
+    if (res.status !== 200) throw new Error(res.message || "Failed to list servers");
+    return Array.isArray(res.data) ? res.data : [];
+  });
+
+export const linkDeviceQR = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      device_id: z.string().uuid(),
+      sid: z.number().int().positive(),
+      relink: z.boolean().optional(),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: own } = await context.supabase
+      .from("devices").select("id").eq("id", data.device_id).maybeSingle();
+    if (!own) throw new Error("Device not found");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: device } = await supabaseAdmin
+      .from("devices").select("api_secret, device_unique_id").eq("id", data.device_id).single();
+    if (!device?.api_secret) throw new Error("Device API secret missing");
+    const { bdwebs } = await import("@/lib/bdwebs.server");
+    const res = data.relink && device.device_unique_id
+      ? await bdwebs.relinkWhatsApp({
+          secret: device.api_secret, sid: data.sid, unique: device.device_unique_id,
+        })
+      : await bdwebs.linkWhatsApp({ secret: device.api_secret, sid: data.sid });
+    if (res.status !== 200) throw new Error(res.message || "Failed to generate QR");
+    return res.data as { qrstring: string; qrimagelink: string; infolink?: string };
+  });
+
+
 export const testDeviceConnection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
