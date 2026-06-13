@@ -40,15 +40,109 @@ function mergeSetCookies(jar: Jar, res: Response) {
   }
 }
 
+function decodeHtml(value: string): string {
+  return value
+    .replace(/&quot;/g, '"')
+    .replace(/&#039;|&apos;/g, "'")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">");
+}
+
+function attrsFromTag(tag: string): Record<string, string> {
+  const attrs: Record<string, string> = {};
+  for (const match of tag.matchAll(/([^\s"'<>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g)) {
+    const name = match[1]?.toLowerCase();
+    if (!name || name === "meta" || name === "input") continue;
+    attrs[name] = decodeHtml(match[2] ?? match[3] ?? match[4] ?? "");
+  }
+  return attrs;
+}
+
+function safeDecodeURIComponent(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
 function extractToken(html: string): string | null {
-  const meta = html.match(
-    /<meta[^>]+name=["']csrf-token["'][^>]+content=["']([^"']+)["']/i,
-  );
-  if (meta?.[1]) return meta[1];
-  const input = html.match(
-    /<input[^>]+name=["']_token["'][^>]+value=["']([^"']+)["']/i,
-  );
-  return input?.[1] ?? null;
+  for (const match of html.matchAll(/<meta\b[^>]*>/gi)) {
+    const attrs = attrsFromTag(match[0]);
+    const key = (attrs.name ?? attrs.property ?? attrs["http-equiv"] ?? "").toLowerCase();
+    if ((/csrf|xsrf|token/.test(key) || key === "csrf-token") && attrs.content) {
+      return attrs.content.trim();
+    }
+  }
+
+  for (const match of html.matchAll(/<input\b[^>]*>/gi)) {
+    const attrs = attrsFromTag(match[0]);
+    const name = (attrs.name ?? attrs.id ?? "").toLowerCase();
+    if ((name === "_token" || /csrf|xsrf|token/.test(name)) && attrs.value) {
+      return attrs.value.trim();
+    }
+  }
+
+  const scriptPatterns = [
+    /["']csrf-token["']\s*:\s*["']([^"']+)["']/i,
+    /["']x-csrf-token["']\s*:\s*["']([^"']+)["']/i,
+    /\bcsrfToken\b\s*[:=]\s*["']([^"']+)["']/i,
+    /\bcsrf_token\b\s*[:=]\s*["']([^"']+)["']/i,
+    /\b_token\b\s*[:=]\s*["']([^"']+)["']/i,
+  ];
+  for (const pattern of scriptPatterns) {
+    const match = html.match(pattern);
+    if (match?.[1]) return decodeHtml(match[1]).trim();
+  }
+
+  return null;
+}
+
+function tokenFromCookies(jar: Jar): string | null {
+  for (const [name, value] of Object.entries(jar)) {
+    if (/^(xsrf-token|csrf-token|x-csrf-token|_token)$/i.test(name) && value) {
+      return safeDecodeURIComponent(decodeHtml(value)).trim();
+    }
+  }
+  return null;
+}
+
+async function fetchHtmlFollowingRedirects(initialUrl: string, jar: Jar) {
+  let url = initialUrl;
+  let status = 0;
+  for (let i = 0; i < 5; i++) {
+    const res = await fetch(url, {
+      headers: {
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "User-Agent": "Mozilla/5.0 LovableBot",
+        ...(Object.keys(jar).length ? { Cookie: jarToHeader(jar) } : {}),
+      },
+      redirect: "manual",
+    });
+    status = res.status;
+    mergeSetCookies(jar, res);
+    const location = res.headers.get("location");
+    if (location && status >= 300 && status < 400) {
+      url = new URL(location, url).toString();
+      continue;
+    }
+    return { html: await res.text(), url, status };
+  }
+  return { html: "", url, status };
+}
+
+async function getLoginPage(base: string, jar: Jar) {
+  const candidates = ["/login", "/", "/user/login", "/admin/login", "/signin"];
+  let best = { html: "", url: `${base}/login`, status: 0 };
+  const checked: string[] = [];
+  for (const path of candidates) {
+    const page = await fetchHtmlFollowingRedirects(`${base}${path}`, jar);
+    checked.push(`${path} → ${page.status}`);
+    if (extractToken(page.html) || tokenFromCookies(jar)) return { ...page, checked };
+    if (page.html.length > best.html.length) best = page;
+  }
+  return { ...best, checked };
 }
 
 async function login(): Promise<{ jar: Jar; token: string }> {
@@ -61,15 +155,19 @@ async function login(): Promise<{ jar: Jar; token: string }> {
   const jar: Jar = {};
 
   // 1) GET login page → CSRF token + XSRF/session cookies.
-  const loginUrl = `${base}/login`;
-  const r1 = await fetch(loginUrl, {
-    headers: { "User-Agent": "Mozilla/5.0 LovableBot" },
-    redirect: "manual",
-  });
-  mergeSetCookies(jar, r1);
-  const html = await r1.text();
-  const token = extractToken(html);
-  if (!token) throw new Error("Panel login page: CSRF token not found");
+  const page = await getLoginPage(base, jar);
+  const loginUrl = page.url;
+  const token = extractToken(page.html) ?? tokenFromCookies(jar);
+  if (!token) {
+    console.warn("Panel login token lookup failed", {
+      finalUrl: page.url,
+      checked: page.checked,
+      status: page.status,
+      cookieNames: Object.keys(jar),
+      htmlStart: page.html.slice(0, 300),
+    });
+    throw new Error(`Panel login page: CSRF token not found (checked ${page.checked.join(", ")})`);
+  }
 
   // 2) POST credentials.
   const body = new URLSearchParams({
@@ -88,6 +186,8 @@ async function login(): Promise<{ jar: Jar; token: string }> {
       Referer: loginUrl,
       Origin: base,
       "X-Requested-With": "XMLHttpRequest",
+      "X-CSRF-TOKEN": token,
+      "X-XSRF-TOKEN": tokenFromCookies(jar) ?? token,
     },
     body: body.toString(),
   });
