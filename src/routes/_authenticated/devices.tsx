@@ -73,14 +73,15 @@ function DevicesPage() {
   const canManage = isOwner || isSupport || isBrandOwner;
 
   // Available brands = visible brands that still have device capacity.
-  // Platform owners/support bypass per-brand caps in the backend, so always allow.
+  // The backend enforces device_limit per brand regardless of platform role,
+  // so don't bypass for owners/support — reflect the same rule in the UI.
   const availableBrands = (brands.data ?? []).filter((b: any) => {
     const limit = Number(b.device_limit ?? 0);
     if (limit <= 0) return true; // 0 = unlimited
     const used = (devices.data ?? []).filter((d: any) => d.brand_id === b.id).length;
     return used < limit;
   });
-  const hasCapacity = isOwner || isSupport || availableBrands.length > 0;
+  const hasCapacity = availableBrands.length > 0;
 
   const [editing, setEditing] = useState<Device | null>(null);
   const [open, setOpen] = useState(false);
