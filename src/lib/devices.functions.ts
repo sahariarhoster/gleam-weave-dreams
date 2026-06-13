@@ -129,10 +129,41 @@ export const deleteDevice = createServerFn({ method: "POST" })
     if (device?.api_secret && device?.device_unique_id) {
       try {
         const { bdwebs } = await import("@/lib/bdwebs.server");
-        await bdwebs.deleteWhatsApp({
-          secret: device.api_secret,
-          unique: device.device_unique_id,
-        });
+        // Resolve numeric WA account id by looking it up on the panel.
+        let waId: number | string | undefined;
+        try {
+          const list = await bdwebs.getWhatsAppAccounts(device.api_secret);
+          const accounts = Array.isArray(list.data) ? list.data : [];
+          const match = accounts.find((a: any) =>
+            a.unique === device.device_unique_id ||
+            a.account === device.device_unique_id ||
+            a.device_unique_id === device.device_unique_id,
+          );
+          waId = match?.id ?? match?.account_id;
+        } catch (e) {
+          console.warn("getWhatsAppAccounts (for delete) failed", e);
+        }
+
+        // Try several endpoint shapes; panels differ in path + param name.
+        const attempts: Array<{ path: string; params: Record<string, any> }> = [];
+        if (waId !== undefined && waId !== null) {
+          attempts.push({ path: "/api/delete/whatsapp", params: { secret: device.api_secret, id: waId } });
+          attempts.push({ path: "/api/delete/wa.account", params: { secret: device.api_secret, id: waId } });
+        }
+        attempts.push({ path: "/api/delete/whatsapp", params: { secret: device.api_secret, unique: device.device_unique_id } });
+        attempts.push({ path: "/api/delete/wa.account", params: { secret: device.api_secret, unique: device.device_unique_id } });
+
+        let ok = false;
+        for (const a of attempts) {
+          try {
+            const r = await bdwebs.rawPost(a.path, a.params);
+            console.log("deleteWhatsApp try", a.path, a.params, "→", r.status, r.message);
+            if (r.status === 200) { ok = true; break; }
+          } catch (e) {
+            console.warn("deleteWhatsApp attempt error", a.path, e);
+          }
+        }
+        if (!ok) console.warn("deleteWhatsApp: no endpoint accepted the request");
       } catch (e) {
         console.warn("deleteWhatsApp panel call failed", e);
       }
