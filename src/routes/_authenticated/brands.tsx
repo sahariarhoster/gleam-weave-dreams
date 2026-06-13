@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Plus, Pencil, Trash2, Building2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Building2, Search } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,11 @@ function BrandsPage() {
 
   const [editing, setEditing] = useState<Brand | null>(null);
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const filtered = (brands.data ?? []).filter((b: any) =>
+    !q || b.name?.toLowerCase().includes(q) || b.status?.toLowerCase().includes(q),
+  );
 
   const delMut = useMutation({
     mutationFn: (id: string) => deleteBrandClient(id),
@@ -60,6 +65,15 @@ function BrandsPage() {
       />
       <Card className="border-border/60 shadow-sm">
         <CardContent className="pt-6">
+          <div className="relative mb-4 max-w-sm">
+            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search brands…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="pl-8"
+            />
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -78,7 +92,10 @@ function BrandsPage() {
               {!brands.isLoading && (brands.data?.length ?? 0) === 0 && (
                 <TableRow><TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">No brands yet.</TableCell></TableRow>
               )}
-              {(brands.data ?? []).map((b: any) => (
+              {!brands.isLoading && filtered.length === 0 && (brands.data?.length ?? 0) > 0 && (
+                <TableRow><TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">No brands match "{query}".</TableCell></TableRow>
+              )}
+              {filtered.map((b: any) => (
                 <TableRow key={b.id}>
                   <TableCell className="font-medium">{b.name}</TableCell>
                   <TableCell>
