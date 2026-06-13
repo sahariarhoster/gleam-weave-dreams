@@ -46,12 +46,15 @@ export const sendBrandAdminNotice = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: bm } = await supabaseAdmin
-      .from("brand_members").select("user_id, role").in("role", ["brand_admin", "brand_owner"]);
+      .from("brand_members").select("user_id").eq("role", "brand_admin");
     const { data: br } = await supabaseAdmin
       .from("user_roles").select("user_id").eq("role", "brand_owner");
+    const { data: bo } = await supabaseAdmin
+      .from("brands").select("created_by");
     const ids = new Set<string>();
     (bm ?? []).forEach((r: any) => r.user_id && ids.add(r.user_id));
     (br ?? []).forEach((r: any) => r.user_id && ids.add(r.user_id));
+    (bo ?? []).forEach((r: any) => r.created_by && ids.add(r.created_by));
     if (ids.size === 0) return { sent: 0, failed: 0, skipped: 0, total: 0 };
 
     const { data: profiles } = await supabaseAdmin
