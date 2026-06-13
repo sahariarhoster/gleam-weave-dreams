@@ -474,7 +474,12 @@ export const pollDeviceLink = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertOwner(context.supabase, context.userId);
-    await assertCanAddDeviceToBrand(context.userId, data.brand_id ?? null);
+    // Permission only — we recheck the device_limit once we know `unique`
+    // so re-linking an existing device doesn't trip the cap.
+    await assertCanAddDeviceToBrand(context.userId, data.brand_id ?? null, {
+      skipLimitCheck: true,
+    });
+
 
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: key } = await supabaseAdmin
