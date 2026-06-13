@@ -209,21 +209,26 @@ export const refreshDeviceStatuses = createServerFn({ method: "POST" })
         continue;
       }
       for (const dev of group) {
-        const acc = accounts.find((a: any) =>
+        let acc = accounts.find((a: any) =>
           a.unique === dev.device_unique_id ||
           a.account === dev.device_unique_id ||
           a.device_unique_id === dev.device_unique_id,
         );
+        // Auto-heal: if this secret only has one account on the panel,
+        // adopt it even when the stored device_unique_id is stale.
+        if (!acc && accounts.length === 1) acc = accounts[0];
         const rawStatus = String(acc?.status ?? "").toLowerCase();
         const status = !acc
           ? "disconnected"
           : rawStatus === "1" || rawStatus === "active" || rawStatus === "connected"
             ? "active"
             : "disconnected";
-        await supabaseAdmin
-          .from("devices")
-          .update({ status, last_checked_at: nowIso })
-          .eq("id", dev.id);
+        const patch: Record<string, any> = { status, last_checked_at: nowIso };
+        const panelUnique = acc?.unique ?? acc?.account ?? acc?.device_unique_id;
+        if (panelUnique && panelUnique !== dev.device_unique_id) {
+          patch.device_unique_id = String(panelUnique);
+        }
+        await supabaseAdmin.from("devices").update(patch).eq("id", dev.id);
         updated++;
       }
     }
