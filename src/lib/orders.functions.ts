@@ -668,3 +668,157 @@ export const adminCreateOrder = createServerFn({ method: "POST" })
     return { ok: true, order_id: order.id, brand_id: brandId };
   });
 
+// Owner/staff: search existing customers for the manual order/subscription dialog
+export const searchCustomers = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ q: z.string().trim().max(120).default("") }).parse(d))
+  .handler(async ({ data, context }) => {
+    const { data: roleRow } = await context.supabase
+      .from("user_roles").select("role").eq("user_id", context.userId)
+      .in("role", ["owner", "support_agent", "sales_agent"]);
+    if (!roleRow || roleRow.length === 0) throw new Error("Forbidden");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let query = supabaseAdmin.from("profiles").select("id, email, full_name, phone").limit(20);
+    const q = data.q.replace(/[%,]/g, "");
+    if (q) query = query.or(`email.ilike.%${q}%,full_name.ilike.%${q}%,phone.ilike.%${q}%`);
+    const { data: profs, error } = await query.order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    // attach brands per profile
+    const ids = (profs ?? []).map((p: any) => p.id);
+    let brandsByOwner: Record<string, any[]> = {};
+    if (ids.length) {
+      const { data: brands } = await supabaseAdmin
+        .from("brands").select("id, name, status, created_by").in("created_by", ids);
+      for (const b of brands ?? []) {
+        (brandsByOwner[b.created_by!] ??= []).push({ id: b.id, name: b.name, status: b.status });
+      }
+    }
+    return (profs ?? []).map((p: any) => ({ ...p, brands: brandsByOwner[p.id] ?? [] }));
+  });
+
+// Authenticated user: their brands eligible for upgrade/new order from the public order page
+export const listMyBrandsForOrder = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase
+      .from("brands")
+      .select("id, name, status, current_package_id, expires_at, packages:current_package_id(name, is_trial)")
+      .eq("created_by", context.userId)
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return (data ?? []).map((b: any) => ({
+      id: b.id,
+      name: b.name,
+      status: b.status,
+      expires_at: b.expires_at,
+      package_name: b.packages?.name ?? null,
+      is_trial: b.packages?.is_trial ?? false,
+    }));
+  });
+
+// Authenticated user: place an order using their existing account (new brand OR upgrade existing brand)
+export const createOrderForMe = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        package_id: z.string().uuid(),
+        brand_id: z.string().uuid().optional().nullable(),
+        brand_name: z.string().trim().min(1).max(100).optional().nullable(),
+        phone: z.string().trim().max(30).optional().nullable(),
+        bkash_number: z.string().trim().max(30).optional().nullable(),
+        txid: z.string().trim().max(64).optional().nullable(),
+        coupon_code: z.string().trim().max(64).optional().nullable(),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: pkg, error: pErr } = await supabaseAdmin
+      .from("packages").select("*").eq("id", data.package_id).eq("is_active", true).maybeSingle();
+    if (pErr || !pkg) throw new Error("Package not found");
+
+    // If brand_id provided, must be owned by this user
+    let brandId: string | null = null;
+    let brandName = data.brand_name ?? "";
+    if (data.brand_id) {
+      const { data: b } = await supabaseAdmin
+        .from("brands").select("id, name, created_by").eq("id", data.brand_id).maybeSingle();
+      if (!b || b.created_by !== context.userId) throw new Error("Brand not found");
+      brandId = b.id;
+      brandName = b.name;
+    } else {
+      if (!brandName || brandName.length < 1) throw new Error("Brand name required");
+    }
+
+    // Coupon
+    let couponId: string | null = null;
+    let discount = 0;
+    if (data.coupon_code && data.coupon_code.trim()) {
+      const { data: cres, error: cErr } = await supabaseAdmin.rpc("validate_coupon", {
+        _code: data.coupon_code, _amount: Number(pkg.price),
+      });
+      if (cErr) throw new Error(cErr.message);
+      const r = cres as any;
+      if (!r?.valid) throw new Error(r?.error ?? "Invalid coupon");
+      couponId = r.id;
+      discount = Number(r.discount ?? 0);
+    }
+    const original = Number(pkg.price);
+    const final = Math.max(original - discount, 0);
+    if (final > 0) {
+      if (!data.bkash_number || data.bkash_number.trim().length < 8) throw new Error("bKash number required");
+      if (!data.txid || data.txid.trim().length < 4) throw new Error("Transaction ID required");
+      const { data: dup } = await supabaseAdmin.from("orders").select("id").eq("txid", data.txid).maybeSingle();
+      if (dup) throw new Error("This bKash TXID has already been submitted.");
+    }
+
+    // Get profile for fallback name/email
+    const { data: profile } = await supabaseAdmin
+      .from("profiles").select("email, full_name, phone").eq("id", context.userId).maybeSingle();
+
+    // If new brand, create as pending
+    if (!brandId) {
+      const { data: nb, error: bErr } = await supabaseAdmin
+        .from("brands")
+        .insert({
+          name: brandName,
+          status: "pending" as any,
+          message_limit: pkg.message_limit,
+          device_limit: pkg.device_limit,
+          license_limit: pkg.license_count,
+          created_by: context.userId,
+        } as any)
+        .select("id").single();
+      if (bErr || !nb) throw new Error(bErr?.message ?? "Could not create brand");
+      brandId = nb.id;
+      await supabaseAdmin.from("brand_members").upsert(
+        { brand_id: brandId, user_id: context.userId, role: "brand_admin" },
+        { onConflict: "brand_id,user_id" },
+      );
+    }
+
+    const { data: order, error: oErr } = await supabaseAdmin
+      .from("orders")
+      .insert({
+        package_id: pkg.id,
+        user_id: context.userId,
+        brand_id: brandId,
+        coupon_id: couponId,
+        full_name: profile?.full_name ?? "",
+        email: profile?.email ?? "",
+        phone: data.phone ?? profile?.phone ?? null,
+        bkash_number: data.bkash_number ?? "",
+        txid: data.txid ?? "",
+        original_amount: original,
+        discount_amount: discount,
+        final_amount: final,
+        status: "pending",
+      })
+      .select("id").single();
+    if (oErr || !order) throw new Error(oErr?.message ?? "Could not create order");
+
+    return { ok: true, order_id: order.id, brand_id: brandId };
+  });
+
