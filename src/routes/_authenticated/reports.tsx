@@ -254,7 +254,7 @@ function NotifyConfigCard() {
             placeholder="8801XXXXXXXXX, 8801YYYYYYYYY"
           />
           <p className="mt-1 text-xs text-muted-foreground">
-            Comma-separated. These numbers also receive new-order and new device-request alerts.
+            Comma-separated. These numbers also receive new-order alerts.
           </p>
         </div>
 
