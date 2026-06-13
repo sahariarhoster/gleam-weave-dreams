@@ -494,27 +494,17 @@ export const pollDeviceLink = createServerFn({ method: "POST" })
       }
 
       if (waAccountId !== undefined && waAccountId !== null) {
-        const payload = {
-          secret: key.secret,
+        const { panelEditWhatsApp } = await import("@/lib/panel.server");
+        const r = await panelEditWhatsApp({
           id: waAccountId,
           receive_chats: 2,
           random_send: 2,
           random_min: 1,
           random_max: 5,
-        };
-        const attempts = [
-          "/api/edit/whatsapp",
-          "/api/edit/wa.account",
-          "/api/update/whatsapp",
-          "/api/update/wa.account",
-          "/api/whatsapp/edit",
-          "/api/set/whatsapp",
-        ];
-        for (const path of attempts) {
-          const r = await bdwebs.rawPost(path, payload);
-          console.log(`editWhatsApp try ${path} → status=${r?.status} msg=${r?.message}`);
-          if (r?.status === 200) break;
-        }
+        });
+        console.log(
+          `editWhatsApp panel → ok=${r.ok} status=${r.status} endpoint=${r.endpoint}`,
+        );
       } else {
         console.warn("editWhatsApp defaults: no WA account id found for", unique);
       }
@@ -642,30 +632,18 @@ export const applyDeviceDefaults = createServerFn({ method: "POST" })
     );
     if (!match?.id) throw new Error("WhatsApp account not found on panel");
 
-    const payload = {
-      secret: dev.api_secret,
+    const { panelEditWhatsApp } = await import("@/lib/panel.server");
+    const r = await panelEditWhatsApp({
       id: match.id,
       receive_chats: 2,
       random_send: 2,
       random_min: 1,
       random_max: 5,
-    };
-    const attempts = [
-      "/api/edit/whatsapp",
-      "/api/edit/wa.account",
-      "/api/update/whatsapp",
-      "/api/update/wa.account",
-      "/api/whatsapp/edit",
-      "/api/set/whatsapp",
-    ];
-    let okPath: string | null = null;
-    let lastMsg = "";
-    for (const path of attempts) {
-      const r = await bdwebs.rawPost(path, payload);
-      lastMsg = r?.message ?? "";
-      console.log(`applyDeviceDefaults try ${path} → status=${r?.status} msg=${lastMsg}`);
-      if (r?.status === 200) { okPath = path; break; }
+    });
+    if (!r.ok) {
+      throw new Error(
+        `Panel rejected edit (status ${r.status}): ${r.body.slice(0, 200) || "no body"}`,
+      );
     }
-    if (!okPath) throw new Error(lastMsg || "Panel rejected all known edit endpoints");
-    return { ok: true, endpoint: okPath };
+    return { ok: true, endpoint: r.endpoint };
   });
