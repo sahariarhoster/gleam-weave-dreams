@@ -156,6 +156,18 @@ function CampaignsPage() {
                             <Play className="h-4 w-4" />
                           </Button>
                         )}
+                        {(c.status === "running" || c.status === "paused" || c.status === "scheduled" || c.status === "draft") && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => ignoreMut.mutate({ id: c.id, ignore: !c.ignore_failure_pause })}
+                            title={c.ignore_failure_pause ? "Failures skipped — click to re-enable auto-pause" : "Skip failures (don't auto-pause on errors)"}
+                          >
+                            {c.ignore_failure_pause
+                              ? <ShieldAlert className="h-4 w-4 text-amber-600" />
+                              : <ShieldCheck className="h-4 w-4" />}
+                          </Button>
+                        )}
                         {(c.status === "draft" || c.status === "scheduled" || c.status === "running" || c.status === "paused") && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
