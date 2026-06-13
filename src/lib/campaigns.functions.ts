@@ -236,7 +236,7 @@ export const runCampaignChunk = createServerFn({ method: "POST" })
     await assertCampaignManager(context.supabase, context.userId, data.id);
     const { data: camp, error: cErr } = await context.supabase
       .from("campaigns")
-      .select("id, status, device_id, min_delay_seconds, max_delay_seconds, daily_limit, send_window_start, send_window_end, sent_count, failed_count")
+      .select("id, status, device_id, min_delay_seconds, max_delay_seconds, daily_limit, send_window_start, send_window_end, sent_count, failed_count, ignore_failure_pause")
       .eq("id", data.id)
       .single();
     if (cErr || !camp) throw new Error("Campaign not found");
