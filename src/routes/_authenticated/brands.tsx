@@ -54,7 +54,7 @@ function BrandsPage() {
             <DialogTrigger asChild>
               <Button size="sm" className="gap-1"><Plus className="h-4 w-4" /> Add Brand</Button>
             </DialogTrigger>
-            <BrandDialog editing={editing} onDone={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["brands"] }); }} />
+            <BrandDialog key={editing?.id ?? "new"} editing={editing} onDone={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["brands"] }); }} />
           </Dialog>
         }
       />
