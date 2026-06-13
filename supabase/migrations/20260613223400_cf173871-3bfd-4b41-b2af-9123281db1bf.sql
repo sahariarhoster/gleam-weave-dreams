@@ -1,0 +1,1 @@
+ALTER TABLE public.campaigns ALTER COLUMN device_id DROP NOT NULL;

@@ -236,7 +236,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           daily_limit: number
-          device_id: string
+          device_id: string | null
           failed_count: number
           id: string
           ignore_failure_pause: boolean
@@ -261,7 +261,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           daily_limit?: number
-          device_id: string
+          device_id?: string | null
           failed_count?: number
           id?: string
           ignore_failure_pause?: boolean
@@ -286,7 +286,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           daily_limit?: number
-          device_id?: string
+          device_id?: string | null
           failed_count?: number
           id?: string
           ignore_failure_pause?: boolean

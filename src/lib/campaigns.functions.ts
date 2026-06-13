@@ -274,6 +274,7 @@ export const runCampaignChunk = createServerFn({ method: "POST" })
     const remainingToday = (camp.daily_limit ?? 500) - (sentToday ?? 0);
     if (remainingToday <= 0) return { ran: 0, reason: "daily_limit_reached" };
 
+    if (!camp.device_id) throw new Error("Campaign has no device linked");
     const { data: ownDevice, error: ownDevErr } = await context.supabase
       .from("devices").select("id").eq("id", camp.device_id).maybeSingle();
     if (ownDevErr || !ownDevice) throw new Error("Device not found");
