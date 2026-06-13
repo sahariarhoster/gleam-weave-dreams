@@ -330,6 +330,7 @@ export const pollDeviceLink = createServerFn({ method: "POST" })
     const waAccountId = root.id ?? root.account_id ?? root.wa_id;
     if (waAccountId !== undefined && waAccountId !== null) {
       try {
+        const { bdwebs } = await import("@/lib/bdwebs.server");
         await bdwebs.editWhatsApp({
           secret: key.secret,
           id: waAccountId,
