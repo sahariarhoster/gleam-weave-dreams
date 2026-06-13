@@ -253,11 +253,11 @@ async function ensureSession(force = false): Promise<PanelSession> {
   return s;
 }
 
-/** POST to a panel AJAX path (relative, e.g. "/ajax/edit.whatsapp") with form fields. */
+/** POST to a panel AJAX path (relative, e.g. "/requests/whatsapp/edit") with form fields. */
 export async function panelAjaxPost(
   path: string,
   fields: Record<string, string | number | undefined>,
-): Promise<{ status: number; body: string }> {
+): Promise<{ status: number; body: string; location: string | null }> {
   const base = panelBase();
   const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
 
@@ -268,6 +268,7 @@ export async function panelAjaxPost(
       if (v === undefined || v === null) continue;
       body.set(k, String(v));
     }
+    const xsrf = tokenFromCookies(sess.jar);
     const res = await fetch(url, {
       method: "POST",
       redirect: "manual",
@@ -280,21 +281,21 @@ export async function panelAjaxPost(
         "X-Requested-With": "XMLHttpRequest",
         Accept: "application/json, text/plain, */*",
         ...(sess.token ? { "X-CSRF-TOKEN": sess.token } : {}),
+        ...(xsrf ? { "X-XSRF-TOKEN": xsrf } : {}),
       },
       body: body.toString(),
     });
     const text = await res.text();
-    return { status: res.status, body: text };
+    return { status: res.status, body: text, location: res.headers.get("location") };
   };
 
   let sess = await ensureSession(false);
   let r = await doCall(sess);
-  // 401/419 (Laravel CSRF/session expired) / 302 → /login → re-login once.
   const looksUnauth =
     r.status === 401 ||
     r.status === 419 ||
-    (r.status >= 300 && r.status < 400) ||
-    /login/i.test(r.body.slice(0, 500));
+    (r.status >= 300 && r.status < 400 && /login/i.test(r.location ?? "")) ||
+    /login|sign[\s-]?in/i.test(r.body.slice(0, 500));
   if (looksUnauth) {
     sess = await ensureSession(true);
     r = await doCall(sess);
@@ -309,7 +310,7 @@ export async function panelEditWhatsApp(args: {
   random_send?: 1 | 2;
   random_min?: number;
   random_max?: number;
-}): Promise<{ ok: boolean; status: number; body: string; endpoint: string }> {
+}): Promise<{ ok: boolean; status: number; body: string; endpoint: string; attempts: string[] }> {
   const fields = {
     id: args.id,
     receive_chats: args.receive_chats ?? 2,
@@ -317,20 +318,35 @@ export async function panelEditWhatsApp(args: {
     random_min: args.random_min ?? 1,
     random_max: args.random_max ?? 5,
   };
-  // Common Laravel AJAX paths on this panel. First that returns non-redirect 2xx wins.
+  // Zender's WhatsApp script: AJAX routes live under /requests/whatsapp/*
+  // and the controller method for editing an account is `edit`.
+  const override = process.env.HOSTERCAMP_PANEL_EDIT_PATH;
   const paths = [
+    ...(override ? [override] : []),
+    "/requests/whatsapp/edit",
+    "/requests/whatsapp/index/edit",
+    "/whatsapp/edit",
     "/ajax/edit.whatsapp",
     "/user/ajax/edit.whatsapp",
     "/dashboard/ajax/edit.whatsapp",
     "/ajax/whatsapp/edit",
   ];
-  let last: { status: number; body: string } = { status: 0, body: "" };
+  const attempts: string[] = [];
+  let last: { status: number; body: string; location: string | null } = { status: 0, body: "", location: null };
   for (const p of paths) {
     const r = await panelAjaxPost(p, fields);
     last = r;
-    if (r.status >= 200 && r.status < 300 && !/login/i.test(r.body.slice(0, 200))) {
-      return { ok: true, status: r.status, body: r.body, endpoint: p };
+    attempts.push(`${p} → ${r.status}${r.location ? ` (→ ${r.location})` : ""}`);
+    if (r.status >= 200 && r.status < 300 && !/login|sign[\s-]?in/i.test(r.body.slice(0, 200))) {
+      return { ok: true, status: r.status, body: r.body, endpoint: p, attempts };
     }
   }
-  return { ok: false, status: last.status, body: last.body, endpoint: "" };
+  console.warn("panelEditWhatsApp: all endpoints failed", { attempts, lastBody: last.body.slice(0, 300) });
+  return {
+    ok: false,
+    status: last.status,
+    body: last.body || (last.location ? `redirect → ${last.location}` : "no body"),
+    endpoint: "",
+    attempts,
+  };
 }
