@@ -343,6 +343,7 @@ export async function panelEditWhatsApp(args: {
   const override = process.env.HOSTERCAMP_PANEL_EDIT_PATH;
   const paths = [
     ...(override ? [override] : []),
+    "/requests/whatsapp/edit.whatsapp",
     "/requests/whatsapp/edit",
     "/requests/whatsapp/index/edit",
     "/whatsapp/edit",
@@ -357,7 +358,14 @@ export async function panelEditWhatsApp(args: {
     const r = await panelAjaxPost(p, fields);
     last = r;
     attempts.push(`${p} → ${r.status}${r.location ? ` (→ ${r.location})` : ""}`);
-    if (r.status >= 200 && r.status < 300 && !/login|sign[\s-]?in/i.test(r.body.slice(0, 200))) {
+    let accepted = r.status >= 200 && r.status < 300 && !/login|sign[\s-]?in/i.test(r.body.slice(0, 200));
+    try {
+      const json = JSON.parse(r.body);
+      accepted = accepted && [200, 301].includes(Number(json?.status));
+    } catch {
+      /* non-json success responses are allowed */
+    }
+    if (accepted) {
       return { ok: true, status: r.status, body: r.body, endpoint: p, attempts };
     }
   }
