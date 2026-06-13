@@ -40,6 +40,7 @@ async function isPlatformOwner(supabase: any, userId: string) {
 async function assertCanAddDeviceToBrand(
   userId: string,
   brand_id: string | null | undefined,
+  opts: { skipLimitCheck?: boolean; existingDeviceUnique?: string | null } = {},
 ) {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const platformOwner = await isPlatformOwner(supabaseAdmin, userId);
@@ -77,12 +78,19 @@ async function assertCanAddDeviceToBrand(
     throw new Error("This brand is not active.");
   }
 
+  if (opts.skipLimitCheck) return;
+
   const limit = Number(brand.device_limit ?? 0);
   if (limit > 0) {
-    const { count } = await supabaseAdmin
+    let q = supabaseAdmin
       .from("devices")
       .select("id", { count: "exact", head: true })
       .eq("brand_id", brand_id);
+    // When re-linking an existing device, exclude it from the count.
+    if (opts.existingDeviceUnique) {
+      q = q.neq("device_unique_id", opts.existingDeviceUnique);
+    }
+    const { count } = await q;
     if ((count ?? 0) >= limit) {
       throw new Error(
         `Device limit reached for this brand (${count}/${limit}). Upgrade your plan to add more devices.`,
@@ -90,6 +98,7 @@ async function assertCanAddDeviceToBrand(
     }
   }
 }
+
 
 
 type Stats = {
