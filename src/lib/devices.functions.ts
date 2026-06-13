@@ -641,9 +641,9 @@ export const applyDeviceDefaults = createServerFn({ method: "POST" })
       random_max: 5,
     });
     if (!r.ok) {
-      throw new Error(
-        `Panel rejected edit (status ${r.status}): ${r.body.slice(0, 200) || "no body"} | tried: ${r.attempts.join("; ")}`,
-      );
+      const message = `Panel rejected edit (status ${r.status}): ${r.body.slice(0, 200) || "no body"}`;
+      console.warn("applyDeviceDefaults failed", { message, attempts: r.attempts });
+      return { ok: false, message };
     }
-    return { ok: true, endpoint: r.endpoint };
+    return { ok: true, endpoint: r.endpoint, message: "Receive Chats & Random Send disabled" };
   });
