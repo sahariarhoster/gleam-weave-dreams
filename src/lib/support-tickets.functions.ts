@@ -90,7 +90,7 @@ export const updateSupportTicket = createServerFn({ method: "POST" })
     if (data.priority) patch.priority = data.priority;
     if (Object.keys(patch).length === 0) return { ok: true };
     const { error } = await context.supabase
-      .from("support_tickets").update(patch).eq("id", data.id);
+      .from("support_tickets").update(patch as any).eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
