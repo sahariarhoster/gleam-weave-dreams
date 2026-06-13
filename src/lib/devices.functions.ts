@@ -437,15 +437,17 @@ export const pollDeviceLink = createServerFn({ method: "POST" })
       let waAccountId: number | string | undefined =
         root.id ?? root.account_id ?? root.wa_id;
       if (waAccountId === undefined || waAccountId === null) {
-        const accounts = await bdwebs.getWhatsAppAccounts(key.secret);
-        const match = (accounts ?? []).find(
-          (a: any) =>
+        const accRes = await bdwebs.getWhatsAppAccounts(key.secret);
+        const accounts = (accRes?.data ?? []) as Array<Record<string, any>>;
+        const match = accounts.find(
+          (a) =>
             a.unique === unique ||
             a.account === unique ||
             a.device_unique_id === unique,
         );
         waAccountId = match?.id;
       }
+
       if (waAccountId !== undefined && waAccountId !== null) {
         await bdwebs.editWhatsApp({
           secret: key.secret,
