@@ -142,7 +142,7 @@ export async function getGroupMembersClient(groupId: string) {
 export async function listCampaignsClient() {
   const { data, error } = await db
     .from("campaigns")
-    .select("id, name, status, total_recipients, sent_count, failed_count, scheduled_at, created_at, brands(name), devices(name)")
+    .select("id, name, status, total_recipients, sent_count, failed_count, scheduled_at, created_at, ignore_failure_pause, brands(name), devices(name)")
     .order("created_at", { ascending: false });
   assertOk(error);
   return data ?? [];
