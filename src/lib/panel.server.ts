@@ -315,13 +315,26 @@ export async function panelAjaxPost(
     return { status: res.status, body: text, location: res.headers.get("location") };
   };
 
+  const isJsonUnauth = (body: string) => {
+    try {
+      const j = JSON.parse(body);
+      const code = Number(j?.status);
+      // Zender returns {status:302,...} (redirect to login) when the PHP
+      // session has expired, plus standard 401/419.
+      return [302, 401, 419].includes(code);
+    } catch {
+      return false;
+    }
+  };
+
   let sess = await ensureSession(false);
   let r = await doCall(sess);
   const looksUnauth =
     r.status === 401 ||
     r.status === 419 ||
     (r.status >= 300 && r.status < 400 && /(?:login|auth)/i.test(r.location ?? "")) ||
-    /login|sign[\s-]?in/i.test(r.body.slice(0, 500));
+    /login|sign[\s-]?in/i.test(r.body.slice(0, 500)) ||
+    isJsonUnauth(r.body);
   if (looksUnauth) {
     sess = await ensureSession(true);
     r = await doCall(sess);
