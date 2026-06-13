@@ -223,7 +223,7 @@ export const refreshDeviceStatuses = createServerFn({ method: "POST" })
           : rawStatus === "1" || rawStatus === "active" || rawStatus === "connected"
             ? "active"
             : "disconnected";
-        const patch: Record<string, any> = { status, last_checked_at: nowIso };
+        const patch: { status: string; last_checked_at: string; device_unique_id?: string } = { status, last_checked_at: nowIso };
         const panelUnique = acc?.unique ?? acc?.account ?? acc?.device_unique_id;
         if (panelUnique && panelUnique !== dev.device_unique_id) {
           patch.device_unique_id = String(panelUnique);
