@@ -109,12 +109,19 @@ function AdminView() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between gap-3">
+      <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <CardTitle className="text-base">All Subscriptions</CardTitle>
           <CardDescription>Suspend, activate, renew, or change package.</CardDescription>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <CreateOrderDialog
+            autoApprove
+            triggerLabel="Add subscription"
+            title="Create subscription manually"
+            description="Creates an active brand & subscription for the customer immediately."
+            onCreated={() => qc.invalidateQueries({ queryKey: ["subs-admin"] })}
+          />
           <Input
             placeholder="Search brand or owner…"
             value={search}
