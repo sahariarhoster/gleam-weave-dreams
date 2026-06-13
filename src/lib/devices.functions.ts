@@ -397,16 +397,43 @@ export const pollDeviceLink = createServerFn({ method: "POST" })
       return { status: "pending" as const, message: String(e?.message ?? e) };
     }
 
-    const root = info?.data ?? info ?? {};
-    const unique: string | undefined =
-      root.unique ?? root.account ?? root.device_unique_id ?? info?.unique;
-    const waId: string | undefined =
+    const root: any = info?.data ?? info ?? {};
+    let unique: string | undefined =
+      root.unique ?? root.account ?? root.device_unique_id ?? root.uniqueId ??
+      root.unique_id ?? root.uid ?? info?.unique;
+    let waId: string | undefined =
       root.whatsapp ?? root.whatsapp_id ?? root.wid ?? root.phone ??
       root.sim ?? root.number ?? root.msisdn ?? unique;
+
+    // Fallback: panel may already list the account but infolink hasn't updated.
+    if (!unique) {
+      console.log("pollDeviceLink waiting — info payload:", JSON.stringify(info).slice(0, 600));
+      try {
+        const { bdwebs } = await import("@/lib/bdwebs.server");
+        const accRes = await bdwebs.getWhatsAppAccounts(key.secret);
+        const accounts = (accRes?.data ?? []) as Array<Record<string, any>>;
+        if (accounts.length) {
+          const latest = [...accounts].sort(
+            (a, b) => Number(b.id ?? 0) - Number(a.id ?? 0),
+          )[0];
+          const fb = latest.unique ?? latest.account ?? latest.device_unique_id;
+          if (fb) {
+            console.log("pollDeviceLink fallback unique from wa.accounts:", fb);
+            unique = String(fb);
+            waId = latest.whatsapp ?? latest.phone ?? latest.msisdn ?? unique;
+            root.id = latest.id;
+          }
+        }
+      } catch (e) {
+        console.warn("pollDeviceLink fallback wa.accounts failed", e);
+      }
+    }
 
     if (!unique) {
       return { status: "pending" as const, message: info?.message ?? "Waiting for scan…" };
     }
+
+
 
     // Upsert: if this device already exists, refresh its fields; else insert.
     const { data: existing } = await supabaseAdmin
