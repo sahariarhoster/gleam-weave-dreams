@@ -885,6 +885,33 @@ export type Database = {
         }
         Relationships: []
       }
+      wa_api_keys: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          label: string
+          secret: string
+          sid: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          label: string
+          secret: string
+          sid?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          label?: string
+          secret?: string
+          sid?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

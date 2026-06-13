@@ -32,6 +32,7 @@ import { Route as AuthenticatedCampaignsRouteImport } from './routes/_authentica
 import { Route as AuthenticatedBrandsRouteImport } from './routes/_authenticated/brands'
 import { Route as AuthenticatedBlockedRouteImport } from './routes/_authenticated/blocked'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
+import { Route as AuthenticatedApiKeysRouteImport } from './routes/_authenticated/api-keys'
 import { Route as AuthenticatedActivityRouteImport } from './routes/_authenticated/activity'
 import { Route as ApiPublicWhmcsUpdateRouteImport } from './routes/api/public/whmcs/update'
 import { Route as ApiPublicWhmcsUnsuspendRouteImport } from './routes/api/public/whmcs/unsuspend'
@@ -164,6 +165,11 @@ const AuthenticatedBillingRoute = AuthenticatedBillingRouteImport.update({
   path: '/billing',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedApiKeysRoute = AuthenticatedApiKeysRouteImport.update({
+  id: '/api-keys',
+  path: '/api-keys',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedActivityRoute = AuthenticatedActivityRouteImport.update({
   id: '/activity',
   path: '/activity',
@@ -249,6 +255,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/order': typeof OrderRoute
   '/activity': typeof AuthenticatedActivityRoute
+  '/api-keys': typeof AuthenticatedApiKeysRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/blocked': typeof AuthenticatedBlockedRoute
   '/brands': typeof AuthenticatedBrandsRoute
@@ -288,6 +295,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/order': typeof OrderRoute
   '/activity': typeof AuthenticatedActivityRoute
+  '/api-keys': typeof AuthenticatedApiKeysRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/blocked': typeof AuthenticatedBlockedRoute
   '/brands': typeof AuthenticatedBrandsRoute
@@ -329,6 +337,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/order': typeof OrderRoute
   '/_authenticated/activity': typeof AuthenticatedActivityRoute
+  '/_authenticated/api-keys': typeof AuthenticatedApiKeysRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/blocked': typeof AuthenticatedBlockedRoute
   '/_authenticated/brands': typeof AuthenticatedBrandsRoute
@@ -370,6 +379,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/order'
     | '/activity'
+    | '/api-keys'
     | '/billing'
     | '/blocked'
     | '/brands'
@@ -409,6 +419,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/order'
     | '/activity'
+    | '/api-keys'
     | '/billing'
     | '/blocked'
     | '/brands'
@@ -449,6 +460,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/order'
     | '/_authenticated/activity'
+    | '/_authenticated/api-keys'
     | '/_authenticated/billing'
     | '/_authenticated/blocked'
     | '/_authenticated/brands'
@@ -668,6 +680,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBillingRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/api-keys': {
+      id: '/_authenticated/api-keys'
+      path: '/api-keys'
+      fullPath: '/api-keys'
+      preLoaderRoute: typeof AuthenticatedApiKeysRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/activity': {
       id: '/_authenticated/activity'
       path: '/activity'
@@ -778,6 +797,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedActivityRoute: typeof AuthenticatedActivityRoute
+  AuthenticatedApiKeysRoute: typeof AuthenticatedApiKeysRoute
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedBlockedRoute: typeof AuthenticatedBlockedRoute
   AuthenticatedBrandsRoute: typeof AuthenticatedBrandsRoute
@@ -801,6 +821,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedActivityRoute: AuthenticatedActivityRoute,
+  AuthenticatedApiKeysRoute: AuthenticatedApiKeysRoute,
   AuthenticatedBillingRoute: AuthenticatedBillingRoute,
   AuthenticatedBlockedRoute: AuthenticatedBlockedRoute,
   AuthenticatedBrandsRoute: AuthenticatedBrandsRoute,

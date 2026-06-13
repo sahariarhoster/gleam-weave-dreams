@@ -40,6 +40,7 @@ import { supabase } from "@/integrations/supabase/client";
 const items = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Devices", url: "/devices", icon: Smartphone },
+  { title: "API Keys", url: "/api-keys", icon: KeyRound, ownerOnly: true },
   { title: "Brands", url: "/brands", icon: Building2, anyRole: ["owner", "support_agent"] as string[] },
   { title: "Users", url: "/users", icon: Users, ownerOnly: true },
   { title: "Members", url: "/members", icon: Users, brandOwnerOnly: true },

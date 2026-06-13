@@ -21,8 +21,8 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-  createDevice, updateDevice, deleteDevice, testDeviceConnection,
-  listWaServers, linkDeviceQR,
+  updateDevice, deleteDevice, testDeviceConnection,
+  listWaServers, linkDeviceQR, startDeviceLink, pollDeviceLink,
 } from "@/lib/devices.functions";
 import { PageHeader } from "@/components/layout/page-header";
 import { listBrandsLiteClient, listDevicesClient, listMyRolesClient } from "@/lib/client-queries";
@@ -294,13 +294,13 @@ function TestDialog({ device, pending, onSend }: { device: Device | null; pendin
 function DeviceDialog({
   editing, brands, onDone,
 }: { editing: Device | null; brands: { id: string; name: string }[]; onDone: () => void }) {
-  const fnCreate = useServerFn(createDevice);
   const fnUpdate = useServerFn(updateDevice);
+  const fnStart = useServerFn(startDeviceLink);
+  const fnPoll = useServerFn(pollDeviceLink);
+
   const [form, setForm] = useState({
     name: editing?.name ?? "",
-    device_unique_id: editing?.device_unique_id ?? "",
     sim_info: editing?.sim_info ?? "",
-    api_secret: "",
     brand_id: editing?.brand_id ?? "",
   });
   const [brandSearch, setBrandSearch] = useState("");
@@ -308,79 +308,165 @@ function DeviceDialog({
     b.name.toLowerCase().includes(brandSearch.toLowerCase()),
   );
 
-  const mut = useMutation({
-    mutationFn: async () => {
-      
-      const base = {
+  // Edit mode → simple update
+  const editMut = useMutation({
+    mutationFn: () => fnUpdate({
+      data: {
+        id: editing!.id,
         name: form.name,
-        device_unique_id: form.device_unique_id,
+        device_unique_id: editing!.device_unique_id,
         sim_info: form.sim_info || null,
         brand_id: form.brand_id || null,
-      };
-      if (editing) {
-        const data: typeof base & { id: string; api_secret?: string } = { id: editing.id, ...base };
-        if (form.api_secret) data.api_secret = form.api_secret;
-        return fnUpdate({ data });
-      }
-      return fnCreate({ data: { ...base, api_secret: form.api_secret } });
-    },
-    onSuccess: () => { toast.success(editing ? "Device updated" : "Device added"); onDone(); },
+      },
+    }),
+    onSuccess: () => { toast.success("Device updated"); onDone(); },
     onError: (e) => toast.error((e as Error).message),
   });
 
+  // Add mode → QR linking flow
+  const [qr, setQr] = useState<{ qrimagelink: string; infolink: string; api_key_id: string } | null>(null);
+  const [expiresAt, setExpiresAt] = useState<number | null>(null);
+  const [linked, setLinked] = useState(false);
+
+  const startMut = useMutation({
+    mutationFn: () => fnStart({ data: { brand_id: form.brand_id || null } }),
+    onSuccess: (res) => {
+      setQr({ qrimagelink: res.qrimagelink, infolink: res.infolink, api_key_id: res.api_key_id });
+      setExpiresAt(new Date(res.expires_at).getTime());
+      setLinked(false);
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  // Poll the infolink every 2s while QR is active
+  const poll = useQuery({
+    queryKey: ["device-link-poll", qr?.infolink ?? ""],
+    queryFn: () => fnPoll({
+      data: {
+        api_key_id: qr!.api_key_id,
+        infolink: qr!.infolink,
+        name: form.name,
+        sim_info: form.sim_info || null,
+        brand_id: form.brand_id || null,
+      },
+    }),
+    enabled: !!qr && !linked && (expiresAt ? Date.now() < expiresAt : true),
+    refetchInterval: 2000,
+    refetchOnWindowFocus: false,
+  });
+
+  if (poll.data?.status === "linked" && !linked) {
+    setLinked(true);
+    toast.success("Device linked!");
+    setTimeout(() => onDone(), 600);
+  }
+
+  const expired = !!expiresAt && Date.now() > expiresAt && !linked;
+
+  if (editing) {
+    return (
+      <DialogContent>
+        <DialogHeader><DialogTitle>Edit Device</DialogTitle></DialogHeader>
+        <form onSubmit={(e) => { e.preventDefault(); editMut.mutate(); }} className="space-y-3">
+          <div className="space-y-1.5">
+            <Label>Device Name</Label>
+            <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>SIM Info</Label>
+            <Input value={form.sim_info} onChange={(e) => setForm({ ...form, sim_info: e.target.value })} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Linked Brand (optional)</Label>
+            <Select value={form.brand_id || "none"} onValueChange={(v) => setForm({ ...form, brand_id: v === "none" ? "" : v })}>
+              <SelectTrigger><SelectValue placeholder="No brand" /></SelectTrigger>
+              <SelectContent>
+                <div className="sticky top-0 z-10 bg-popover p-1.5 border-b">
+                  <Input placeholder="Search brands…" value={brandSearch}
+                    onChange={(e) => setBrandSearch(e.target.value)}
+                    onKeyDown={(e) => e.stopPropagation()} className="h-8" />
+                </div>
+                <SelectItem value="none">No brand</SelectItem>
+                {filteredBrands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button type="submit" disabled={editMut.isPending} className="w-full">
+              {editMut.isPending ? "Saving…" : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    );
+  }
+
+  // Add mode
   return (
     <DialogContent>
-      <DialogHeader>
-        <DialogTitle>{editing ? "Edit Device" : "Add Device"}</DialogTitle>
-      </DialogHeader>
-      <form
-        onSubmit={(e) => { e.preventDefault(); mut.mutate(); }}
-        className="space-y-3"
-      >
-        <div className="space-y-1.5">
-          <Label>Device Name</Label>
-          <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="My Device" />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Device Unique ID</Label>
-          <Input required value={form.device_unique_id} onChange={(e) => setForm({ ...form, device_unique_id: e.target.value })} placeholder="device-123" />
-        </div>
-        <div className="space-y-1.5">
-          <Label>SIM Info</Label>
-          <Input value={form.sim_info} onChange={(e) => setForm({ ...form, sim_info: e.target.value })} placeholder="+8801XXXXXXXXX" />
-        </div>
-        <div className="space-y-1.5">
-          <Label>API Secret {editing && <span className="text-xs text-muted-foreground">(re-enter to update)</span>}</Label>
-          <Input required={!editing} value={form.api_secret} onChange={(e) => setForm({ ...form, api_secret: e.target.value })} placeholder="secret_key" type="password" />
-        </div>
-        <div className="space-y-1.5">
-          <Label>Linked Brand (optional)</Label>
-          <Select value={form.brand_id || "none"} onValueChange={(v) => setForm({ ...form, brand_id: v === "none" ? "" : v })}>
-            <SelectTrigger><SelectValue placeholder="No brand" /></SelectTrigger>
-            <SelectContent>
-              <div className="sticky top-0 z-10 bg-popover p-1.5 border-b">
-                <Input
-                  placeholder="Search brands…"
-                  value={brandSearch}
-                  onChange={(e) => setBrandSearch(e.target.value)}
-                  onKeyDown={(e) => e.stopPropagation()}
-                  className="h-8"
-                />
-              </div>
-              <SelectItem value="none">No brand</SelectItem>
-              {filteredBrands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
-              {filteredBrands.length === 0 && (
-                <div className="px-2 py-3 text-center text-xs text-muted-foreground">No matches</div>
-              )}
-            </SelectContent>
-          </Select>
-        </div>
-        <DialogFooter>
-          <Button type="submit" disabled={mut.isPending} className="w-full">
-            {mut.isPending ? "Saving…" : editing ? "Save Changes" : "Add Device"}
+      <DialogHeader><DialogTitle>Add Device</DialogTitle></DialogHeader>
+      {!qr ? (
+        <form onSubmit={(e) => { e.preventDefault(); if (form.name) startMut.mutate(); }} className="space-y-3">
+          <div className="space-y-1.5">
+            <Label>Device Name</Label>
+            <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="My Device" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>SIM Info (optional)</Label>
+            <Input value={form.sim_info} onChange={(e) => setForm({ ...form, sim_info: e.target.value })} placeholder="+8801XXXXXXXXX" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Linked Brand (optional)</Label>
+            <Select value={form.brand_id || "none"} onValueChange={(v) => setForm({ ...form, brand_id: v === "none" ? "" : v })}>
+              <SelectTrigger><SelectValue placeholder="No brand" /></SelectTrigger>
+              <SelectContent>
+                <div className="sticky top-0 z-10 bg-popover p-1.5 border-b">
+                  <Input placeholder="Search brands…" value={brandSearch}
+                    onChange={(e) => setBrandSearch(e.target.value)}
+                    onKeyDown={(e) => e.stopPropagation()} className="h-8" />
+                </div>
+                <SelectItem value="none">No brand</SelectItem>
+                {filteredBrands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            An API key from your pool will be picked at random to generate the QR.
+            Manage keys in <span className="font-medium">Settings → API Keys</span>.
+          </p>
+          <DialogFooter>
+            <Button type="submit" disabled={startMut.isPending || !form.name} className="w-full">
+              {startMut.isPending ? "Generating QR…" : "Generate QR"}
+            </Button>
+          </DialogFooter>
+        </form>
+      ) : (
+        <div className="space-y-3">
+          <div className="rounded-md border bg-muted/30 p-3 text-center">
+            <img src={qr.qrimagelink} alt="WhatsApp QR" className="mx-auto h-64 w-64 rounded bg-white p-2" />
+            <p className="mt-2 text-xs text-muted-foreground">
+              Open WhatsApp → <span className="font-medium">Linked Devices → Link a device</span>, then scan this code.
+            </p>
+            {linked ? (
+              <p className="mt-2 text-sm font-medium text-emerald-600">Linked ✓</p>
+            ) : expired ? (
+              <p className="mt-2 text-sm font-medium text-rose-600">QR expired</p>
+            ) : (
+              <p className="mt-2 text-xs text-muted-foreground">Waiting for scan…</p>
+            )}
+          </div>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            disabled={startMut.isPending}
+            onClick={() => startMut.mutate()}
+          >
+            {startMut.isPending ? "Regenerating…" : "Regenerate QR"}
           </Button>
-        </DialogFooter>
-      </form>
+        </div>
+      )}
     </DialogContent>
   );
 }
+
