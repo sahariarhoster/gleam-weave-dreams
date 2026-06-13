@@ -604,6 +604,24 @@ export const pollDeviceLink = createServerFn({ method: "POST" })
       console.warn("editWhatsApp defaults failed", e);
     }
 
+    // Notify support/admins about the successful link.
+    try {
+      const { notifyAdmins } = await import("@/lib/notify.server");
+      let brandName = "—";
+      if (data.brand_id) {
+        const { data: b } = await supabaseAdmin
+          .from("brands").select("name").eq("id", data.brand_id).maybeSingle();
+        if (b?.name) brandName = b.name;
+      }
+      const { data: prof } = await supabaseAdmin
+        .from("profiles").select("full_name, email").eq("id", context.userId).maybeSingle();
+      const who = prof?.full_name || prof?.email || context.userId;
+      await notifyAdmins(
+        `✅ Device linked\nName: ${data.name}\nSIM: ${waId ?? "—"}\nBrand: ${brandName}\nBy: ${who}`,
+      );
+    } catch (e) {
+      console.warn("notifyAdmins (device linked) failed", e);
+    }
 
     return { status: "linked" as const, device_id: deviceId };
   });
