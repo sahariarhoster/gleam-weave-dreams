@@ -148,6 +148,10 @@ function DevicesPage() {
                         <Link2 className="h-3.5 w-3.5" /> Test
                       </Button>
                       {canManage && (
+                        <Button size="sm" variant="outline" className="h-8 gap-1" onClick={() => setLinking(d as Device)} title="Link with QR code">
+                          <QrCode className="h-3.5 w-3.5" /> Link QR
+                        </Button>
+                      )}
                         <Button size="icon" variant="ghost" onClick={() => { setEditing(d as Device); setOpen(true); }} title="Edit">
                           <Pencil className="h-4 w-4" />
                         </Button>
