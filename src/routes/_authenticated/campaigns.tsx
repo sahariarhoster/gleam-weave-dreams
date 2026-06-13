@@ -31,6 +31,7 @@ function statusColor(s: string) {
   if (s === "completed") return "bg-emerald-100 text-emerald-700 hover:bg-emerald-100";
   if (s === "paused") return "bg-amber-100 text-amber-700 hover:bg-amber-100";
   if (s === "failed") return "bg-rose-100 text-rose-700 hover:bg-rose-100";
+  if (s === "cancelled") return "bg-slate-200 text-slate-700 hover:bg-slate-200";
   if (s === "scheduled") return "bg-violet-100 text-violet-700 hover:bg-violet-100";
   return "bg-muted text-muted-foreground";
 }
