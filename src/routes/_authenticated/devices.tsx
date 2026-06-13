@@ -23,8 +23,9 @@ import {
 import {
   updateDevice, deleteDevice, testDeviceConnection,
   listWaServers, linkDeviceQR, startDeviceLink, pollDeviceLink,
-  refreshDeviceStatuses,
+  refreshDeviceStatuses, applyDeviceDefaults,
 } from "@/lib/devices.functions";
+
 import { PageHeader } from "@/components/layout/page-header";
 import { listBrandsLiteClient, listDevicesClient, listMyRolesClient } from "@/lib/client-queries";
 import { useAuth } from "@/hooks/use-auth";
