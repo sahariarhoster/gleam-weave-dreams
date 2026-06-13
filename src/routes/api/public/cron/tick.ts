@@ -67,6 +67,7 @@ export const Route = createFileRoute("/api/public/cron/tick")({
           const remaining = (c.daily_limit ?? 500) - (sentToday ?? 0);
           if (remaining <= 0) { results.push({ id: c.id, skipped: "daily_limit" }); continue; }
 
+          if (!c.device_id) { results.push({ id: c.id, skipped: "no_device" }); continue; }
           const { data: device } = await supabaseAdmin
             .from("devices")
             .select("api_secret, device_unique_id")
