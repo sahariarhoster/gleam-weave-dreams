@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Plus, Trash2, Megaphone, Play, Pause, Eye } from "lucide-react";
+import { Plus, Trash2, Megaphone, Play, Pause, Eye, Ban } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Progress } from "@/components/ui/progress";
-import { listCampaigns, createCampaign, deleteCampaign, setCampaignStatus, runCampaignChunk } from "@/lib/campaigns.functions";
+import { listCampaigns, createCampaign, deleteCampaign, setCampaignStatus, runCampaignChunk, cancelCampaign } from "@/lib/campaigns.functions";
 import { PageHeader } from "@/components/layout/page-header";
 import { listBrandsLiteClient, listCampaignsClient, listDevicesClient, listGroupsClient } from "@/lib/client-queries";
 
@@ -31,6 +31,7 @@ function statusColor(s: string) {
   if (s === "completed") return "bg-emerald-100 text-emerald-700 hover:bg-emerald-100";
   if (s === "paused") return "bg-amber-100 text-amber-700 hover:bg-amber-100";
   if (s === "failed") return "bg-rose-100 text-rose-700 hover:bg-rose-100";
+  if (s === "cancelled") return "bg-slate-200 text-slate-700 hover:bg-slate-200";
   if (s === "scheduled") return "bg-violet-100 text-violet-700 hover:bg-violet-100";
   return "bg-muted text-muted-foreground";
 }
@@ -40,6 +41,7 @@ function CampaignsPage() {
   const fnDelete = useServerFn(deleteCampaign);
   const fnStatus = useServerFn(setCampaignStatus);
   const fnRun = useServerFn(runCampaignChunk);
+  const fnCancel = useServerFn(cancelCampaign);
 
   const camps = useQuery({ queryKey: ["campaigns"], queryFn: listCampaignsClient });
   const [open, setOpen] = useState(false);
@@ -65,6 +67,12 @@ function CampaignsPage() {
   const statusMut = useMutation({
     mutationFn: (v: { id: string; status: "running" | "paused" }) => fnStatus({ data: v }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["campaigns"] }),
+  });
+
+  const cancelMut = useMutation({
+    mutationFn: (id: string) => fnCancel({ data: { id } }),
+    onSuccess: (r) => { toast.success(`Campaign cancelled · ${r.cancelled} queued messages removed`); qc.invalidateQueries({ queryKey: ["campaigns"] }); },
+    onError: (e) => toast.error((e as Error).message),
   });
 
   return (
@@ -137,6 +145,25 @@ function CampaignsPage() {
                           <Button size="icon" variant="ghost" onClick={() => statusMut.mutate({ id: c.id, status: "running" })} title="Resume">
                             <Play className="h-4 w-4" />
                           </Button>
+                        )}
+                        {(c.status === "draft" || c.status === "scheduled" || c.status === "running" || c.status === "paused") && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="icon" variant="ghost" className="text-amber-600 hover:bg-amber-50 hover:text-amber-700" title="Cancel campaign">
+                                <Ban className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Cancel this campaign?</AlertDialogTitle>
+                                <AlertDialogDescription>All queued (unsent) messages will be cancelled. Already-sent messages are not affected.</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Keep running</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => cancelMut.mutate(c.id)} className="bg-amber-600 hover:bg-amber-700">Cancel campaign</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         )}
                         <Link to="/logs" search={{ campaign: c.id } as never}>
                           <Button size="icon" variant="ghost" title="View logs"><Eye className="h-4 w-4" /></Button>
