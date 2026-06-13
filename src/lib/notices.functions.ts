@@ -14,19 +14,21 @@ export const previewBrandAdminRecipients = createServerFn({ method: "GET" })
     await assertOwner(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // Brand owners/admins from brand_members
+    // Brand admins from brand_members
     const { data: bm } = await supabaseAdmin
-      .from("brand_members")
-      .select("user_id, role")
-      .in("role", ["brand_admin", "brand_owner"]);
+      .from("brand_members").select("user_id").eq("role", "brand_admin");
     // Users with global brand_owner role
     const { data: br } = await supabaseAdmin
       .from("user_roles").select("user_id").eq("role", "brand_owner");
+    // Brand creators (brand owners by ownership)
+    const { data: bo } = await supabaseAdmin
+      .from("brands").select("created_by");
 
     const ids = new Set<string>();
     (bm ?? []).forEach((r: any) => r.user_id && ids.add(r.user_id));
     (br ?? []).forEach((r: any) => r.user_id && ids.add(r.user_id));
-    if (ids.size === 0) return { recipients: [] as { id: string; name: string | null; phone: string | null; email: string | null }[] };
+    (bo ?? []).forEach((r: any) => r.created_by && ids.add(r.created_by));
+    if (ids.size === 0) return { recipients: [] as { id: string; full_name: string | null; phone: string | null; email: string | null }[] };
 
     const { data: profiles } = await supabaseAdmin
       .from("profiles").select("id, full_name, phone, email").in("id", Array.from(ids));
