@@ -372,14 +372,14 @@ function CustomerView() {
               </div>
             )}
             {s.is_owner && (
-              <div className="flex gap-2 pt-2">
-                <Link to="/order" className="flex-1">
-                  <Button className="w-full" size="sm">Renew</Button>
+              <div className="flex flex-wrap gap-2 pt-2">
+                <Link to="/order" search={{ upgrade: s.id }} className="flex-1 min-w-[120px]">
+                  <Button className="w-full" size="sm">{s.package?.name?.toLowerCase().includes("trial") ? "Upgrade plan" : "Renew / upgrade"}</Button>
                 </Link>
                 {!s.cancel_requested_at && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="flex-1">Request cancel</Button>
+                      <Button variant="outline" size="sm" className="flex-1 min-w-[120px]">Request cancel</Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
