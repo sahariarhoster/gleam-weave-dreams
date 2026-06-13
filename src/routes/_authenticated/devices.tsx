@@ -192,7 +192,74 @@ function DevicesPage() {
           onSend={(recipient, message) => testing && testMut.mutate({ id: testing.id, recipient, message })}
         />
       </Dialog>
+
+      <Dialog open={!!linking} onOpenChange={(v) => !v && setLinking(null)}>
+        {linking && <LinkQrDialog device={linking} />}
+      </Dialog>
     </div>
+  );
+}
+
+function LinkQrDialog({ device }: { device: Device }) {
+  const fnServers = useServerFn(listWaServers);
+  const fnLink = useServerFn(linkDeviceQR);
+  const servers = useQuery({
+    queryKey: ["wa-servers", device.id],
+    queryFn: () => fnServers({ data: { device_id: device.id } }),
+  });
+  const [sid, setSid] = useState<string>("");
+  const [relink, setRelink] = useState(true);
+  const linkMut = useMutation({
+    mutationFn: () => fnLink({ data: { device_id: device.id, sid: Number(sid), relink } }),
+    onError: (e) => toast.error((e as Error).message),
+  });
+  const qr = linkMut.data;
+
+  return (
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Link {device.name}</DialogTitle>
+      </DialogHeader>
+      <div className="space-y-3">
+        <div className="space-y-1.5">
+          <Label>WhatsApp Server</Label>
+          <Select value={sid} onValueChange={setSid} disabled={servers.isLoading}>
+            <SelectTrigger>
+              <SelectValue placeholder={servers.isLoading ? "Loading servers…" : "Select a server"} />
+            </SelectTrigger>
+            <SelectContent>
+              {(servers.data ?? []).map((s: any) => (
+                <SelectItem key={s.id} value={String(s.id)}>
+                  {s.name ? `${s.name} (#${s.id})` : `Server #${s.id}`}{s.status ? ` — ${s.status}` : ""}
+                </SelectItem>
+              ))}
+              {(servers.data ?? []).length === 0 && !servers.isLoading && (
+                <div className="px-2 py-3 text-center text-xs text-muted-foreground">No servers available</div>
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={relink} onChange={(e) => setRelink(e.target.checked)} />
+          Relink existing device (use this device's unique ID)
+        </label>
+        <Button
+          className="w-full"
+          disabled={!sid || linkMut.isPending}
+          onClick={() => linkMut.mutate()}
+        >
+          {linkMut.isPending ? "Generating…" : qr ? "Regenerate QR" : "Generate QR"}
+        </Button>
+        {qr && (
+          <div className="space-y-2 rounded-md border bg-muted/30 p-3 text-center">
+            <img src={qr.qrimagelink} alt="WhatsApp QR" className="mx-auto h-64 w-64 rounded bg-white p-2" />
+            <p className="text-xs text-muted-foreground">
+              Open WhatsApp on your phone → Linked Devices → Link a device, then scan this QR.
+            </p>
+          </div>
+        )}
+      </div>
+    </DialogContent>
   );
 }
 
