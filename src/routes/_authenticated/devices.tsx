@@ -119,7 +119,10 @@ function DevicesPage() {
   const fnApplyDefaults = useServerFn(applyDeviceDefaults);
   const applyMut = useMutation({
     mutationFn: (id: string) => fnApplyDefaults({ data: { id } }),
-    onSuccess: () => toast.success("Receive Chats & Random Send disabled"),
+    onSuccess: (r) => {
+      if (r.ok) toast.success(r.message);
+      else toast.warning(r.message);
+    },
     onError: (e) => toast.error((e as Error).message),
   });
 
