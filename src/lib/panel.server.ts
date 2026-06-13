@@ -4,6 +4,7 @@
 // cookie + CSRF token in module scope, and re-logs on auth failure.
 
 type Jar = Record<string, string>;
+type PanelSession = { jar: Jar; token?: string | null };
 
 let cachedJar: Jar | null = null;
 let cachedToken: string | null | undefined = null;
@@ -151,7 +152,7 @@ function hasZenderLoginForm(html: string): boolean {
     /<input\b[^>]+name=["']?password["'\s>]/i.test(html);
 }
 
-async function login(): Promise<{ jar: Jar; token?: string | null }> {
+async function login(): Promise<PanelSession> {
   const base = panelBase();
   const email = process.env.HOSTERCAMP_PANEL_EMAIL;
   const password = process.env.HOSTERCAMP_PANEL_PASSWORD;
@@ -240,9 +241,9 @@ async function login(): Promise<{ jar: Jar; token?: string | null }> {
   return { jar, token };
 }
 
-async function ensureSession(force = false): Promise<{ jar: Jar; token: string }> {
+async function ensureSession(force = false): Promise<PanelSession> {
   const fresh = Date.now() - cachedAt < TTL_MS;
-  if (!force && cachedJar && cachedToken && fresh) {
+  if (!force && cachedJar && cachedToken !== null && fresh) {
     return { jar: cachedJar, token: cachedToken };
   }
   const s = await login();
@@ -260,9 +261,9 @@ export async function panelAjaxPost(
   const base = panelBase();
   const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
 
-  const doCall = async (sess: { jar: Jar; token: string }) => {
+  const doCall = async (sess: PanelSession) => {
     const body = new URLSearchParams();
-    body.set("_token", sess.token);
+    if (sess.token) body.set("_token", sess.token);
     for (const [k, v] of Object.entries(fields)) {
       if (v === undefined || v === null) continue;
       body.set(k, String(v));
@@ -277,8 +278,8 @@ export async function panelAjaxPost(
         Referer: base + "/",
         Origin: base,
         "X-Requested-With": "XMLHttpRequest",
-        "X-CSRF-TOKEN": sess.token,
         Accept: "application/json, text/plain, */*",
+        ...(sess.token ? { "X-CSRF-TOKEN": sess.token } : {}),
       },
       body: body.toString(),
     });
