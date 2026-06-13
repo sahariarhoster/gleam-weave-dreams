@@ -159,7 +159,7 @@ function DevicesPage() {
                 <TableRow key={d.id}>
                   <TableCell className="font-medium">{d.name}</TableCell>
                   {isOwner && <TableCell className="max-w-[280px] truncate font-mono text-xs">{d.device_unique_id}</TableCell>}
-                  <TableCell className="text-sm">{d.sim_info ?? "—"}</TableCell>
+                  <TableCell className="text-sm">{formatSim(d.sim_info)}</TableCell>
                   <TableCell>
                     {d.brands?.name ? <Badge variant="secondary">{d.brands.name}</Badge> : <span className="text-xs text-muted-foreground">—</span>}
                   </TableCell>
