@@ -221,7 +221,7 @@ function DevicesPage() {
                           <Pencil className="h-4 w-4" />
                         </Button>
                       )}
-                      {isOwner && (
+                      {canManage && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button size="icon" variant="ghost" className="text-rose-600 hover:bg-rose-50 hover:text-rose-700" title="Delete">
