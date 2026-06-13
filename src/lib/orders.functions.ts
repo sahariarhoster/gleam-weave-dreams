@@ -555,26 +555,30 @@ export const adminCreateOrder = createServerFn({ method: "POST" })
       .from("packages").select("*").eq("id", data.package_id).maybeSingle();
     if (pErr || !pkg) throw new Error("Package not found");
 
-    // Resolve or create user
+    // Resolve user: explicit user_id wins, else lookup by email, else create
     let userId: string;
-    const { data: list } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
-    const existing = (list?.users ?? []).find(
-      (u) => u.email?.toLowerCase() === data.email.toLowerCase(),
-    );
-    if (existing) {
-      userId = existing.id;
+    if (data.user_id) {
+      userId = data.user_id;
     } else {
-      const password = data.password && data.password.length >= 6
-        ? data.password
-        : Math.random().toString(36).slice(2) + "Aa1!";
-      const { data: created, error: cuErr } = await supabaseAdmin.auth.admin.createUser({
-        email: data.email,
-        password,
-        email_confirm: true,
-        user_metadata: { full_name: data.full_name },
-      });
-      if (cuErr || !created.user) throw new Error(cuErr?.message ?? "Could not create account");
-      userId = created.user.id;
+      const { data: list } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
+      const existing = (list?.users ?? []).find(
+        (u) => u.email?.toLowerCase() === data.email.toLowerCase(),
+      );
+      if (existing) {
+        userId = existing.id;
+      } else {
+        const password = data.password && data.password.length >= 6
+          ? data.password
+          : Math.random().toString(36).slice(2) + "Aa1!";
+        const { data: created, error: cuErr } = await supabaseAdmin.auth.admin.createUser({
+          email: data.email,
+          password,
+          email_confirm: true,
+          user_metadata: { full_name: data.full_name },
+        });
+        if (cuErr || !created.user) throw new Error(cuErr?.message ?? "Could not create account");
+        userId = created.user.id;
+      }
     }
 
     await supabaseAdmin.from("profiles").upsert(
@@ -589,24 +593,44 @@ export const adminCreateOrder = createServerFn({ method: "POST" })
       ? new Date(Date.now() + (pkg.duration_days ?? 30) * 86_400_000).toISOString()
       : null;
 
-    const { data: brand, error: bErr } = await supabaseAdmin
-      .from("brands")
-      .insert({
-        name: data.brand_name,
-        status: (data.auto_approve ? "active" : "pending") as any,
+    // Upgrade existing brand or create new
+    let brandId: string;
+    if (data.brand_id) {
+      const patch: Record<string, any> = {
+        current_package_id: pkg.id,
         message_limit: pkg.message_limit,
         device_limit: pkg.device_limit,
         license_limit: pkg.license_count,
-        created_by: userId,
-        current_package_id: pkg.id,
-        expires_at: expiresIso,
-      } as any)
-      .select("id")
-      .single();
-    if (bErr || !brand) throw new Error(bErr?.message ?? "Could not create brand");
+      };
+      if (data.auto_approve) {
+        patch.status = "active";
+        patch.expires_at = expiresIso;
+        patch.cancel_requested_at = null;
+      }
+      const { error: uErr } = await supabaseAdmin.from("brands").update(patch).eq("id", data.brand_id);
+      if (uErr) throw new Error(uErr.message);
+      brandId = data.brand_id;
+    } else {
+      const { data: brand, error: bErr } = await supabaseAdmin
+        .from("brands")
+        .insert({
+          name: data.brand_name,
+          status: (data.auto_approve ? "active" : "pending") as any,
+          message_limit: pkg.message_limit,
+          device_limit: pkg.device_limit,
+          license_limit: pkg.license_count,
+          created_by: userId,
+          current_package_id: pkg.id,
+          expires_at: expiresIso,
+        } as any)
+        .select("id")
+        .single();
+      if (bErr || !brand) throw new Error(bErr?.message ?? "Could not create brand");
+      brandId = brand.id;
+    }
 
     await supabaseAdmin.from("brand_members").upsert(
-      { brand_id: brand.id, user_id: userId, role: "brand_admin" },
+      { brand_id: brandId, user_id: userId, role: "brand_admin" },
       { onConflict: "brand_id,user_id" },
     );
 
