@@ -171,6 +171,162 @@ export const linkDeviceQR = createServerFn({ method: "POST" })
     return res.data as { qrstring: string; qrimagelink: string; infolink?: string };
   });
 
+// ============ API Key Pool ============
+
+export const listApiKeys = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertStrictOwner(context.supabase, context.userId);
+    const { data, error } = await context.supabase
+      .from("wa_api_keys")
+      .select("id, label, secret, sid, active, created_at")
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  });
+
+export const createApiKey = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      label: z.string().min(1).max(120),
+      secret: z.string().min(4).max(500),
+      sid: z.number().int().positive().default(1),
+      active: z.boolean().default(true),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertStrictOwner(context.supabase, context.userId);
+    const { error } = await context.supabase.from("wa_api_keys").insert(data);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const updateApiKey = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      id: z.string().uuid(),
+      label: z.string().min(1).max(120).optional(),
+      secret: z.string().min(4).max(500).optional(),
+      sid: z.number().int().positive().optional(),
+      active: z.boolean().optional(),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertStrictOwner(context.supabase, context.userId);
+    const { id, ...patch } = data;
+    const { error } = await context.supabase.from("wa_api_keys").update(patch).eq("id", id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const deleteApiKey = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertStrictOwner(context.supabase, context.userId);
+    const { error } = await context.supabase.from("wa_api_keys").delete().eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+// ============ Add-Device QR flow (uses random pool key) ============
+
+export const startDeviceLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ brand_id: z.string().uuid().nullable().optional() }).parse(d),
+  )
+  .handler(async ({ context }) => {
+    await assertOwner(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: keys, error: keysErr } = await supabaseAdmin
+      .from("wa_api_keys")
+      .select("id, secret, sid")
+      .eq("active", true);
+    if (keysErr) throw new Error(keysErr.message);
+    if (!keys || keys.length === 0) {
+      throw new Error("No active API keys configured. Add one in Settings → API Keys.");
+    }
+    const pick = keys[Math.floor(Math.random() * keys.length)];
+    const { bdwebs } = await import("@/lib/bdwebs.server");
+    const res = await bdwebs.linkWhatsApp({ secret: pick.secret, sid: pick.sid });
+    if (res.status !== 200) throw new Error(res.message || "Failed to generate QR");
+    const d = res.data as { qrstring?: string; qrimagelink?: string; infolink?: string };
+    return {
+      api_key_id: pick.id,
+      qrimagelink: d.qrimagelink ?? "",
+      infolink: d.infolink ?? "",
+      expires_at: new Date(Date.now() + 60_000).toISOString(),
+    };
+  });
+
+export const pollDeviceLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      api_key_id: z.string().uuid(),
+      infolink: z.string().url(),
+      name: z.string().min(1).max(100),
+      sim_info: z.string().max(50).nullable().optional(),
+      brand_id: z.string().uuid().nullable().optional(),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertOwner(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: key } = await supabaseAdmin
+      .from("wa_api_keys")
+      .select("secret")
+      .eq("id", data.api_key_id)
+      .maybeSingle();
+    if (!key?.secret) throw new Error("API key no longer exists");
+
+    let info: any = null;
+    try {
+      const res = await fetch(data.infolink, { method: "GET" });
+      const text = await res.text();
+      try { info = JSON.parse(text); } catch { info = { raw: text }; }
+    } catch (e: any) {
+      return { status: "pending" as const, message: String(e?.message ?? e) };
+    }
+
+    const root = info?.data ?? info ?? {};
+    const unique: string | undefined =
+      root.unique ?? root.account ?? root.device_unique_id ?? info?.unique;
+
+    if (!unique) {
+      return { status: "pending" as const, message: info?.message ?? "Waiting for scan…" };
+    }
+
+    // Idempotent: if this device already exists, return it.
+    const { data: existing } = await supabaseAdmin
+      .from("devices")
+      .select("id")
+      .eq("device_unique_id", unique)
+      .maybeSingle();
+    if (existing) return { status: "linked" as const, device_id: existing.id };
+
+    const { data: inserted, error: insErr } = await supabaseAdmin
+      .from("devices")
+      .insert({
+        name: data.name,
+        device_unique_id: unique,
+        sim_info: data.sim_info ?? root.phone ?? root.sim ?? null,
+        api_secret: key.secret,
+        brand_id: data.brand_id ?? null,
+        status: "active",
+        created_by: context.userId,
+      })
+      .select("id")
+      .single();
+    if (insErr) throw new Error(insErr.message);
+    return { status: "linked" as const, device_id: inserted.id };
+  });
+
+
+
 
 export const testDeviceConnection = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
