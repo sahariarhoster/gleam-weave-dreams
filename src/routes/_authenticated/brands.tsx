@@ -36,6 +36,11 @@ function BrandsPage() {
 
   const [editing, setEditing] = useState<Brand | null>(null);
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+  const filtered = (brands.data ?? []).filter((b: any) =>
+    !q || b.name?.toLowerCase().includes(q) || b.status?.toLowerCase().includes(q),
+  );
 
   const delMut = useMutation({
     mutationFn: (id: string) => deleteBrandClient(id),
