@@ -76,6 +76,15 @@ function CampaignsPage() {
     onError: (e) => toast.error((e as Error).message),
   });
 
+  const ignoreMut = useMutation({
+    mutationFn: (v: { id: string; ignore: boolean }) => fnIgnore({ data: v }),
+    onSuccess: (_r, v) => {
+      toast.success(v.ignore ? "Auto-pause on failures disabled" : "Auto-pause on failures enabled");
+      qc.invalidateQueries({ queryKey: ["campaigns"] });
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
   return (
     <div className="mx-auto max-w-7xl">
       <PageHeader
