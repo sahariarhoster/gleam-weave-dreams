@@ -69,6 +69,12 @@ function CampaignsPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["campaigns"] }),
   });
 
+  const cancelMut = useMutation({
+    mutationFn: (id: string) => fnCancel({ data: { id } }),
+    onSuccess: (r) => { toast.success(`Campaign cancelled · ${r.cancelled} queued messages removed`); qc.invalidateQueries({ queryKey: ["campaigns"] }); },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
   return (
     <div className="mx-auto max-w-7xl">
       <PageHeader
