@@ -1,5 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { z } from "zod";
+import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import {
   MessageCircle,
   Mail,
@@ -19,14 +21,21 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
+const authSearchSchema = z.object({
+  redirect: fallback(z.string().optional(), undefined),
+});
+
 export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({ meta: [{ title: "Sign in — WA Suite" }] }),
+  validateSearch: zodValidator(authSearchSchema),
   component: AuthPage,
 });
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { redirect } = Route.useSearch();
+  const redirectTo = redirect?.startsWith("/") && !redirect.startsWith("//") ? redirect : "/dashboard";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -34,9 +43,9 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data, error }) => {
-      if (!error && data.user) navigate({ to: "/dashboard", replace: true });
+      if (!error && data.user) navigate({ to: redirectTo, replace: true });
     });
-  }, [navigate]);
+  }, [navigate, redirectTo]);
 
   async function signIn(e: React.FormEvent) {
     e.preventDefault();
@@ -52,7 +61,7 @@ function AuthPage() {
     }
     toast.success("Welcome back!");
     setLoading(false);
-    navigate({ to: "/dashboard", replace: true });
+    navigate({ to: redirectTo, replace: true });
   }
 
   async function forgot() {
