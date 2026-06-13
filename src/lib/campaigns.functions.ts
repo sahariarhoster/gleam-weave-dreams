@@ -41,7 +41,7 @@ export const listCampaigns = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
       .from("campaigns")
-      .select("id, name, status, total_recipients, sent_count, failed_count, scheduled_at, created_at, brands(name), devices(name)")
+      .select("id, name, status, total_recipients, sent_count, failed_count, scheduled_at, created_at, ignore_failure_pause, brands(name), devices(name)")
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
     return data ?? [];
@@ -208,6 +208,21 @@ export const setCampaignStatus = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const setCampaignIgnoreFailurePause = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid(), ignore: z.boolean() }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertCampaignManager(context.supabase, context.userId, data.id);
+    const { error } = await context.supabase
+      .from("campaigns")
+      .update({ ignore_failure_pause: data.ignore } as never)
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 // ============ SEND ENGINE ============
 // Runs synchronously; sends a chunk of queued messages respecting delays/window/daily limit.
 
@@ -236,7 +251,7 @@ export const runCampaignChunk = createServerFn({ method: "POST" })
     await assertCampaignManager(context.supabase, context.userId, data.id);
     const { data: camp, error: cErr } = await context.supabase
       .from("campaigns")
-      .select("id, status, device_id, min_delay_seconds, max_delay_seconds, daily_limit, send_window_start, send_window_end, sent_count, failed_count")
+      .select("id, status, device_id, min_delay_seconds, max_delay_seconds, daily_limit, send_window_start, send_window_end, sent_count, failed_count, ignore_failure_pause")
       .eq("id", data.id)
       .single();
     if (cErr || !camp) throw new Error("Campaign not found");
@@ -375,7 +390,7 @@ export const runCampaignChunk = createServerFn({ method: "POST" })
     const total = newSent + newFailed;
     const failRate = total > 0 ? newFailed / total : 0;
     const patch: Record<string, any> = { sent_count: newSent, failed_count: newFailed };
-    if (total >= 20 && failRate > 0.2) patch.status = "paused";
+    if (!camp.ignore_failure_pause && total >= 20 && failRate > 0.2) patch.status = "paused";
     await context.supabase.from("campaigns").update(patch as never).eq("id", camp.id);
 
     return { ran: batch.length, sent, failed, requeued, paused: patch.status === "paused" };

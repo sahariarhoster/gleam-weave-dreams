@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Plus, Trash2, Megaphone, Play, Pause, Eye, Ban } from "lucide-react";
+import { Plus, Trash2, Megaphone, Play, Pause, Eye, Ban, ShieldAlert, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Progress } from "@/components/ui/progress";
-import { listCampaigns, createCampaign, deleteCampaign, setCampaignStatus, runCampaignChunk, cancelCampaign } from "@/lib/campaigns.functions";
+import { listCampaigns, createCampaign, deleteCampaign, setCampaignStatus, runCampaignChunk, cancelCampaign, setCampaignIgnoreFailurePause } from "@/lib/campaigns.functions";
 import { PageHeader } from "@/components/layout/page-header";
 import { listBrandsLiteClient, listCampaignsClient, listDevicesClient, listGroupsClient } from "@/lib/client-queries";
 
@@ -42,6 +42,7 @@ function CampaignsPage() {
   const fnStatus = useServerFn(setCampaignStatus);
   const fnRun = useServerFn(runCampaignChunk);
   const fnCancel = useServerFn(cancelCampaign);
+  const fnIgnore = useServerFn(setCampaignIgnoreFailurePause);
 
   const camps = useQuery({ queryKey: ["campaigns"], queryFn: listCampaignsClient });
   const [open, setOpen] = useState(false);
@@ -72,6 +73,15 @@ function CampaignsPage() {
   const cancelMut = useMutation({
     mutationFn: (id: string) => fnCancel({ data: { id } }),
     onSuccess: (r) => { toast.success(`Campaign cancelled · ${r.cancelled} queued messages removed`); qc.invalidateQueries({ queryKey: ["campaigns"] }); },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const ignoreMut = useMutation({
+    mutationFn: (v: { id: string; ignore: boolean }) => fnIgnore({ data: v }),
+    onSuccess: (_r, v) => {
+      toast.success(v.ignore ? "Auto-pause on failures disabled" : "Auto-pause on failures enabled");
+      qc.invalidateQueries({ queryKey: ["campaigns"] });
+    },
     onError: (e) => toast.error((e as Error).message),
   });
 
@@ -144,6 +154,18 @@ function CampaignsPage() {
                         {c.status === "paused" && (
                           <Button size="icon" variant="ghost" onClick={() => statusMut.mutate({ id: c.id, status: "running" })} title="Resume">
                             <Play className="h-4 w-4" />
+                          </Button>
+                        )}
+                        {(c.status === "running" || c.status === "paused" || c.status === "scheduled" || c.status === "draft") && (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => ignoreMut.mutate({ id: c.id, ignore: !c.ignore_failure_pause })}
+                            title={c.ignore_failure_pause ? "Failures skipped — click to re-enable auto-pause" : "Skip failures (don't auto-pause on errors)"}
+                          >
+                            {c.ignore_failure_pause
+                              ? <ShieldAlert className="h-4 w-4 text-amber-600" />
+                              : <ShieldCheck className="h-4 w-4" />}
                           </Button>
                         )}
                         {(c.status === "draft" || c.status === "scheduled" || c.status === "running" || c.status === "paused") && (
