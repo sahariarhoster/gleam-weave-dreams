@@ -506,31 +506,13 @@ export const pollDeviceLink = createServerFn({ method: "POST" })
       root.whatsapp ?? root.whatsapp_id ?? root.wid ?? root.phone ??
       root.sim ?? root.number ?? root.msisdn ?? unique;
 
-    // Fallback: panel may already list the account but infolink hasn't updated.
+    // Only treat as linked when the infolink itself reports the scanned
+    // account. Do NOT fall back to wa.accounts here — it would pick up an
+    // unrelated existing device on the same panel API key and falsely mark
+    // the new QR as "linked" before the user has scanned anything (also
+    // blocking second-device adds by re-linking the first device instead).
     if (!unique) {
       console.log("pollDeviceLink waiting — info payload:", JSON.stringify(info).slice(0, 600));
-      try {
-        const { bdwebs } = await import("@/lib/bdwebs.server");
-        const accRes = await bdwebs.getWhatsAppAccounts(key.secret);
-        const accounts = (accRes?.data ?? []) as Array<Record<string, any>>;
-        if (accounts.length) {
-          const latest = [...accounts].sort(
-            (a, b) => Number(b.id ?? 0) - Number(a.id ?? 0),
-          )[0];
-          const fb = latest.unique ?? latest.account ?? latest.device_unique_id;
-          if (fb) {
-            console.log("pollDeviceLink fallback unique from wa.accounts:", fb);
-            unique = String(fb);
-            waId = latest.whatsapp ?? latest.phone ?? latest.msisdn ?? unique;
-            root.id = latest.id;
-          }
-        }
-      } catch (e) {
-        console.warn("pollDeviceLink fallback wa.accounts failed", e);
-      }
-    }
-
-    if (!unique) {
       return { status: "pending" as const, message: info?.message ?? "Waiting for scan…" };
     }
 
