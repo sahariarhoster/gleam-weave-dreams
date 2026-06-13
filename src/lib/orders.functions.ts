@@ -660,11 +660,11 @@ export const adminCreateOrder = createServerFn({ method: "POST" })
 
     await supabaseAdmin.from("activity_log").insert({
       action: data.auto_approve ? "admin_create_subscription" : "admin_create_order",
-      brand_id: brand.id,
+      brand_id: brandId,
       user_id: context.userId,
-      details: { order_id: order.id, package_id: pkg.id },
+      details: { order_id: order.id, package_id: pkg.id, upgraded: !!data.brand_id },
     });
 
-    return { ok: true, order_id: order.id, brand_id: brand.id };
+    return { ok: true, order_id: order.id, brand_id: brandId };
   });
 
