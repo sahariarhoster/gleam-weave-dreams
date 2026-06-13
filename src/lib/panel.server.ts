@@ -14,7 +14,11 @@ const TTL_MS = 30 * 60 * 1000; // 30 min
 function panelBase(): string {
   const url = process.env.HOSTERCAMP_PANEL_URL;
   if (!url) throw new Error("HOSTERCAMP_PANEL_URL is not configured");
-  return url.replace(/\/+$/, "");
+  return new URL(url.replace(/\/+$/, "")).origin;
+}
+
+function panelDashboardBase(): string {
+  return `${panelBase()}/dashboard`;
 }
 
 function jarToHeader(jar: Jar): string {
@@ -134,14 +138,14 @@ async function fetchHtmlFollowingRedirects(initialUrl: string, jar: Jar) {
 }
 
 async function getLoginPage(base: string, jar: Jar) {
-  const candidates = ["/login", "/", "/user/login", "/admin/login", "/signin"];
-  let best = { html: "", url: `${base}/login`, status: 0 };
+  const candidates = ["/dashboard/auth", "/dashboard/login", "/login", "/", "/user/login", "/admin/login", "/signin"];
+  let best = { html: "", url: `${base}/dashboard/auth`, status: 0 };
   const checked: string[] = [];
   for (const path of candidates) {
     const page = await fetchHtmlFollowingRedirects(`${base}${path}`, jar);
     checked.push(`${path} → ${page.status}`);
     if (extractToken(page.html) || tokenFromCookies(jar)) return { ...page, checked };
-    if (page.html.length > best.html.length) best = page;
+    if (hasZenderLoginForm(page.html) || page.html.length > best.html.length) best = page;
   }
   return { ...best, checked };
 }
@@ -238,6 +242,22 @@ async function login(): Promise<PanelSession> {
     }
   }
 
+  // Touch an authenticated dashboard page so the PHP session is fully established
+  // before later AJAX calls hit `/requests/*` at the site root.
+  try {
+    const r4 = await fetch(`${panelDashboardBase()}/hosts/whatsapp`, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 LovableBot",
+        Cookie: jarToHeader(jar),
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      },
+      redirect: "manual",
+    });
+    mergeSetCookies(jar, r4);
+  } catch {
+    /* non-fatal */
+  }
+
   return { jar, token };
 }
 
@@ -276,7 +296,7 @@ export async function panelAjaxPost(
         "Content-Type": "application/x-www-form-urlencoded",
         "User-Agent": "Mozilla/5.0 LovableBot",
         Cookie: jarToHeader(sess.jar),
-        Referer: base + "/",
+        Referer: `${panelDashboardBase()}/hosts/whatsapp`,
         Origin: base,
         "X-Requested-With": "XMLHttpRequest",
         Accept: "application/json, text/plain, */*",
@@ -294,7 +314,7 @@ export async function panelAjaxPost(
   const looksUnauth =
     r.status === 401 ||
     r.status === 419 ||
-    (r.status >= 300 && r.status < 400 && /login/i.test(r.location ?? "")) ||
+    (r.status >= 300 && r.status < 400 && /(?:login|auth)/i.test(r.location ?? "")) ||
     /login|sign[\s-]?in/i.test(r.body.slice(0, 500));
   if (looksUnauth) {
     sess = await ensureSession(true);
@@ -323,6 +343,7 @@ export async function panelEditWhatsApp(args: {
   const override = process.env.HOSTERCAMP_PANEL_EDIT_PATH;
   const paths = [
     ...(override ? [override] : []),
+    "/requests/whatsapp/edit.whatsapp",
     "/requests/whatsapp/edit",
     "/requests/whatsapp/index/edit",
     "/whatsapp/edit",
@@ -337,7 +358,14 @@ export async function panelEditWhatsApp(args: {
     const r = await panelAjaxPost(p, fields);
     last = r;
     attempts.push(`${p} → ${r.status}${r.location ? ` (→ ${r.location})` : ""}`);
-    if (r.status >= 200 && r.status < 300 && !/login|sign[\s-]?in/i.test(r.body.slice(0, 200))) {
+    let accepted = r.status >= 200 && r.status < 300 && !/login|sign[\s-]?in/i.test(r.body.slice(0, 200));
+    try {
+      const json = JSON.parse(r.body);
+      accepted = accepted && [200, 301].includes(Number(json?.status));
+    } catch {
+      /* non-json success responses are allowed */
+    }
+    if (accepted) {
       return { ok: true, status: r.status, body: r.body, endpoint: p, attempts };
     }
   }
