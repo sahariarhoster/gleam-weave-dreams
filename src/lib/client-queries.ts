@@ -273,28 +273,6 @@ export async function listLicensesClient() {
   }));
 }
 
-export async function listDeviceRequestsClient() {
-  const { data, error } = await db
-    .from("device_requests")
-    .select("id, brand_id, requested_by, device_name, notes, status, admin_reply, created_at, updated_at, brands(name)")
-    .order("created_at", { ascending: false });
-  assertOk(error);
-  const rows = data ?? [];
-  const userIds = Array.from(new Set(rows.map((row: any) => row.requested_by).filter(Boolean)));
-  let profiles: any[] = [];
-  if (userIds.length) {
-    const { data: profileRows, error: profilesError } = await db.from("profiles").select("id, email, full_name").in("id", userIds);
-    assertOk(profilesError);
-    profiles = profileRows ?? [];
-  }
-  const profileMap = Object.fromEntries(profiles.map((profile: any) => [profile.id, profile]));
-  return rows.map((row: any) => ({
-    ...row,
-    brand_name: row.brands?.name,
-    requester_email: profileMap[row.requested_by]?.email,
-    requester_name: profileMap[row.requested_by]?.full_name,
-  }));
-}
 
 export async function createBrandClient(input: {
   name: string;

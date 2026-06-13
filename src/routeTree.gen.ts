@@ -14,6 +14,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
+import { Route as AuthenticatedSupportRouteImport } from './routes/_authenticated/support'
 import { Route as AuthenticatedSubscriptionsRouteImport } from './routes/_authenticated/subscriptions'
 import { Route as AuthenticatedSendRouteImport } from './routes/_authenticated/send'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
@@ -24,7 +25,6 @@ import { Route as AuthenticatedLogsRouteImport } from './routes/_authenticated/l
 import { Route as AuthenticatedLicensesRouteImport } from './routes/_authenticated/licenses'
 import { Route as AuthenticatedGroupsRouteImport } from './routes/_authenticated/groups'
 import { Route as AuthenticatedDevicesRouteImport } from './routes/_authenticated/devices'
-import { Route as AuthenticatedDeviceRequestsRouteImport } from './routes/_authenticated/device-requests'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCouponsRouteImport } from './routes/_authenticated/coupons'
 import { Route as AuthenticatedContactsRouteImport } from './routes/_authenticated/contacts'
@@ -71,6 +71,11 @@ const IndexRoute = IndexRouteImport.update({
 const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
   id: '/users',
   path: '/users',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSupportRoute = AuthenticatedSupportRouteImport.update({
+  id: '/support',
+  path: '/support',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedSubscriptionsRoute =
@@ -124,12 +129,6 @@ const AuthenticatedDevicesRoute = AuthenticatedDevicesRouteImport.update({
   path: '/devices',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedDeviceRequestsRoute =
-  AuthenticatedDeviceRequestsRouteImport.update({
-    id: '/device-requests',
-    path: '/device-requests',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -263,7 +262,6 @@ export interface FileRoutesByFullPath {
   '/contacts': typeof AuthenticatedContactsRoute
   '/coupons': typeof AuthenticatedCouponsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/device-requests': typeof AuthenticatedDeviceRequestsRoute
   '/devices': typeof AuthenticatedDevicesRoute
   '/groups': typeof AuthenticatedGroupsRoute
   '/licenses': typeof AuthenticatedLicensesRoute
@@ -274,6 +272,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof AuthenticatedReportsRoute
   '/send': typeof AuthenticatedSendRoute
   '/subscriptions': typeof AuthenticatedSubscriptionsRoute
+  '/support': typeof AuthenticatedSupportRoute
   '/users': typeof AuthenticatedUsersRoute
   '/api/public/cron/daily-report': typeof ApiPublicCronDailyReportRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
@@ -303,7 +302,6 @@ export interface FileRoutesByTo {
   '/contacts': typeof AuthenticatedContactsRoute
   '/coupons': typeof AuthenticatedCouponsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/device-requests': typeof AuthenticatedDeviceRequestsRoute
   '/devices': typeof AuthenticatedDevicesRoute
   '/groups': typeof AuthenticatedGroupsRoute
   '/licenses': typeof AuthenticatedLicensesRoute
@@ -314,6 +312,7 @@ export interface FileRoutesByTo {
   '/reports': typeof AuthenticatedReportsRoute
   '/send': typeof AuthenticatedSendRoute
   '/subscriptions': typeof AuthenticatedSubscriptionsRoute
+  '/support': typeof AuthenticatedSupportRoute
   '/users': typeof AuthenticatedUsersRoute
   '/api/public/cron/daily-report': typeof ApiPublicCronDailyReportRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
@@ -345,7 +344,6 @@ export interface FileRoutesById {
   '/_authenticated/contacts': typeof AuthenticatedContactsRoute
   '/_authenticated/coupons': typeof AuthenticatedCouponsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/device-requests': typeof AuthenticatedDeviceRequestsRoute
   '/_authenticated/devices': typeof AuthenticatedDevicesRoute
   '/_authenticated/groups': typeof AuthenticatedGroupsRoute
   '/_authenticated/licenses': typeof AuthenticatedLicensesRoute
@@ -356,6 +354,7 @@ export interface FileRoutesById {
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/send': typeof AuthenticatedSendRoute
   '/_authenticated/subscriptions': typeof AuthenticatedSubscriptionsRoute
+  '/_authenticated/support': typeof AuthenticatedSupportRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/api/public/cron/daily-report': typeof ApiPublicCronDailyReportRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
@@ -387,7 +386,6 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/coupons'
     | '/dashboard'
-    | '/device-requests'
     | '/devices'
     | '/groups'
     | '/licenses'
@@ -398,6 +396,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/send'
     | '/subscriptions'
+    | '/support'
     | '/users'
     | '/api/public/cron/daily-report'
     | '/api/public/cron/tick'
@@ -427,7 +426,6 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/coupons'
     | '/dashboard'
-    | '/device-requests'
     | '/devices'
     | '/groups'
     | '/licenses'
@@ -438,6 +436,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/send'
     | '/subscriptions'
+    | '/support'
     | '/users'
     | '/api/public/cron/daily-report'
     | '/api/public/cron/tick'
@@ -468,7 +467,6 @@ export interface FileRouteTypes {
     | '/_authenticated/contacts'
     | '/_authenticated/coupons'
     | '/_authenticated/dashboard'
-    | '/_authenticated/device-requests'
     | '/_authenticated/devices'
     | '/_authenticated/groups'
     | '/_authenticated/licenses'
@@ -479,6 +477,7 @@ export interface FileRouteTypes {
     | '/_authenticated/reports'
     | '/_authenticated/send'
     | '/_authenticated/subscriptions'
+    | '/_authenticated/support'
     | '/_authenticated/users'
     | '/api/public/cron/daily-report'
     | '/api/public/cron/tick'
@@ -554,6 +553,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedUsersRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/support': {
+      id: '/_authenticated/support'
+      path: '/support'
+      fullPath: '/support'
+      preLoaderRoute: typeof AuthenticatedSupportRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/subscriptions': {
       id: '/_authenticated/subscriptions'
       path: '/subscriptions'
@@ -622,13 +628,6 @@ declare module '@tanstack/react-router' {
       path: '/devices'
       fullPath: '/devices'
       preLoaderRoute: typeof AuthenticatedDevicesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/device-requests': {
-      id: '/_authenticated/device-requests'
-      path: '/device-requests'
-      fullPath: '/device-requests'
-      preLoaderRoute: typeof AuthenticatedDeviceRequestsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -805,7 +804,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedContactsRoute: typeof AuthenticatedContactsRoute
   AuthenticatedCouponsRoute: typeof AuthenticatedCouponsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedDeviceRequestsRoute: typeof AuthenticatedDeviceRequestsRoute
   AuthenticatedDevicesRoute: typeof AuthenticatedDevicesRoute
   AuthenticatedGroupsRoute: typeof AuthenticatedGroupsRoute
   AuthenticatedLicensesRoute: typeof AuthenticatedLicensesRoute
@@ -816,6 +814,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedSendRoute: typeof AuthenticatedSendRoute
   AuthenticatedSubscriptionsRoute: typeof AuthenticatedSubscriptionsRoute
+  AuthenticatedSupportRoute: typeof AuthenticatedSupportRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
 }
 
@@ -829,7 +828,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedContactsRoute: AuthenticatedContactsRoute,
   AuthenticatedCouponsRoute: AuthenticatedCouponsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedDeviceRequestsRoute: AuthenticatedDeviceRequestsRoute,
   AuthenticatedDevicesRoute: AuthenticatedDevicesRoute,
   AuthenticatedGroupsRoute: AuthenticatedGroupsRoute,
   AuthenticatedLicensesRoute: AuthenticatedLicensesRoute,
@@ -840,6 +838,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedSendRoute: AuthenticatedSendRoute,
   AuthenticatedSubscriptionsRoute: AuthenticatedSubscriptionsRoute,
+  AuthenticatedSupportRoute: AuthenticatedSupportRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
 }
 

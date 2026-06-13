@@ -53,7 +53,7 @@ const items = [
   { title: "Blocked Numbers", url: "/blocked", icon: Ban },
   { title: "Activity Log", url: "/activity", icon: ScrollText },
   { title: "Plugin Licenses", url: "/licenses", icon: KeyRound, anyRole: ["owner", "brand_owner", "support_agent"] as string[] },
-  { title: "Device Requests", url: "/device-requests", icon: Wrench, anyRole: ["owner", "brand_owner", "sales_agent", "support_agent"] as string[] },
+  { title: "Support Tickets", url: "/support", icon: Wrench },
   { title: "Billing (WHMCS)", url: "/billing", icon: CreditCard, ownerOnly: true },
   { title: "Orders", url: "/orders", icon: ShoppingBag, anyRole: ["owner", "support_agent"] as string[] },
   { title: "Packages", url: "/packages", icon: Package, ownerOnly: true },
