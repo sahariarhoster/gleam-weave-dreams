@@ -564,7 +564,10 @@ export const pollDeviceLink = createServerFn({ method: "POST" })
       if (updErr) throw new Error(updErr.message);
       deviceId = existing.id;
     } else {
+      // New device — full check including device_limit.
+      await assertCanAddDeviceToBrand(context.userId, data.brand_id ?? null);
       const { data: inserted, error: insErr } = await supabaseAdmin
+
         .from("devices")
         .insert({
           name: data.name,
