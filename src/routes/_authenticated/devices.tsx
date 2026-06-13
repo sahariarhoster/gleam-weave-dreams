@@ -21,7 +21,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
-  createDevice, updateDevice, deleteDevice, testDeviceConnection,
+  updateDevice, deleteDevice, testDeviceConnection,
   listWaServers, linkDeviceQR, startDeviceLink, pollDeviceLink,
 } from "@/lib/devices.functions";
 import { PageHeader } from "@/components/layout/page-header";
