@@ -325,6 +325,24 @@ export const pollDeviceLink = createServerFn({ method: "POST" })
       .select("id")
       .single();
     if (insErr) throw new Error(insErr.message);
+
+    // Disable "Receive Chats" and "Random Send Interval" by default on the WA panel.
+    const waAccountId = root.id ?? root.account_id ?? root.wa_id;
+    if (waAccountId !== undefined && waAccountId !== null) {
+      try {
+        await bdwebs.editWhatsApp({
+          secret: key.secret,
+          id: waAccountId,
+          receive_chats: 2,
+          random_send: 2,
+          random_min: 1,
+          random_max: 5,
+        });
+      } catch (e) {
+        console.warn("editWhatsApp defaults failed", e);
+      }
+    }
+
     return { status: "linked" as const, device_id: inserted.id };
   });
 
