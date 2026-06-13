@@ -151,9 +151,15 @@ async function getLoginPage(base: string, jar: Jar) {
 }
 
 function hasZenderLoginForm(html: string): boolean {
-  return /<form\b[^>]*zender-authenticate-login/i.test(html) &&
-    /<input\b[^>]+name=["']?email["'\s>]/i.test(html) &&
-    /<input\b[^>]+name=["']?password["'\s>]/i.test(html);
+  return /zender-authenticate-login|Login to Access the Dashboard|WA Suite|requests\/index\/login/i.test(html) &&
+    /name=["']?email["'\s>]/i.test(html) &&
+    /name=["']?password["'\s>]/i.test(html);
+}
+
+function canAttemptTokenlessLogin(page: { html: string; url: string }, jar: Jar): boolean {
+  return hasZenderLoginForm(page.html) ||
+    (/\/dashboard\/(?:auth|login)?$/i.test(new URL(page.url).pathname) && "PHPSESSID" in jar) ||
+    (/WA Suite|Hoster Camp|SMS marketing platform/i.test(page.html) && "PHPSESSID" in jar);
 }
 
 async function login(): Promise<PanelSession> {
@@ -169,7 +175,7 @@ async function login(): Promise<PanelSession> {
   const page = await getLoginPage(base, jar);
   const loginUrl = page.url;
   const token = extractToken(page.html) ?? tokenFromCookies(jar);
-  const tokenlessZenderLogin = !token && hasZenderLoginForm(page.html);
+  const tokenlessZenderLogin = !token && canAttemptTokenlessLogin(page, jar);
   if (!token && !tokenlessZenderLogin) {
     console.warn("Panel login token lookup failed", {
       finalUrl: page.url,
