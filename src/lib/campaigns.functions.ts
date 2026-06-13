@@ -241,7 +241,8 @@ export const runCampaignChunk = createServerFn({ method: "POST" })
       .single();
     if (cErr || !camp) throw new Error("Campaign not found");
     if (camp.status === "paused") return { ran: 0, reason: "paused" };
-    if (camp.status === "completed" || camp.status === "failed") return { ran: 0, reason: camp.status };
+    if (camp.status === "completed" || camp.status === "failed" || camp.status === "cancelled") return { ran: 0, reason: camp.status };
+
 
     if (!inSendWindow(camp.send_window_start ?? "09:00", camp.send_window_end ?? "21:00")) {
       return { ran: 0, reason: "outside_window" };
