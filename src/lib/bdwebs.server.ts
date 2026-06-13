@@ -114,6 +114,13 @@ export const bdwebs = {
     });
   },
   /**
+   * Raw helper: POST to any panel path with form fields. Used to try alternative
+   * delete endpoints if the primary one isn't supported.
+   */
+  rawPost(path: string, params: Record<string, string | number | undefined>) {
+    return call<unknown>(path, params, "POST");
+  },
+  /**
    * Fetch all linked WhatsApp accounts for this secret.
    * Used to refresh per-device status.
    */
