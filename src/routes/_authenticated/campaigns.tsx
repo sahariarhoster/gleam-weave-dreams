@@ -41,6 +41,7 @@ function CampaignsPage() {
   const fnDelete = useServerFn(deleteCampaign);
   const fnStatus = useServerFn(setCampaignStatus);
   const fnRun = useServerFn(runCampaignChunk);
+  const fnCancel = useServerFn(cancelCampaign);
 
   const camps = useQuery({ queryKey: ["campaigns"], queryFn: listCampaignsClient });
   const [open, setOpen] = useState(false);
