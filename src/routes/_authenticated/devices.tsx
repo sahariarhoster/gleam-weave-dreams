@@ -110,19 +110,24 @@ function DevicesPage() {
         title="Devices"
         description="Connect Android phones to send WhatsApp messages."
         actions={
-          canManage && (
-            <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="gap-1"><Plus className="h-4 w-4" /> Add Device</Button>
-              </DialogTrigger>
-              <DeviceDialog
-                key={editing?.id ?? "new"}
-                editing={editing}
-                brands={brands.data ?? []}
-                onDone={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["devices"] }); }}
-              />
-            </Dialog>
-          )
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => refreshMut.mutate()} disabled={refreshMut.isPending}>
+              {refreshMut.isPending ? "Refreshing…" : "Refresh Status"}
+            </Button>
+            {canManage && (
+              <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="gap-1"><Plus className="h-4 w-4" /> Add Device</Button>
+                </DialogTrigger>
+                <DeviceDialog
+                  key={editing?.id ?? "new"}
+                  editing={editing}
+                  brands={brands.data ?? []}
+                  onDone={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["devices"] }); }}
+                />
+              </Dialog>
+            )}
+          </div>
         }
       />
       <Card className="border-border/60 shadow-sm">
