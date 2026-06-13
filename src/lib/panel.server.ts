@@ -385,7 +385,9 @@ export async function panelEditWhatsApp(args: {
   let last: { status: number; body: string; location: string | null } = { status: 0, body: "", location: null };
   let bestFailure: { status: number; body: string; location: string | null } | null = null;
   for (const p of paths) {
-    const r = await panelAjaxPost(p, fields);
+    // Zender's [zender-form] handler submits as multipart/form-data; the
+    // PHP controller for `update/edit.whatsapp` only parses multipart input.
+    const r = await panelAjaxPost(p, fields, { multipart: true });
     last = r;
     attempts.push(`${p} → ${r.status}${r.location ? ` (→ ${r.location})` : ""}`);
     let accepted = false;
