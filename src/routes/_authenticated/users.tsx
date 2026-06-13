@@ -96,6 +96,15 @@ function UsersPage() {
       />
       <Card className="border-border/60 shadow-sm">
         <CardContent className="pt-6">
+          <div className="relative mb-4 max-w-sm">
+            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search by name, email, phone, or brand…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-8"
+            />
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -109,7 +118,10 @@ function UsersPage() {
             </TableHeader>
             <TableBody>
               {users.isLoading && <TableRow><TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">Loading…</TableCell></TableRow>}
-              {(users.data ?? []).map((u: any) => (
+              {!users.isLoading && filteredUsers.length === 0 && (
+                <TableRow><TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">No users match your search.</TableCell></TableRow>
+              )}
+              {filteredUsers.map((u: any) => (
                 <TableRow key={u.id}>
                   <TableCell className="font-medium">{u.full_name || "—"}</TableCell>
                   <TableCell className="text-sm">{u.email}</TableCell>
