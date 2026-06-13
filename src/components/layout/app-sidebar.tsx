@@ -10,6 +10,7 @@ import {
   Ban,
   ScrollText,
   MessageCircle,
+  BellRing,
   Contact,
   FolderOpen,
   KeyRound,
