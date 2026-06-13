@@ -34,6 +34,14 @@ export const Route = createFileRoute("/_authenticated/devices")({
   component: DevicesPage,
 });
 
+function formatSim(v: string | null | undefined): string {
+  if (!v) return "—";
+  const digits = v.replace(/\D+/g, "");
+  if (!digits) return "—";
+  return "+" + digits;
+}
+
+
 type Device = {
   id: string;
   name: string;
