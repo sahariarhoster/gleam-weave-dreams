@@ -421,8 +421,10 @@ export const startDeviceLink = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({ brand_id: z.string().uuid().nullable().optional() }).parse(d),
   )
-  .handler(async ({ context }) => {
+  .handler(async ({ data, context }) => {
     await assertOwner(context.supabase, context.userId);
+    await assertCanAddDeviceToBrand(context.userId, data?.brand_id ?? null);
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: keys, error: keysErr } = await supabaseAdmin
       .from("wa_api_keys")
