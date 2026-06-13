@@ -3,8 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { ListChecks, Search, AlertCircle, Eye, X } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
-import { z } from "zod";
-import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -16,15 +14,14 @@ import { listMessageLogsClient, listBrandsLiteClient } from "@/lib/client-querie
 import { PageHeader } from "@/components/layout/page-header";
 import { supabase } from "@/integrations/supabase/client";
 
-const logsSearchSchema = z.object({
-  campaign: fallback(z.string().optional(), undefined),
-});
-
 export const Route = createFileRoute("/_authenticated/logs")({
   head: () => ({ meta: [{ title: "Message Logs — WA Suite" }] }),
-  validateSearch: zodValidator(logsSearchSchema),
+  validateSearch: (search: Record<string, unknown>): { campaign?: string } => ({
+    campaign: typeof search.campaign === "string" ? search.campaign : undefined,
+  }),
   component: LogsPage,
 });
+
 
 
 const statusColor: Record<string, string> = {
