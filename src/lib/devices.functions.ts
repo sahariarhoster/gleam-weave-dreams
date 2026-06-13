@@ -637,21 +637,9 @@ export const applyDeviceDefaults = createServerFn({ method: "POST" })
     );
     if (!match?.id) throw new Error("WhatsApp account not found on panel");
 
-    // Prefer the bdwebs API (uses the device's own secret). Fall back to the
-    // panel AJAX scrape if the API rejects the request.
-    const apiRes = await bdwebs.editWhatsApp({
-      secret: dev.api_secret,
-      id: match.id,
-      receive_chats: 2,
-      random_send: 2,
-      random_min: 1,
-      random_max: 5,
-    });
-    if (apiRes?.status === 200) {
-      return { ok: true, endpoint: "/api/edit/whatsapp", message: "Receive Chats & Random Send disabled" };
-    }
-    console.warn("bdwebs.editWhatsApp rejected", apiRes);
-
+    // The bdwebs `/api/edit/whatsapp` endpoint isn't exposed as an API-key
+    // permission on HosterCamp, so go straight to the panel AJAX route
+    // (multipart, mirroring Zender's `[zender-form]` submit).
     const { panelEditWhatsApp } = await import("@/lib/panel.server");
     const r = await panelEditWhatsApp({
       id: match.id,
@@ -661,8 +649,7 @@ export const applyDeviceDefaults = createServerFn({ method: "POST" })
       random_max: 5,
     });
     if (!r.ok) {
-      const apiMsg = apiRes?.message ? `API: ${apiRes.message}. ` : "";
-      const message = `${apiMsg}Panel rejected edit (status ${r.status}): ${r.body.slice(0, 200) || "no body"}`;
+      const message = `Panel rejected edit (status ${r.status}): ${r.body.slice(0, 200) || "no body"}`;
       console.warn("applyDeviceDefaults failed", { message, attempts: r.attempts });
       return { ok: false, message };
     }
