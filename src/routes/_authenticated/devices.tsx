@@ -470,7 +470,7 @@ function DeviceDialog({
     <DialogContent>
       <DialogHeader><DialogTitle>Add Device</DialogTitle></DialogHeader>
       {!qr ? (
-        <form onSubmit={(e) => { e.preventDefault(); if (form.name) startMut.mutate(); }} className="space-y-3">
+        <form onSubmit={(e) => { e.preventDefault(); if (form.name && form.brand_id) startMut.mutate(); }} className="space-y-3">
           <div className="space-y-1.5">
             <Label>Device Name</Label>
             <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="My Device" />
