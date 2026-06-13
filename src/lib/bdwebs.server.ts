@@ -1,7 +1,8 @@
-// Server-only client for the whatsapp.bdwebs.com API.
+// Server-only client for the WA Suite (Hoster Camp) API.
 // Each device row stores its own API secret; pass it explicitly.
+// Override the host via WA_API_BASE_URL if you self-host the panel.
 
-const BASE_URL = "https://whatsapp.bdwebs.com";
+const BASE_URL = process.env.WA_API_BASE_URL ?? "https://wasrv.hostercamp.com";
 
 type BdwebsResponse<T = unknown> = {
   status: number;
