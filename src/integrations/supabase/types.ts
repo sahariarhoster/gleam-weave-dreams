@@ -476,53 +476,6 @@ export type Database = {
         }
         Relationships: []
       }
-      device_requests: {
-        Row: {
-          admin_reply: string | null
-          assigned_to: string | null
-          brand_id: string
-          created_at: string
-          device_name: string
-          id: string
-          notes: string | null
-          requested_by: string
-          status: string
-          updated_at: string
-        }
-        Insert: {
-          admin_reply?: string | null
-          assigned_to?: string | null
-          brand_id: string
-          created_at?: string
-          device_name: string
-          id?: string
-          notes?: string | null
-          requested_by: string
-          status?: string
-          updated_at?: string
-        }
-        Update: {
-          admin_reply?: string | null
-          assigned_to?: string | null
-          brand_id?: string
-          created_at?: string
-          device_name?: string
-          id?: string
-          notes?: string | null
-          requested_by?: string
-          status?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "device_requests_brand_id_fkey"
-            columns: ["brand_id"]
-            isOneToOne: false
-            referencedRelation: "brands"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       devices: {
         Row: {
           api_secret: string
@@ -798,6 +751,88 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      support_ticket_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          is_internal: boolean
+          sender_id: string
+          ticket_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          sender_id: string
+          ticket_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          is_internal?: boolean
+          sender_id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          brand_id: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          priority: string
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          brand_id?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          priority?: string
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          brand_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          priority?: string
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       system_settings: {
         Row: {
