@@ -640,7 +640,7 @@ export const adminCreateOrder = createServerFn({ method: "POST" })
       .insert({
         package_id: pkg.id,
         user_id: userId,
-        brand_id: brand.id,
+        brand_id: brandId,
         full_name: data.full_name,
         email: data.email,
         phone: data.phone ?? null,
