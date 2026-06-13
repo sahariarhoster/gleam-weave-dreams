@@ -163,6 +163,7 @@ export const createDevice = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => deviceInput.parse(d))
   .handler(async ({ data, context }) => {
     await assertOwner(context.supabase, context.userId);
+    await assertCanAddDeviceToBrand(context.userId, data.brand_id ?? null);
     const { data: row, error } = await context.supabase
       .from("devices")
       .insert({ ...data, created_by: context.userId })
@@ -171,6 +172,7 @@ export const createDevice = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return row;
   });
+
 
 export const updateDevice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
