@@ -642,7 +642,7 @@ export const applyDeviceDefaults = createServerFn({ method: "POST" })
     });
     if (!r.ok) {
       throw new Error(
-        `Panel rejected edit (status ${r.status}): ${r.body.slice(0, 200) || "no body"}`,
+        `Panel rejected edit (status ${r.status}): ${r.body.slice(0, 200) || "no body"} | tried: ${r.attempts.join("; ")}`,
       );
     }
     return { ok: true, endpoint: r.endpoint };
