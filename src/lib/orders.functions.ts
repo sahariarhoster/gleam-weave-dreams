@@ -267,7 +267,7 @@ export const decideOrder = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: order, error: oErr } = await supabaseAdmin
       .from("orders")
-      .select("id, brand_id, coupon_id, status, package_id, user_id, packages(duration_days)")
+      .select("id, brand_id, coupon_id, status, package_id, user_id, packages(duration_days, message_limit, device_limit, license_count)")
       .eq("id", data.id)
       .maybeSingle();
     if (oErr || !order) throw new Error("Order not found");
@@ -290,12 +290,21 @@ export const decideOrder = createServerFn({ method: "POST" })
     const wasApproved = order.status === "approved";
 
     if (data.action === "approve") {
-      const days = (order as any).packages?.duration_days ?? 30;
+      const pkgInfo = (order as any).packages ?? {};
+      const days = pkgInfo.duration_days ?? 30;
       const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
       if (order.brand_id) {
         await supabaseAdmin
           .from("brands")
-          .update({ status: "active", expires_at: expires })
+          .update({
+            status: "active",
+            expires_at: expires,
+            current_package_id: order.package_id,
+            message_limit: pkgInfo.message_limit ?? null,
+            device_limit: pkgInfo.device_limit ?? null,
+            license_limit: pkgInfo.license_count ?? null,
+            cancel_requested_at: null,
+          } as any)
           .eq("id", order.brand_id);
       }
       if (order.coupon_id && !wasApproved) {
