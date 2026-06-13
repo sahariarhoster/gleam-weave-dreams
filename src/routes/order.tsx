@@ -1,21 +1,27 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { Loader2, Check, MessageCircle, Smartphone, Infinity as InfinityIcon, KeyRound, Calendar, Tag } from "lucide-react";
+import { Loader2, Check, MessageCircle, Smartphone, Infinity as InfinityIcon, KeyRound, Calendar, Tag, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { listActivePackages, validateCoupon, createOrder } from "@/lib/orders.functions";
+import { listActivePackages, validateCoupon, createOrder, createOrderForMe, listMyBrandsForOrder } from "@/lib/orders.functions";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 const BKASH_NUMBER = "01407168338";
 
 export const Route = createFileRoute("/order")({
   ssr: false,
+  validateSearch: (s: Record<string, unknown>): { upgrade?: string } => ({
+    upgrade: typeof s.upgrade === "string" ? s.upgrade : undefined,
+  }),
   head: () => ({ meta: [{ title: "Place an Order — WA Suite" }] }),
   component: OrderPage,
 });
@@ -24,11 +30,22 @@ function OrderPage() {
   const fnList = useServerFn(listActivePackages);
   const fnCoupon = useServerFn(validateCoupon);
   const fnCreate = useServerFn(createOrder);
+  const fnCreateMe = useServerFn(createOrderForMe);
+  const fnMyBrands = useServerFn(listMyBrandsForOrder);
   const navigate = useNavigate();
+  const search = useSearch({ from: "/order" });
+  const { user, loading } = useAuth();
+  const loggedIn = !!user;
 
   const packages = useQuery({ queryKey: ["public-packages"], queryFn: () => fnList() });
+  const myBrands = useQuery({
+    queryKey: ["my-brands-for-order", user?.id ?? "anon"],
+    queryFn: () => fnMyBrands(),
+    enabled: loggedIn,
+  });
 
   const [selected, setSelected] = useState<string>("");
+  const [brandChoice, setBrandChoice] = useState<string>("__new__"); // brand_id or __new__
   const [form, setForm] = useState({
     full_name: "",
     email: "",
@@ -43,6 +60,28 @@ function OrderPage() {
   const [submitting, setSubmitting] = useState(false);
   const [couponChecking, setCouponChecking] = useState(false);
   const [done, setDone] = useState(false);
+
+  // Prefill from profile if logged in
+  useEffect(() => {
+    if (!loggedIn || !user) return;
+    (async () => {
+      const { data: p } = await supabase
+        .from("profiles").select("email, full_name, phone").eq("id", user.id).maybeSingle();
+      setForm((f) => ({
+        ...f,
+        email: p?.email ?? user.email ?? "",
+        full_name: p?.full_name ?? "",
+        phone: p?.phone ?? f.phone,
+      }));
+    })();
+  }, [loggedIn, user]);
+
+  // Honor ?upgrade=<brand_id>
+  useEffect(() => {
+    if (search.upgrade && myBrands.data?.some((b) => b.id === search.upgrade)) {
+      setBrandChoice(search.upgrade);
+    }
+  }, [search.upgrade, myBrands.data]);
 
   const pkg = (packages.data ?? []).find((p: any) => p.id === selected);
   const original = pkg ? Number(pkg.price) : 0;
@@ -64,31 +103,50 @@ function OrderPage() {
   }
 
   const requirePayment = final > 0;
+  const upgrading = loggedIn && brandChoice !== "__new__";
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!selected) return toast.error("Pick a package");
     setSubmitting(true);
     try {
-      await fnCreate({
-        data: {
-          package_id: selected,
-          full_name: form.full_name,
-          email: form.email,
-          password: form.password,
-          phone: form.phone,
-          brand_name: form.brand_name,
-          bkash_number: requirePayment ? form.bkash_number : null,
-          txid: requirePayment ? form.txid : null,
-          coupon_code: form.coupon_code || null,
-        },
-      });
+      if (loggedIn) {
+        await fnCreateMe({
+          data: {
+            package_id: selected,
+            brand_id: upgrading ? brandChoice : null,
+            brand_name: upgrading ? null : form.brand_name,
+            phone: form.phone || null,
+            bkash_number: requirePayment ? form.bkash_number : null,
+            txid: requirePayment ? form.txid : null,
+            coupon_code: form.coupon_code || null,
+          },
+        });
+      } else {
+        await fnCreate({
+          data: {
+            package_id: selected,
+            full_name: form.full_name,
+            email: form.email,
+            password: form.password,
+            phone: form.phone,
+            brand_name: form.brand_name,
+            bkash_number: requirePayment ? form.bkash_number : null,
+            txid: requirePayment ? form.txid : null,
+            coupon_code: form.coupon_code || null,
+          },
+        });
+      }
       setDone(true);
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (loading) {
+    return <div className="min-h-screen grid place-content-center"><Loader2 className="h-5 w-5 animate-spin" /></div>;
   }
 
   if (done) {
@@ -99,12 +157,15 @@ function OrderPage() {
             <div className="mx-auto w-14 h-14 rounded-full bg-emerald-100 grid place-content-center">
               <Check className="h-7 w-7 text-emerald-600" />
             </div>
-            <h2 className="text-xl font-semibold">Order placed!</h2>
+            <h2 className="text-xl font-semibold">{upgrading ? "Upgrade requested!" : "Order placed!"}</h2>
             <p className="text-sm text-muted-foreground">
-              Your account has been created. We'll verify your bKash payment and activate it within a few hours.
-              You can sign in now to track status — your account will show "Pending" until approved.
+              {requirePayment
+                ? "We'll verify your bKash payment and activate your subscription within a few hours."
+                : "We'll activate your subscription shortly."}
             </p>
-            <Button onClick={() => navigate({ to: "/auth" })} className="w-full">Go to sign in</Button>
+            <Button onClick={() => navigate({ to: loggedIn ? "/subscriptions" : "/auth" })} className="w-full">
+              {loggedIn ? "Back to subscriptions" : "Go to sign in"}
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -121,14 +182,32 @@ function OrderPage() {
             </div>
             <span className="font-semibold">WA Suite</span>
           </div>
-          <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground">Already have an account? Sign in</Link>
+          {loggedIn ? (
+            <div className="flex items-center gap-3 text-sm">
+              <span className="text-muted-foreground hidden sm:inline">Signed in as {user.email}</span>
+              <Link to="/subscriptions" className="text-muted-foreground hover:text-foreground">My subscriptions</Link>
+              <Button size="sm" variant="ghost" onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/auth" }); }}>
+                <LogOut className="h-3.5 w-3.5 mr-1" /> Sign out
+              </Button>
+            </div>
+          ) : (
+            <Link to="/auth" search={{ redirect: "/order" }} className="text-sm text-muted-foreground hover:text-foreground">
+              Already have an account? Sign in
+            </Link>
+          )}
         </div>
       </header>
 
       <main className="mx-auto max-w-5xl px-4 py-8 space-y-6">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Choose a package</h1>
-          <p className="text-sm text-muted-foreground">Pay via bKash, share your transaction ID, and we'll activate your account.</p>
+          <h1 className="text-2xl font-bold tracking-tight">
+            {upgrading ? "Upgrade your subscription" : "Choose a package"}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {requirePayment
+              ? "Pay via bKash, share your transaction ID, and we'll activate your account."
+              : "Pick a package to get started."}
+          </p>
         </div>
 
         {/* Packages */}
@@ -167,38 +246,65 @@ function OrderPage() {
 
         {selected && pkg && (
           <form onSubmit={submit} className="grid gap-6 lg:grid-cols-3">
-            {/* Form */}
             <Card className="lg:col-span-2">
               <CardContent className="pt-6 space-y-4">
                 <div className="rounded-md border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-900 dark:text-amber-200">
-                  <strong>Important:</strong> After your account is activated, you must link your own WhatsApp number as a device from the Devices page. Messages are sent from your linked WhatsApp — we do not send on your behalf.
+                  <strong>Important:</strong> After your account is activated, you must link your own WhatsApp number as a device from the Devices page.
                 </div>
-                <div>
-                  <h3 className="font-semibold mb-3">Your account</h3>
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    <div>
-                      <Label>Full name</Label>
-                      <Input required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
-                    </div>
-                    <div>
-                      <Label>Brand / business name</Label>
-                      <Input required value={form.brand_name} onChange={(e) => setForm({ ...form, brand_name: e.target.value })} />
-                    </div>
-                    <div>
-                      <Label>Email</Label>
-                      <Input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-                    </div>
-                    <div>
+
+                {loggedIn ? (
+                  <div>
+                    <h3 className="font-semibold mb-3">Apply to</h3>
+                    <Select value={brandChoice} onValueChange={setBrandChoice}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {(myBrands.data ?? []).map((b) => (
+                          <SelectItem key={b.id} value={b.id}>
+                            Upgrade: {b.name}{b.is_trial ? " (Trial)" : ""} — {b.status}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="__new__">+ Create a new brand</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {brandChoice === "__new__" && (
+                      <div className="mt-3">
+                        <Label>Brand / business name</Label>
+                        <Input required value={form.brand_name} onChange={(e) => setForm({ ...form, brand_name: e.target.value })} />
+                      </div>
+                    )}
+                    <div className="mt-3">
                       <Label>Phone (WhatsApp)</Label>
-                      <Input required type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="01XXXXXXXXX" />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <Label>Password</Label>
-                      <Input required type="password" minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-                      <p className="text-[11px] text-muted-foreground mt-1">Used to sign in once your account is approved.</p>
+                      <Input type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="01XXXXXXXXX" />
                     </div>
                   </div>
-                </div>
+                ) : (
+                  <div>
+                    <h3 className="font-semibold mb-3">Your account</h3>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      <div>
+                        <Label>Full name</Label>
+                        <Input required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
+                      </div>
+                      <div>
+                        <Label>Brand / business name</Label>
+                        <Input required value={form.brand_name} onChange={(e) => setForm({ ...form, brand_name: e.target.value })} />
+                      </div>
+                      <div>
+                        <Label>Email</Label>
+                        <Input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+                      </div>
+                      <div>
+                        <Label>Phone (WhatsApp)</Label>
+                        <Input required type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} placeholder="01XXXXXXXXX" />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <Label>Password</Label>
+                        <Input required type="password" minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+                        <p className="text-[11px] text-muted-foreground mt-1">Used to sign in once your account is approved.</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div className="border-t pt-4">
                   <Label className="flex items-center gap-1.5"><Tag className="h-3.5 w-3.5" /> Coupon code (optional)</Label>
@@ -241,7 +347,6 @@ function OrderPage() {
               </CardContent>
             </Card>
 
-            {/* Summary */}
             <Card className="h-fit">
               <CardContent className="pt-6 space-y-3">
                 <h3 className="font-semibold">Order summary</h3>
@@ -268,9 +373,13 @@ function OrderPage() {
                   <span>৳{final.toFixed(0)}</span>
                 </div>
                 <Button type="submit" className="w-full" disabled={submitting}>
-                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Place Order"}
+                  {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : upgrading ? "Upgrade plan" : "Place Order"}
                 </Button>
-                <p className="text-[11px] text-muted-foreground">By placing the order you confirm you've sent the bKash payment. We verify and activate within a few hours.</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {requirePayment
+                    ? "By placing the order you confirm you've sent the bKash payment. We verify and activate within a few hours."
+                    : "Your order will be reviewed by our team and activated shortly."}
+                </p>
               </CardContent>
             </Card>
           </form>
