@@ -11,7 +11,8 @@ export const Route = createFileRoute("/_authenticated")({
       params.delete("__lovable_token");
       const search = params.toString();
       const redirectTo = `${location.pathname}${search ? `?${search}` : ""}`;
-      throw redirect({ href: `/auth?redirect=${encodeURIComponent(redirectTo)}` });
+      window.sessionStorage.setItem("postAuthRedirect", redirectTo);
+      throw redirect({ to: "/auth" });
     }
     return { user: data.user };
   },
