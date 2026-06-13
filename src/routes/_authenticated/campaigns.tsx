@@ -146,6 +146,25 @@ function CampaignsPage() {
                             <Play className="h-4 w-4" />
                           </Button>
                         )}
+                        {(c.status === "draft" || c.status === "scheduled" || c.status === "running" || c.status === "paused") && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="icon" variant="ghost" className="text-amber-600 hover:bg-amber-50 hover:text-amber-700" title="Cancel campaign">
+                                <Ban className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Cancel this campaign?</AlertDialogTitle>
+                                <AlertDialogDescription>All queued (unsent) messages will be cancelled. Already-sent messages are not affected.</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Keep running</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => cancelMut.mutate(c.id)} className="bg-amber-600 hover:bg-amber-700">Cancel campaign</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
                         <Link to="/logs" search={{ campaign: c.id } as never}>
                           <Button size="icon" variant="ghost" title="View logs"><Eye className="h-4 w-4" /></Button>
                         </Link>
