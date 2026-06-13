@@ -349,6 +349,7 @@ export async function panelEditWhatsApp(args: {
   const override = process.env.HOSTERCAMP_PANEL_EDIT_PATH;
   const paths = [
     ...(override ? [override] : []),
+    "/requests/update/edit.whatsapp",
     "/requests/whatsapp/edit.whatsapp",
     "/requests/whatsapp/edit",
     "/requests/whatsapp/index/edit",
