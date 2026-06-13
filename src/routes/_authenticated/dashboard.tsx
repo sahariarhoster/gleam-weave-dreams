@@ -455,8 +455,8 @@ function DashboardPage() {
             <HealthRow label="Delivery rate" value={`${rate.toFixed(0)}%`} pct={rate} tone="primary" />
             <HealthRow
               label="Failure rate"
-              value={`${stats.totalMessages > 0 ? ((stats.failed / stats.totalMessages) * 100).toFixed(0) : 0}%`}
-              pct={stats.totalMessages > 0 ? (stats.failed / stats.totalMessages) * 100 : 0}
+              value={`${processed > 0 ? ((stats.failed / processed) * 100).toFixed(0) : 0}%`}
+              pct={processed > 0 ? (stats.failed / processed) * 100 : 0}
               tone="rose"
             />
             <div className="grid grid-cols-2 gap-3 pt-2">
