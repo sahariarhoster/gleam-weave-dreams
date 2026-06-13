@@ -607,7 +607,7 @@ export const adminCreateOrder = createServerFn({ method: "POST" })
         patch.expires_at = expiresIso;
         patch.cancel_requested_at = null;
       }
-      const { error: uErr } = await supabaseAdmin.from("brands").update(patch).eq("id", data.brand_id);
+      const { error: uErr } = await supabaseAdmin.from("brands").update(patch as any).eq("id", data.brand_id);
       if (uErr) throw new Error(uErr.message);
       brandId = data.brand_id;
     } else {
