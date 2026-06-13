@@ -460,6 +460,8 @@ export const pollDeviceLink = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertOwner(context.supabase, context.userId);
+    await assertCanAddDeviceToBrand(context.userId, data.brand_id ?? null);
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: key } = await supabaseAdmin
       .from("wa_api_keys")
