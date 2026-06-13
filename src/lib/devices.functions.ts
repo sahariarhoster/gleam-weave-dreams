@@ -617,3 +617,55 @@ export const sendSingleMessage = createServerFn({ method: "POST" })
     }
     return { ok: true, message: res.message };
   });
+
+export const applyDeviceDefaults = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertOwner(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: dev } = await supabaseAdmin
+      .from("devices")
+      .select("api_secret, device_unique_id")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (!dev?.api_secret) throw new Error("Device not found");
+
+    const { bdwebs } = await import("@/lib/bdwebs.server");
+    const accRes = await bdwebs.getWhatsAppAccounts(dev.api_secret);
+    const accounts = (accRes?.data ?? []) as Array<Record<string, any>>;
+    const match = accounts.find(
+      (a) =>
+        a.unique === dev.device_unique_id ||
+        a.account === dev.device_unique_id ||
+        a.device_unique_id === dev.device_unique_id,
+    );
+    if (!match?.id) throw new Error("WhatsApp account not found on panel");
+
+    const payload = {
+      secret: dev.api_secret,
+      id: match.id,
+      receive_chats: 2,
+      random_send: 2,
+      random_min: 1,
+      random_max: 5,
+    };
+    const attempts = [
+      "/api/edit/whatsapp",
+      "/api/edit/wa.account",
+      "/api/update/whatsapp",
+      "/api/update/wa.account",
+      "/api/whatsapp/edit",
+      "/api/set/whatsapp",
+    ];
+    let okPath: string | null = null;
+    let lastMsg = "";
+    for (const path of attempts) {
+      const r = await bdwebs.rawPost(path, payload);
+      lastMsg = r?.message ?? "";
+      console.log(`applyDeviceDefaults try ${path} → status=${r?.status} msg=${lastMsg}`);
+      if (r?.status === 200) { okPath = path; break; }
+    }
+    if (!okPath) throw new Error(lastMsg || "Panel rejected all known edit endpoints");
+    return { ok: true, endpoint: okPath };
+  });

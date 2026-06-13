@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Plus, Pencil, Trash2, Link2, Smartphone, QrCode } from "lucide-react";
+import { Plus, Pencil, Trash2, Link2, Smartphone, QrCode, BellOff } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,8 +23,9 @@ import {
 import {
   updateDevice, deleteDevice, testDeviceConnection,
   listWaServers, linkDeviceQR, startDeviceLink, pollDeviceLink,
-  refreshDeviceStatuses,
+  refreshDeviceStatuses, applyDeviceDefaults,
 } from "@/lib/devices.functions";
+
 import { PageHeader } from "@/components/layout/page-header";
 import { listBrandsLiteClient, listDevicesClient, listMyRolesClient } from "@/lib/client-queries";
 import { useAuth } from "@/hooks/use-auth";
@@ -115,6 +116,14 @@ function DevicesPage() {
     onError: (e) => toast.error((e as Error).message),
   });
 
+  const fnApplyDefaults = useServerFn(applyDeviceDefaults);
+  const applyMut = useMutation({
+    mutationFn: (id: string) => fnApplyDefaults({ data: { id } }),
+    onSuccess: () => toast.success("Receive Chats & Random Send disabled"),
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+
   return (
     <div className="mx-auto max-w-7xl">
       <PageHeader
@@ -192,6 +201,17 @@ function DevicesPage() {
                           <QrCode className="h-3.5 w-3.5" /> Link QR
                         </Button>
                       )}
+                      {canManage && (
+                        <Button
+                          size="sm" variant="outline" className="h-8 gap-1"
+                          onClick={() => applyMut.mutate(d.id)}
+                          disabled={applyMut.isPending && applyMut.variables === d.id}
+                          title="Disable Receive Chats & Random Send on the panel"
+                        >
+                          <BellOff className="h-3.5 w-3.5" /> Disable Receive
+                        </Button>
+                      )}
+
                       {canManage && (
                         <Button size="icon" variant="ghost" onClick={() => { setEditing(d as Device); setOpen(true); }} title="Edit">
                           <Pencil className="h-4 w-4" />
