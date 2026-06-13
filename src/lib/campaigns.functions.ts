@@ -169,6 +169,27 @@ export const deleteCampaign = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const cancelCampaign = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertCampaignManager(context.supabase, context.userId, data.id);
+    // Cancel all queued messages for this campaign
+    const { error: msgErr, count } = await context.supabase
+      .from("campaign_messages")
+      .update({ status: "cancelled", error_message: "Cancelled by user" } as never, { count: "exact" })
+      .eq("campaign_id", data.id)
+      .eq("status", "queued");
+    if (msgErr) throw new Error(msgErr.message);
+    const { error } = await context.supabase
+      .from("campaigns")
+      .update({ status: "cancelled", completed_at: new Date().toISOString() } as never)
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true, cancelled: count ?? 0 };
+  });
+
+
 export const setCampaignStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
