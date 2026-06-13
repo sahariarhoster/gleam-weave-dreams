@@ -59,6 +59,7 @@ function DevicesPage() {
   const [editing, setEditing] = useState<Device | null>(null);
   const [open, setOpen] = useState(false);
   const [testing, setTesting] = useState<Device | null>(null);
+  const [linking, setLinking] = useState<Device | null>(null);
 
   const testMut = useMutation({
     mutationFn: (args: { id: string; recipient: string; message?: string }) => fnTest({ data: args }),
