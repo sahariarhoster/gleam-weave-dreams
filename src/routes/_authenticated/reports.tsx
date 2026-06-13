@@ -216,7 +216,7 @@ function NotifyConfigCard() {
       <CardHeader>
         <CardTitle className="text-base">WhatsApp Notifications — Admin Config</CardTitle>
         <CardDescription>
-          Daily report sent at 9:00 AM (Asia/Dhaka). The same device is used for order &amp; device-request notifications.
+          Daily report sent at 9:00 AM (Asia/Dhaka). The same device is used for order notifications.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid grid-cols-1 gap-3 md:grid-cols-3">
