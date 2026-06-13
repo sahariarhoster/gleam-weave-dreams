@@ -21,7 +21,9 @@ import {
   Package,
   Tag,
   Repeat,
+  PlayCircle,
 } from "lucide-react";
+
 import {
   Sidebar,
   SidebarContent,
