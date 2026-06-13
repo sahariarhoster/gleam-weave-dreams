@@ -483,7 +483,7 @@ export const pollDeviceLink = createServerFn({ method: "POST" })
     }
 
 
-    return { status: "linked" as const, device_id: inserted.id };
+    return { status: "linked" as const, device_id: deviceId };
   });
 
 
