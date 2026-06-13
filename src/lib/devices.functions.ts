@@ -329,12 +329,31 @@ export const listWaServers = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: device } = await supabaseAdmin
       .from("devices").select("api_secret").eq("id", data.device_id).single();
-    if (!device?.api_secret) throw new Error("Device API secret missing");
     const { bdwebs } = await import("@/lib/bdwebs.server");
-    const res = await bdwebs.getWaServers(device.api_secret);
-    if (res.status !== 200) throw new Error(res.message || "Failed to list servers");
-    return Array.isArray(res.data) ? res.data : [];
+    // Try the device's own secret first, then fall back to active pool keys.
+    const secrets: string[] = [];
+    if (device?.api_secret) secrets.push(device.api_secret);
+    const { data: pool } = await supabaseAdmin
+      .from("wa_api_keys").select("secret").eq("active", true).order("created_at", { ascending: false });
+    for (const k of pool ?? []) {
+      if (k.secret && !secrets.includes(k.secret)) secrets.push(k.secret);
+    }
+    let lastMessage = "Failed to list servers";
+    for (const secret of secrets) {
+      try {
+        const res = await bdwebs.getWaServers(secret);
+        if (res.status === 200 && Array.isArray(res.data) && res.data.length > 0) {
+          return res.data;
+        }
+        if (res.message) lastMessage = res.message;
+      } catch (e) {
+        lastMessage = (e as Error).message;
+      }
+    }
+    if (secrets.length === 0) throw new Error("No WhatsApp API secret configured");
+    return [];
   });
+
 
 export const linkDeviceQR = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
