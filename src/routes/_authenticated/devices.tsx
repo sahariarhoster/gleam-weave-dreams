@@ -480,16 +480,15 @@ function DeviceDialog({
             <Input value={form.sim_info} onChange={(e) => setForm({ ...form, sim_info: e.target.value })} placeholder="+8801XXXXXXXXX" />
           </div>
           <div className="space-y-1.5">
-            <Label>Linked Brand (optional)</Label>
-            <Select value={form.brand_id || "none"} onValueChange={(v) => setForm({ ...form, brand_id: v === "none" ? "" : v })}>
-              <SelectTrigger><SelectValue placeholder="No brand" /></SelectTrigger>
+            <Label>Linked Brand <span className="text-rose-600">*</span></Label>
+            <Select value={form.brand_id} onValueChange={(v) => setForm({ ...form, brand_id: v })}>
+              <SelectTrigger><SelectValue placeholder="Select a brand" /></SelectTrigger>
               <SelectContent>
                 <div className="sticky top-0 z-10 bg-popover p-1.5 border-b">
                   <Input placeholder="Search brands…" value={brandSearch}
                     onChange={(e) => setBrandSearch(e.target.value)}
                     onKeyDown={(e) => e.stopPropagation()} className="h-8" />
                 </div>
-                <SelectItem value="none">No brand</SelectItem>
                 {filteredBrands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
               </SelectContent>
             </Select>
@@ -499,7 +498,7 @@ function DeviceDialog({
             Manage keys in <span className="font-medium">Settings → API Keys</span>.
           </p>
           <DialogFooter>
-            <Button type="submit" disabled={startMut.isPending || !form.name} className="w-full">
+            <Button type="submit" disabled={startMut.isPending || !form.name || !form.brand_id} className="w-full">
               {startMut.isPending ? "Generating QR…" : "Generate QR"}
             </Button>
           </DialogFooter>
