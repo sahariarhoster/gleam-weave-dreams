@@ -81,4 +81,25 @@ export const bdwebs = {
       "GET",
     );
   },
+  /**
+   * Update WhatsApp account settings (mirrors panel AJAX `edit.whatsapp`).
+   * receive_chats / random_send: 1 = enable, 2 = disable.
+   */
+  editWhatsApp(args: {
+    secret: string;
+    id: number | string;
+    receive_chats?: 1 | 2;
+    random_send?: 1 | 2;
+    random_min?: number;
+    random_max?: number;
+  }) {
+    return call<unknown>("/api/edit/whatsapp", {
+      secret: args.secret,
+      id: args.id,
+      receive_chats: args.receive_chats ?? 2,
+      random_send: args.random_send ?? 2,
+      random_min: args.random_min ?? 1,
+      random_max: args.random_max ?? 5,
+    });
+  },
 };
