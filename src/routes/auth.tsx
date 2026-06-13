@@ -35,7 +35,9 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const { redirect } = Route.useSearch();
-  const redirectTo = redirect?.startsWith("/") && !redirect.startsWith("//") ? redirect : "/dashboard";
+  const storedRedirect = typeof window !== "undefined" ? window.sessionStorage.getItem("postAuthRedirect") : null;
+  const requestedRedirect = redirect ?? storedRedirect;
+  const redirectTo = requestedRedirect?.startsWith("/") && !requestedRedirect.startsWith("//") ? requestedRedirect : "/dashboard";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
@@ -60,6 +62,7 @@ function AuthPage() {
       return toast.error("Sign in failed. Please try again.");
     }
     toast.success("Welcome back!");
+    window.sessionStorage.removeItem("postAuthRedirect");
     setLoading(false);
     navigate({ to: redirectTo, replace: true });
   }
