@@ -146,7 +146,10 @@ function DashboardPage() {
   });
 
   const stats = data ?? emptyStats;
-  const rate = stats.totalMessages > 0 ? (stats.delivered / stats.totalMessages) * 100 : 0;
+  // Success% should only consider processed messages (delivered + failed).
+  // Queued/pending aren't outcomes yet, so excluding them keeps the rate honest.
+  const processed = stats.delivered + stats.failed;
+  const rate = processed > 0 ? (stats.delivered / processed) * 100 : 0;
   const onlinePct = stats.devices > 0 ? (stats.devicesOnline / stats.devices) * 100 : 0;
 
   const kpis = [
