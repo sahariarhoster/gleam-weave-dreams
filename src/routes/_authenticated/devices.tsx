@@ -202,6 +202,17 @@ function DevicesPage() {
                         </Button>
                       )}
                       {canManage && (
+                        <Button
+                          size="sm" variant="outline" className="h-8 gap-1"
+                          onClick={() => applyMut.mutate(d.id)}
+                          disabled={applyMut.isPending && applyMut.variables === d.id}
+                          title="Disable Receive Chats & Random Send on the panel"
+                        >
+                          <BellOff className="h-3.5 w-3.5" /> Disable Receive
+                        </Button>
+                      )}
+
+                      {canManage && (
                         <Button size="icon" variant="ghost" onClick={() => { setEditing(d as Device); setOpen(true); }} title="Edit">
                           <Pencil className="h-4 w-4" />
                         </Button>
