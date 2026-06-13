@@ -72,6 +72,16 @@ function DevicesPage() {
   const isBrandOwner = (roles.data ?? []).includes("brand_owner");
   const canManage = isOwner || isSupport || isBrandOwner;
 
+  // Available brands = visible brands that still have device capacity.
+  // Platform owners/support bypass per-brand caps in the backend, so always allow.
+  const availableBrands = (brands.data ?? []).filter((b: any) => {
+    const limit = Number(b.device_limit ?? 0);
+    if (limit <= 0) return true; // 0 = unlimited
+    const used = (devices.data ?? []).filter((d: any) => d.brand_id === b.id).length;
+    return used < limit;
+  });
+  const hasCapacity = isOwner || isSupport || availableBrands.length > 0;
+
   const [editing, setEditing] = useState<Device | null>(null);
   const [open, setOpen] = useState(false);
   const [testing, setTesting] = useState<Device | null>(null);
