@@ -102,4 +102,22 @@ export const bdwebs = {
       random_max: args.random_max ?? 5,
     });
   },
+  /**
+   * Delete a WhatsApp account from the panel.
+   * Accepts unique (device_unique_id) or numeric account id.
+   */
+  deleteWhatsApp(args: { secret: string; unique?: string; id?: number | string }) {
+    return call<unknown>("/api/delete/whatsapp", {
+      secret: args.secret,
+      unique: args.unique,
+      id: args.id,
+    });
+  },
+  /**
+   * Fetch all linked WhatsApp accounts for this secret.
+   * Used to refresh per-device status.
+   */
+  getWhatsAppAccounts(secret: string) {
+    return call<Array<Record<string, any>>>("/api/get/wa.accounts", { secret }, "GET");
+  },
 };

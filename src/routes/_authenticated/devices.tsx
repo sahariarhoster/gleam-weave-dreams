@@ -23,6 +23,7 @@ import {
 import {
   updateDevice, deleteDevice, testDeviceConnection,
   listWaServers, linkDeviceQR, startDeviceLink, pollDeviceLink,
+  refreshDeviceStatuses,
 } from "@/lib/devices.functions";
 import { PageHeader } from "@/components/layout/page-header";
 import { listBrandsLiteClient, listDevicesClient, listMyRolesClient } from "@/lib/client-queries";
@@ -47,6 +48,7 @@ function DevicesPage() {
   const qc = useQueryClient();
   const fnTest = useServerFn(testDeviceConnection);
   const fnDelete = useServerFn(deleteDevice);
+  const fnRefresh = useServerFn(refreshDeviceStatuses);
   const { user } = useAuth();
 
   const devices = useQuery({ queryKey: ["devices"], queryFn: listDevicesClient });
@@ -60,6 +62,27 @@ function DevicesPage() {
   const [open, setOpen] = useState(false);
   const [testing, setTesting] = useState<Device | null>(null);
   const [linking, setLinking] = useState<Device | null>(null);
+
+  const refreshMut = useMutation({
+    mutationFn: () => fnRefresh({}),
+    onSuccess: (r) => {
+      toast.success(`Refreshed ${r.updated} device${r.updated === 1 ? "" : "s"}`);
+      qc.invalidateQueries({ queryKey: ["devices"] });
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  // Auto-refresh statuses once when page mounts.
+  useQuery({
+    queryKey: ["devices-status-refresh"],
+    queryFn: async () => {
+      await fnRefresh({});
+      qc.invalidateQueries({ queryKey: ["devices"] });
+      return true;
+    },
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
 
   const testMut = useMutation({
     mutationFn: (args: { id: string; recipient: string; message?: string }) => fnTest({ data: args }),
@@ -87,19 +110,24 @@ function DevicesPage() {
         title="Devices"
         description="Connect Android phones to send WhatsApp messages."
         actions={
-          canManage && (
-            <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="gap-1"><Plus className="h-4 w-4" /> Add Device</Button>
-              </DialogTrigger>
-              <DeviceDialog
-                key={editing?.id ?? "new"}
-                editing={editing}
-                brands={brands.data ?? []}
-                onDone={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["devices"] }); }}
-              />
-            </Dialog>
-          )
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={() => refreshMut.mutate()} disabled={refreshMut.isPending}>
+              {refreshMut.isPending ? "Refreshing…" : "Refresh Status"}
+            </Button>
+            {canManage && (
+              <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="gap-1"><Plus className="h-4 w-4" /> Add Device</Button>
+                </DialogTrigger>
+                <DeviceDialog
+                  key={editing?.id ?? "new"}
+                  editing={editing}
+                  brands={brands.data ?? []}
+                  onDone={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["devices"] }); }}
+                />
+              </Dialog>
+            )}
+          </div>
         }
       />
       <Card className="border-border/60 shadow-sm">
