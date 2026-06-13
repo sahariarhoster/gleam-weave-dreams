@@ -25,7 +25,7 @@ export async function listMyRolesClient(userId?: string | null) {
 }
 
 export async function listBrandsLiteClient() {
-  const { data, error } = await db.from("brands").select("id, name, license_limit").order("name");
+  const { data, error } = await db.from("brands").select("id, name, license_limit, device_limit").order("name");
   assertOk(error);
   return data ?? [];
 }
