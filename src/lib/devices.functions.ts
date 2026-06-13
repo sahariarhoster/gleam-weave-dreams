@@ -363,7 +363,7 @@ export const startDeviceLink = createServerFn({ method: "POST" })
       api_key_id: pick.id,
       qrimagelink: d.qrimagelink ?? "",
       infolink: d.infolink ?? "",
-      expires_at: new Date(Date.now() + 60_000).toISOString(),
+      expires_at: new Date(Date.now() + 180_000).toISOString(),
     };
   });
 
