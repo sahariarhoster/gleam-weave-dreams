@@ -354,13 +354,10 @@ export async function panelEditWhatsApp(args: {
     "/requests/whatsapp/edit",
     "/requests/whatsapp/index/edit",
     "/whatsapp/edit",
-    "/ajax/edit.whatsapp",
-    "/user/ajax/edit.whatsapp",
-    "/dashboard/ajax/edit.whatsapp",
-    "/ajax/whatsapp/edit",
   ];
   const attempts: string[] = [];
   let last: { status: number; body: string; location: string | null } = { status: 0, body: "", location: null };
+  let bestFailure: { status: number; body: string; location: string | null } | null = null;
   for (const p of paths) {
     const r = await panelAjaxPost(p, fields);
     last = r;
@@ -372,6 +369,7 @@ export async function panelEditWhatsApp(args: {
         const code = Number(json?.status);
         accepted = [200, 301].includes(code);
         attempts[attempts.length - 1] += ` json.status=${code}${json?.message ? ` "${String(json.message).slice(0, 80)}"` : ""}`;
+        if (!accepted && !bestFailure) bestFailure = r;
       } catch {
         // Non-JSON 200 means we hit a page route, not the AJAX handler — NOT success.
         attempts[attempts.length - 1] += " (html, not ajax)";
@@ -382,10 +380,11 @@ export async function panelEditWhatsApp(args: {
     }
   }
   console.warn("panelEditWhatsApp: all endpoints failed", { attempts, lastBody: last.body.slice(0, 300) });
+  const failure = bestFailure ?? last;
   return {
     ok: false,
-    status: last.status,
-    body: last.body || (last.location ? `redirect → ${last.location}` : "no body"),
+    status: failure.status,
+    body: failure.body || (failure.location ? `redirect → ${failure.location}` : "no body"),
     endpoint: "",
     attempts,
   };
