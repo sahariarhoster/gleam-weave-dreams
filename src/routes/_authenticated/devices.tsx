@@ -48,6 +48,7 @@ function DevicesPage() {
   const qc = useQueryClient();
   const fnTest = useServerFn(testDeviceConnection);
   const fnDelete = useServerFn(deleteDevice);
+  const fnRefresh = useServerFn(refreshDeviceStatuses);
   const { user } = useAuth();
 
   const devices = useQuery({ queryKey: ["devices"], queryFn: listDevicesClient });
@@ -61,6 +62,27 @@ function DevicesPage() {
   const [open, setOpen] = useState(false);
   const [testing, setTesting] = useState<Device | null>(null);
   const [linking, setLinking] = useState<Device | null>(null);
+
+  const refreshMut = useMutation({
+    mutationFn: () => fnRefresh({}),
+    onSuccess: (r) => {
+      toast.success(`Refreshed ${r.updated} device${r.updated === 1 ? "" : "s"}`);
+      qc.invalidateQueries({ queryKey: ["devices"] });
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  // Auto-refresh statuses once when page mounts.
+  useQuery({
+    queryKey: ["devices-status-refresh"],
+    queryFn: async () => {
+      await fnRefresh({});
+      qc.invalidateQueries({ queryKey: ["devices"] });
+      return true;
+    },
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
+  });
 
   const testMut = useMutation({
     mutationFn: (args: { id: string; recipient: string; message?: string }) => fnTest({ data: args }),
