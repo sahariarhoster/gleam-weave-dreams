@@ -63,6 +63,17 @@ function UsersPage() {
   });
 
   const [openFor, setOpenFor] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+  const q = search.trim().toLowerCase();
+  const filteredUsers = (users.data ?? []).filter((u: any) => {
+    if (!q) return true;
+    return (
+      (u.full_name ?? "").toLowerCase().includes(q) ||
+      (u.email ?? "").toLowerCase().includes(q) ||
+      (u.phone ?? "").toLowerCase().includes(q) ||
+      (u.memberships ?? []).some((m: any) => (m.brand_name ?? "").toLowerCase().includes(q))
+    );
+  });
 
   if (users.isError) {
     return (
