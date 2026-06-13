@@ -399,14 +399,44 @@ export const pollDeviceLink = createServerFn({ method: "POST" })
 
     const root = info?.data ?? info ?? {};
     const unique: string | undefined =
-      root.unique ?? root.account ?? root.device_unique_id ?? info?.unique;
+      root.unique ?? root.account ?? root.device_unique_id ?? root.uniqueId ??
+      root.unique_id ?? root.uid ?? info?.unique;
     const waId: string | undefined =
       root.whatsapp ?? root.whatsapp_id ?? root.wid ?? root.phone ??
       root.sim ?? root.number ?? root.msisdn ?? unique;
 
     if (!unique) {
+      console.log("pollDeviceLink waiting — info payload:", JSON.stringify(info).slice(0, 600));
+      // Fallback: if the panel already lists an account for this secret,
+      // grab the most recent one (highest id) and use it as the linked device.
+      try {
+        const { bdwebs } = await import("@/lib/bdwebs.server");
+        const accRes = await bdwebs.getWhatsAppAccounts(key.secret);
+        const accounts = (accRes?.data ?? []) as Array<Record<string, any>>;
+        if (accounts.length) {
+          const latest = [...accounts].sort(
+            (a, b) => Number(b.id ?? 0) - Number(a.id ?? 0),
+          )[0];
+          const fallbackUnique = latest.unique ?? latest.account ?? latest.device_unique_id;
+          if (fallbackUnique) {
+            console.log("pollDeviceLink fallback unique from wa.accounts:", fallbackUnique);
+            (root as any).id = latest.id;
+            return await finalizeLink({
+              context,
+              data,
+              key,
+              unique: String(fallbackUnique),
+              waId: latest.whatsapp ?? latest.phone ?? latest.msisdn ?? fallbackUnique,
+              accountId: latest.id,
+            });
+          }
+        }
+      } catch (e) {
+        console.warn("pollDeviceLink fallback wa.accounts failed", e);
+      }
       return { status: "pending" as const, message: info?.message ?? "Waiting for scan…" };
     }
+
 
     // Upsert: if this device already exists, refresh its fields; else insert.
     const { data: existing } = await supabaseAdmin
