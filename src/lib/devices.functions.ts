@@ -316,7 +316,7 @@ export const pollDeviceLink = createServerFn({ method: "POST" })
       .insert({
         name: data.name,
         device_unique_id: unique,
-        sim_info: data.sim_info ?? root.phone ?? root.sim ?? null,
+        sim_info: data.sim_info ?? waId ?? null,
         api_secret: key.secret,
         brand_id: data.brand_id ?? null,
         status: "active",
