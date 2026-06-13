@@ -1,74 +1,57 @@
-## WooCommerce Plugin Integration — Plan
+# QR Device Linking with API Key Pool
 
-Big feature. Splitting into two deliverables: (A) backend/portal in this app, (B) WordPress plugin (separate PHP codebase, delivered as a downloadable zip).
+## Goal
 
-### A. Lovable app changes
+Replace the per-device "API Secret" field with a shared pool of API keys. When adding a device, pick one at random, generate a QR (valid ~15s), let the user scan it, poll the infolink to detect completion, then auto-create the device row with the linked WhatsApp number's details.
 
-**1. DB (new migration)**
-- `plugin_licenses` table:
-  - `id uuid pk`, `brand_id uuid fk brands (unique)`, `license_key text unique`, `status text` (active/revoked), `device_id uuid fk devices null`, `site_url text null`, `activated_at timestamptz null`, `last_seen_at timestamptz null`, `created_by uuid`, `created_at`, `updated_at`
-- `system_settings` table (singleton row) with `licenses_per_brand int default 1` — admin can change limit later. (Schema supports >1 by removing unique on brand_id later; for now enforce in code.)
-- RLS:
-  - owner: all access
-  - brand_owner / brand_member: select own brand licenses; brand_owner can insert/update for own brand
-- GRANTs for authenticated + service_role.
+## Database
 
-**2. Server functions (`src/lib/licenses.functions.ts`)**
-- `listMyLicenses` — list licenses for brands the user owns/is member of
-- `generateLicense({ brand_id })` — brand owner generates 1 per brand (respecting limit)
-- `revokeLicense({ id })`
-- `setLicenseLimit({ limit })` — owner only
+New table `wa_api_keys`:
 
-**3. Public API routes (called by WP plugin)** under `src/routes/api/public/plugin/`
-- `POST /api/public/plugin/activate` — body: `{ license_key, site_url }` → validates, marks active, returns `{ brand_id, brand_name }`
-- `GET /api/public/plugin/devices?license_key=...` — returns devices belonging to that brand (id, name)
-- `POST /api/public/plugin/select-device` — `{ license_key, device_id }` → persist
-- `POST /api/public/plugin/send` — `{ license_key, recipient, message }` → sends WhatsApp via the brand's selected device (uses bdwebs server lib)
-- `POST /api/public/plugin/heartbeat` — updates `last_seen_at`
-- All routes validate license_key with Zod, look up via `supabaseAdmin`, reject if revoked.
+| column   | type     | notes                                |
+| -------- | -------- | ------------------------------------ |
+| id       | uuid PK  |                                      |
+| label    | text     | e.g. "Server 1 — key A"              |
+| secret   | text     | the API secret from the panel        |
+| sid      | int      | default WhatsApp server id for this key |
+| active   | bool     | default `true` — only active keys are picked |
+| created_at | timestamptz | default `now()`                |
 
-**4. UI**
-- `src/routes/_authenticated/licenses.tsx` — brand-owner page: list brands → generate license per brand, copy key, revoke, see site_url + last_seen
-- `src/routes/_authenticated/admin-settings.tsx` (owner only) — set licenses_per_brand
-- Add nav entries in `app-sidebar.tsx`
+RLS: owners only (read/write). Service role full access.
+Devices keep their existing `api_secret` column — it gets populated with whichever pool key was used at link time, so sending continues to work without lookups.
 
-### B. WordPress plugin (PHP)
+## Server functions (src/lib/devices.functions.ts)
 
-Generate a downloadable plugin zip in `/mnt/documents/wa-notifier-woocommerce.zip` containing:
+1. `startDeviceLink({ brand_id })` — owner only
+   - Pick a random `active=true` key from `wa_api_keys`.
+   - Call `bdwebs.linkWhatsApp({ secret, sid })`.
+   - Return `{ qrimagelink, infolink, link_token }` where `link_token` is a short server-side cache key (just return all three URLs + the chosen `secret`/`sid` encoded in a short-lived token). Simpler: return `{ qrimagelink, infolink, secret_id, sid }` and persist the pending session in memory is risky — instead pass `secret_id` + `sid` back to the client and have step 2 re-load the secret server-side.
 
-```
-wa-notifier-woocommerce/
-  wa-notifier-woocommerce.php       (plugin header, bootstrap)
-  includes/
-    class-api-client.php            (talks to /api/public/plugin/*)
-    class-settings.php              (option storage)
-    class-wizard.php                (5-step setup wizard)
-    class-woocommerce-hooks.php     (order status change handlers)
-    class-shortcodes.php            ({first_name},{last_name},{order_id},{total})
-  admin/
-    dashboard.php
-    woocommerce-config.php          (per-status toggle + template)
-    admin-config.php                (admin phone + admin templates)
-    change-license.php
-    test.php
-  assets/css/admin.css
-  readme.txt
-```
+2. `pollDeviceLink({ infolink, secret_id, sid, brand_id, name, sim_info })` — owner only
+   - Fetch `infolink`. If the WhatsApp panel reports "not linked yet", return `{ status: "pending" }`.
+   - On success it returns the linked account's unique id and metadata. Insert a `devices` row with `device_unique_id = info.unique`, `api_secret = <secret from pool by id>`, `brand_id`, etc. Return `{ status: "linked", device_id }`.
 
-Wizard steps mirror request: license → device pick → woo status templates → admin templates → test send.
+3. Keep existing `listWaServers` / `linkDeviceQR` for the existing Relink button on already-saved devices (uses the device's own stored secret + unique).
 
-Woo statuses covered: pending, processing, on-hold, completed, cancelled, refunded, failed. Each: toggle off by default, textarea with template using shortcodes `{first_name} {last_name} {order_id} {total} {status}`.
+4. New `listApiKeys` / `createApiKey` / `deleteApiKey` / `toggleApiKey` for the settings UI.
 
-### Technical notes
-- API base URL configurable in plugin (defaults to this app's published URL).
-- License key format: `WAN-XXXX-XXXX-XXXX-XXXX` (random uppercase).
-- Public endpoints rely on license_key as bearer; no PII returned beyond brand name + device list of the owner's brand.
-- Existing `sendSingleMessage` logic refactored: extract pure helper into `bdwebs.server.ts` call already exists; the public send route reuses it.
+## UI
 
-### Out of scope (ask later)
-- Per-license rate limiting / quotas
-- Multi-site per license
-- License expiry dates
-- Plugin auto-update server
+- New page **Settings → API Keys** (owner only): table with label, secret (masked), sid, active toggle, delete; "Add key" dialog.
+- **Devices → Add Device** dialog refactored:
+  1. Step 1: name, SIM info, brand (no API secret field anymore).
+  2. Step 2 (after "Continue"): call `startDeviceLink`, show QR image. Start polling `pollDeviceLink` every 2s.
+  3. On `linked`: close dialog, toast success, invalidate `devices` query. On 30s timeout: show "QR expired, try again" with a Regenerate button.
+- The existing per-row **Link QR** button stays for relinking and still uses the device's stored secret.
 
-Proceed?
+## Technical notes
+
+- Infolink response shape isn't in the docs we have — implementation will treat any JSON with a non-empty `unique` (or `data.unique`) as "linked"; anything else is "pending". If the panel returns a different field, we'll log it once and adjust.
+- Polling uses `useQuery` with `refetchInterval` from the client; the server function is idempotent (won't double-insert if called twice — checks for an existing device with the same `device_unique_id` first).
+- API secrets are randomized **per link attempt**, not per message. Once a device is linked, it always sends via the same secret it was linked with (this matches how the panel binds an account to the secret that created it).
+
+## Out of scope
+
+- No bulk-import of keys.
+- No quota/round-robin tracking — pure random pick is enough for now.
+- Sending logic (`sendWhatsApp`, campaigns) unchanged; still uses each device's stored `api_secret`.
