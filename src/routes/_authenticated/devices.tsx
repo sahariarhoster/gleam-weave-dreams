@@ -116,6 +116,14 @@ function DevicesPage() {
     onError: (e) => toast.error((e as Error).message),
   });
 
+  const fnApplyDefaults = useServerFn(applyDeviceDefaults);
+  const applyMut = useMutation({
+    mutationFn: (id: string) => fnApplyDefaults({ data: { id } }),
+    onSuccess: () => toast.success("Receive Chats & Random Send disabled"),
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+
   return (
     <div className="mx-auto max-w-7xl">
       <PageHeader
