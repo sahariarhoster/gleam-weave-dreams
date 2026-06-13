@@ -522,3 +522,123 @@ export const getMyAccountStatus = createServerFn({ method: "GET" })
     return { locked: true, roles, brands: list, reason, note: lastOrder?.admin_notes ?? null };
   });
 
+// Owner/staff: manually create an order (and optionally auto-approve into an active subscription)
+export const adminCreateOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        package_id: z.string().uuid(),
+        full_name: z.string().trim().min(2).max(100),
+        email: z.string().trim().email().max(255),
+        password: z.string().min(6).max(72).optional().nullable(),
+        phone: z.string().trim().max(30).optional().nullable(),
+        brand_name: z.string().trim().min(1).max(100),
+        bkash_number: z.string().trim().max(30).optional().nullable(),
+        txid: z.string().trim().max(64).optional().nullable(),
+        notes: z.string().trim().max(500).optional().nullable(),
+        auto_approve: z.boolean().default(true),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { data: roleRow } = await context.supabase
+      .from("user_roles").select("role").eq("user_id", context.userId)
+      .in("role", ["owner", "support_agent", "sales_agent"]);
+    if (!roleRow || roleRow.length === 0) throw new Error("Forbidden");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: pkg, error: pErr } = await supabaseAdmin
+      .from("packages").select("*").eq("id", data.package_id).maybeSingle();
+    if (pErr || !pkg) throw new Error("Package not found");
+
+    // Resolve or create user
+    let userId: string;
+    const { data: list } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
+    const existing = (list?.users ?? []).find(
+      (u) => u.email?.toLowerCase() === data.email.toLowerCase(),
+    );
+    if (existing) {
+      userId = existing.id;
+    } else {
+      const password = data.password && data.password.length >= 6
+        ? data.password
+        : Math.random().toString(36).slice(2) + "Aa1!";
+      const { data: created, error: cuErr } = await supabaseAdmin.auth.admin.createUser({
+        email: data.email,
+        password,
+        email_confirm: true,
+        user_metadata: { full_name: data.full_name },
+      });
+      if (cuErr || !created.user) throw new Error(cuErr?.message ?? "Could not create account");
+      userId = created.user.id;
+    }
+
+    await supabaseAdmin.from("profiles").upsert(
+      { id: userId, email: data.email, full_name: data.full_name, phone: data.phone ?? null } as any,
+      { onConflict: "id" },
+    );
+    await supabaseAdmin.from("user_roles").upsert(
+      { user_id: userId, role: "brand_owner" }, { onConflict: "user_id,role" },
+    );
+
+    const expiresIso = data.auto_approve
+      ? new Date(Date.now() + (pkg.duration_days ?? 30) * 86_400_000).toISOString()
+      : null;
+
+    const { data: brand, error: bErr } = await supabaseAdmin
+      .from("brands")
+      .insert({
+        name: data.brand_name,
+        status: (data.auto_approve ? "active" : "pending") as any,
+        message_limit: pkg.message_limit,
+        device_limit: pkg.device_limit,
+        license_limit: pkg.license_count,
+        created_by: userId,
+        current_package_id: pkg.id,
+        expires_at: expiresIso,
+      } as any)
+      .select("id")
+      .single();
+    if (bErr || !brand) throw new Error(bErr?.message ?? "Could not create brand");
+
+    await supabaseAdmin.from("brand_members").upsert(
+      { brand_id: brand.id, user_id: userId, role: "brand_admin" },
+      { onConflict: "brand_id,user_id" },
+    );
+
+    const price = Number(pkg.price);
+    const { data: order, error: oErr } = await supabaseAdmin
+      .from("orders")
+      .insert({
+        package_id: pkg.id,
+        user_id: userId,
+        brand_id: brand.id,
+        full_name: data.full_name,
+        email: data.email,
+        phone: data.phone ?? null,
+        bkash_number: data.bkash_number ?? "",
+        txid: data.txid ?? "",
+        original_amount: price,
+        discount_amount: 0,
+        final_amount: price,
+        status: data.auto_approve ? "approved" : "pending",
+        approved_at: data.auto_approve ? new Date().toISOString() : null,
+        approved_by: data.auto_approve ? context.userId : null,
+        admin_notes: data.notes ?? "Created manually by staff",
+      })
+      .select("id")
+      .single();
+    if (oErr || !order) throw new Error(oErr?.message ?? "Could not create order");
+
+    await supabaseAdmin.from("activity_log").insert({
+      action: data.auto_approve ? "admin_create_subscription" : "admin_create_order",
+      brand_id: brand.id,
+      user_id: context.userId,
+      details: { order_id: order.id, package_id: pkg.id },
+    });
+
+    return { ok: true, order_id: order.id, brand_id: brand.id };
+  });
+
