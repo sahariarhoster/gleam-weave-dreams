@@ -432,10 +432,21 @@ export const pollDeviceLink = createServerFn({ method: "POST" })
     if (insErr) throw new Error(insErr.message);
 
     // Disable "Receive Chats" and "Random Send Interval" by default on the WA panel.
-    const waAccountId = root.id ?? root.account_id ?? root.wa_id;
-    if (waAccountId !== undefined && waAccountId !== null) {
-      try {
-        const { bdwebs } = await import("@/lib/bdwebs.server");
+    try {
+      const { bdwebs } = await import("@/lib/bdwebs.server");
+      let waAccountId: number | string | undefined =
+        root.id ?? root.account_id ?? root.wa_id;
+      if (waAccountId === undefined || waAccountId === null) {
+        const accounts = await bdwebs.getWhatsAppAccounts(key.secret);
+        const match = (accounts ?? []).find(
+          (a: any) =>
+            a.unique === unique ||
+            a.account === unique ||
+            a.device_unique_id === unique,
+        );
+        waAccountId = match?.id;
+      }
+      if (waAccountId !== undefined && waAccountId !== null) {
         await bdwebs.editWhatsApp({
           secret: key.secret,
           id: waAccountId,
@@ -444,10 +455,13 @@ export const pollDeviceLink = createServerFn({ method: "POST" })
           random_min: 1,
           random_max: 5,
         });
-      } catch (e) {
-        console.warn("editWhatsApp defaults failed", e);
+      } else {
+        console.warn("editWhatsApp defaults: no WA account id found for", unique);
       }
+    } catch (e) {
+      console.warn("editWhatsApp defaults failed", e);
     }
+
 
     return { status: "linked" as const, device_id: inserted.id };
   });
