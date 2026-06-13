@@ -65,6 +65,15 @@ function BrandsPage() {
       />
       <Card className="border-border/60 shadow-sm">
         <CardContent className="pt-6">
+          <div className="relative mb-4 max-w-sm">
+            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder="Search brands…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="pl-8"
+            />
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
