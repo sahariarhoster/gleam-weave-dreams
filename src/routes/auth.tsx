@@ -1,7 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { z } from "zod";
-import { fallback, zodValidator } from "@tanstack/zod-adapter";
 import {
   MessageCircle,
   Mail,
@@ -21,16 +19,15 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
-const authSearchSchema = z.object({
-  redirect: fallback(z.string().optional(), undefined),
-});
-
 export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({ meta: [{ title: "Sign in — WA Suite" }] }),
-  validateSearch: zodValidator(authSearchSchema),
+  validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
+    redirect: typeof search.redirect === "string" ? search.redirect : undefined,
+  }),
   component: AuthPage,
 });
+
 
 function AuthPage() {
   const navigate = useNavigate();
