@@ -138,7 +138,7 @@ export const Route = createFileRoute("/api/public/cron/tick")({
           const total = newSent + newFailed;
           const failRate = total > 0 ? newFailed / total : 0;
           const patch: Record<string, any> = { sent_count: newSent, failed_count: newFailed };
-          if (total >= 20 && failRate > 0.2) patch.status = "paused";
+          if (!(c as any).ignore_failure_pause && total >= 20 && failRate > 0.2) patch.status = "paused";
           await supabaseAdmin.from("campaigns").update(patch as never).eq("id", c.id);
           results.push({ id: c.id, sent, failed, paused: patch.status === "paused" });
         }
