@@ -152,12 +152,19 @@ function DevicesPage() {
             {canManage && (
               <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditing(null); }}>
                 <DialogTrigger asChild>
-                  <Button size="sm" className="gap-1"><Plus className="h-4 w-4" /> Add Device</Button>
+                  <Button
+                    size="sm"
+                    className="gap-1"
+                    disabled={!editing && !hasCapacity}
+                    title={!hasCapacity ? "Device limit reached for your brand(s). Upgrade your plan to add more." : undefined}
+                  >
+                    <Plus className="h-4 w-4" /> Add Device
+                  </Button>
                 </DialogTrigger>
                 <DeviceDialog
                   key={editing?.id ?? "new"}
                   editing={editing}
-                  brands={brands.data ?? []}
+                  brands={editing ? (brands.data ?? []) : availableBrands}
                   onDone={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["devices"] }); }}
                 />
               </Dialog>
