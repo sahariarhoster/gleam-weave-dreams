@@ -39,7 +39,7 @@ export const Route = createFileRoute("/api/public/cron/tick")({
           // load campaign details
           const { data: c } = await supabaseAdmin
             .from("campaigns")
-            .select("id, device_id, min_delay_seconds, max_delay_seconds, daily_limit, send_window_start, send_window_end, sent_count, failed_count")
+            .select("id, device_id, min_delay_seconds, max_delay_seconds, daily_limit, send_window_start, send_window_end, sent_count, failed_count, ignore_failure_pause")
             .eq("id", camp.id)
             .single();
           if (!c) continue;
