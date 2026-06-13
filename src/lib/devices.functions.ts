@@ -120,9 +120,83 @@ export const deleteDevice = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertOwner(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: device } = await supabaseAdmin
+      .from("devices")
+      .select("api_secret, device_unique_id")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (device?.api_secret && device?.device_unique_id) {
+      try {
+        const { bdwebs } = await import("@/lib/bdwebs.server");
+        await bdwebs.deleteWhatsApp({
+          secret: device.api_secret,
+          unique: device.device_unique_id,
+        });
+      } catch (e) {
+        console.warn("deleteWhatsApp panel call failed", e);
+      }
+    }
     const { error } = await context.supabase.from("devices").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
+  });
+
+export const refreshDeviceStatuses = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data: visible } = await context.supabase
+      .from("devices")
+      .select("id");
+    const ids = (visible ?? []).map((r: any) => r.id);
+    if (ids.length === 0) return { updated: 0 };
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: rows } = await supabaseAdmin
+      .from("devices")
+      .select("id, api_secret, device_unique_id")
+      .in("id", ids);
+
+    const { bdwebs } = await import("@/lib/bdwebs.server");
+    const bySecret = new Map<string, Array<{ id: string; device_unique_id: string }>>();
+    for (const r of rows ?? []) {
+      if (!r.api_secret || !r.device_unique_id) continue;
+      const list = bySecret.get(r.api_secret) ?? [];
+      list.push({ id: r.id, device_unique_id: r.device_unique_id });
+      bySecret.set(r.api_secret, list);
+    }
+
+    let updated = 0;
+    const nowIso = new Date().toISOString();
+    for (const [secret, group] of bySecret) {
+      let accounts: any[] = [];
+      try {
+        const res = await bdwebs.getWhatsAppAccounts(secret);
+        accounts = Array.isArray(res.data) ? res.data : [];
+      } catch (e) {
+        console.warn("getWhatsAppAccounts failed", e);
+        continue;
+      }
+      for (const dev of group) {
+        const acc = accounts.find((a: any) =>
+          a.unique === dev.device_unique_id ||
+          a.account === dev.device_unique_id ||
+          a.device_unique_id === dev.device_unique_id,
+        );
+        const rawStatus = String(acc?.status ?? "").toLowerCase();
+        const status = !acc
+          ? "disconnected"
+          : rawStatus === "1" || rawStatus === "active" || rawStatus === "connected"
+            ? "active"
+            : "disconnected";
+        await supabaseAdmin
+          .from("devices")
+          .update({ status, last_checked_at: nowIso })
+          .eq("id", dev.id);
+        updated++;
+      }
+    }
+    return { updated };
   });
 
 // ============ WhatsApp QR Linking ============
