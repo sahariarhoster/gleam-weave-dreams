@@ -4,9 +4,10 @@
 // cookie + CSRF token in module scope, and re-logs on auth failure.
 
 type Jar = Record<string, string>;
+type PanelSession = { jar: Jar; token?: string | null };
 
 let cachedJar: Jar | null = null;
-let cachedToken: string | null = null;
+let cachedToken: string | null | undefined = null;
 let cachedAt = 0;
 const TTL_MS = 30 * 60 * 1000; // 30 min
 
@@ -145,7 +146,13 @@ async function getLoginPage(base: string, jar: Jar) {
   return { ...best, checked };
 }
 
-async function login(): Promise<{ jar: Jar; token: string }> {
+function hasZenderLoginForm(html: string): boolean {
+  return /<form\b[^>]*zender-authenticate-login/i.test(html) &&
+    /<input\b[^>]+name=["']?email["'\s>]/i.test(html) &&
+    /<input\b[^>]+name=["']?password["'\s>]/i.test(html);
+}
+
+async function login(): Promise<PanelSession> {
   const base = panelBase();
   const email = process.env.HOSTERCAMP_PANEL_EMAIL;
   const password = process.env.HOSTERCAMP_PANEL_PASSWORD;
@@ -158,7 +165,8 @@ async function login(): Promise<{ jar: Jar; token: string }> {
   const page = await getLoginPage(base, jar);
   const loginUrl = page.url;
   const token = extractToken(page.html) ?? tokenFromCookies(jar);
-  if (!token) {
+  const tokenlessZenderLogin = !token && hasZenderLoginForm(page.html);
+  if (!token && !tokenlessZenderLogin) {
     console.warn("Panel login token lookup failed", {
       finalUrl: page.url,
       checked: page.checked,
@@ -170,26 +178,29 @@ async function login(): Promise<{ jar: Jar; token: string }> {
   }
 
   // 2) POST credentials.
-  const body = new URLSearchParams({
-    _token: token,
-    email,
-    password,
-    remember: "on",
-  });
-  const r2 = await fetch(loginUrl, {
+  const postUrl = tokenlessZenderLogin ? `${base}/requests/index/login` : loginUrl;
+  const body = new FormData();
+  if (token) body.set("_token", token);
+  body.set("email", email);
+  body.set("password", password);
+  body.set("remember", "on");
+  const headers: Record<string, string> = {
+    "User-Agent": "Mozilla/5.0 LovableBot",
+    Cookie: jarToHeader(jar),
+    Referer: loginUrl,
+    Origin: base,
+    "X-Requested-With": "XMLHttpRequest",
+    Accept: "application/json, text/javascript, */*; q=0.01",
+  };
+  if (token) {
+    headers["X-CSRF-TOKEN"] = token;
+    headers["X-XSRF-TOKEN"] = tokenFromCookies(jar) ?? token;
+  }
+  const r2 = await fetch(postUrl, {
     method: "POST",
     redirect: "manual",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      "User-Agent": "Mozilla/5.0 LovableBot",
-      Cookie: jarToHeader(jar),
-      Referer: loginUrl,
-      Origin: base,
-      "X-Requested-With": "XMLHttpRequest",
-      "X-CSRF-TOKEN": token,
-      "X-XSRF-TOKEN": tokenFromCookies(jar) ?? token,
-    },
-    body: body.toString(),
+    headers,
+    body,
   });
   mergeSetCookies(jar, r2);
 
@@ -198,8 +209,18 @@ async function login(): Promise<{ jar: Jar; token: string }> {
   if (r2.status >= 400) {
     throw new Error(`Panel login failed: HTTP ${r2.status}`);
   }
-  if (r2.status === 200 && /login/i.test(await r2.clone().text())) {
-    throw new Error("Panel login failed: credentials rejected");
+  const loginBody = await r2.clone().text();
+  if (r2.status === 200) {
+    try {
+      const parsed = JSON.parse(loginBody);
+      if (![200, 301].includes(Number(parsed?.status))) {
+        throw new Error(String(parsed?.message ?? "credentials rejected"));
+      }
+    } catch (e) {
+      if (/login|zender-authenticate-login/i.test(loginBody)) {
+        throw new Error(`Panel login failed: ${(e as Error)?.message ?? "credentials rejected"}`);
+      }
+    }
   }
   if (location && !/login/i.test(location)) {
     // good — fetch the redirected page so any post-login cookies stick.
@@ -220,9 +241,9 @@ async function login(): Promise<{ jar: Jar; token: string }> {
   return { jar, token };
 }
 
-async function ensureSession(force = false): Promise<{ jar: Jar; token: string }> {
+async function ensureSession(force = false): Promise<PanelSession> {
   const fresh = Date.now() - cachedAt < TTL_MS;
-  if (!force && cachedJar && cachedToken && fresh) {
+  if (!force && cachedJar && cachedToken !== null && fresh) {
     return { jar: cachedJar, token: cachedToken };
   }
   const s = await login();
@@ -240,9 +261,9 @@ export async function panelAjaxPost(
   const base = panelBase();
   const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
 
-  const doCall = async (sess: { jar: Jar; token: string }) => {
+  const doCall = async (sess: PanelSession) => {
     const body = new URLSearchParams();
-    body.set("_token", sess.token);
+    if (sess.token) body.set("_token", sess.token);
     for (const [k, v] of Object.entries(fields)) {
       if (v === undefined || v === null) continue;
       body.set(k, String(v));
@@ -257,8 +278,8 @@ export async function panelAjaxPost(
         Referer: base + "/",
         Origin: base,
         "X-Requested-With": "XMLHttpRequest",
-        "X-CSRF-TOKEN": sess.token,
         Accept: "application/json, text/plain, */*",
+        ...(sess.token ? { "X-CSRF-TOKEN": sess.token } : {}),
       },
       body: body.toString(),
     });
