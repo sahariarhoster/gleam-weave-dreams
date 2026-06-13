@@ -314,7 +314,7 @@ export async function panelAjaxPost(
   const looksUnauth =
     r.status === 401 ||
     r.status === 419 ||
-    (r.status >= 300 && r.status < 400 && /login/i.test(r.location ?? "")) ||
+    (r.status >= 300 && r.status < 400 && /(?:login|auth)/i.test(r.location ?? "")) ||
     /login|sign[\s-]?in/i.test(r.body.slice(0, 500));
   if (looksUnauth) {
     sess = await ensureSession(true);
