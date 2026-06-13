@@ -408,28 +408,46 @@ export const pollDeviceLink = createServerFn({ method: "POST" })
       return { status: "pending" as const, message: info?.message ?? "Waiting for scan…" };
     }
 
-    // Idempotent: if this device already exists, return it.
+    // Upsert: if this device already exists, refresh its fields; else insert.
     const { data: existing } = await supabaseAdmin
       .from("devices")
       .select("id")
       .eq("device_unique_id", unique)
       .maybeSingle();
-    if (existing) return { status: "linked" as const, device_id: existing.id };
 
-    const { data: inserted, error: insErr } = await supabaseAdmin
-      .from("devices")
-      .insert({
-        name: data.name,
-        device_unique_id: unique,
-        sim_info: data.sim_info ?? waId ?? null,
-        api_secret: key.secret,
-        brand_id: data.brand_id ?? null,
-        status: "active",
-        created_by: context.userId,
-      })
-      .select("id")
-      .single();
-    if (insErr) throw new Error(insErr.message);
+    let deviceId: string;
+    if (existing) {
+      const { error: updErr } = await supabaseAdmin
+        .from("devices")
+        .update({
+          name: data.name,
+          sim_info: data.sim_info ?? waId ?? null,
+          api_secret: key.secret,
+          brand_id: data.brand_id ?? null,
+          status: "active",
+          last_checked_at: new Date().toISOString(),
+        })
+        .eq("id", existing.id);
+      if (updErr) throw new Error(updErr.message);
+      deviceId = existing.id;
+    } else {
+      const { data: inserted, error: insErr } = await supabaseAdmin
+        .from("devices")
+        .insert({
+          name: data.name,
+          device_unique_id: unique,
+          sim_info: data.sim_info ?? waId ?? null,
+          api_secret: key.secret,
+          brand_id: data.brand_id ?? null,
+          status: "active",
+          created_by: context.userId,
+        })
+        .select("id")
+        .single();
+      if (insErr) throw new Error(insErr.message);
+      deviceId = inserted.id;
+    }
+
 
     // Disable "Receive Chats" and "Random Send Interval" by default on the WA panel.
     try {
@@ -465,7 +483,7 @@ export const pollDeviceLink = createServerFn({ method: "POST" })
     }
 
 
-    return { status: "linked" as const, device_id: inserted.id };
+    return { status: "linked" as const, device_id: deviceId };
   });
 
 
