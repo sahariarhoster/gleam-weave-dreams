@@ -21,6 +21,77 @@ async function assertStrictOwner(supabase: any, userId: string) {
   if (!data) throw new Error("Owner only");
 }
 
+async function isPlatformOwner(supabase: any, userId: string) {
+  const { data } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .in("role", ["owner", "support_agent"])
+    .maybeSingle();
+  return !!data;
+}
+
+/**
+ * Enforce that the caller can attach a new device to `brand_id` and that the
+ * brand still has room under its device_limit. Platform owners/support bypass
+ * the brand-ownership check but still respect the device_limit when a
+ * brand_id is provided.
+ */
+async function assertCanAddDeviceToBrand(
+  userId: string,
+  brand_id: string | null | undefined,
+) {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const platformOwner = await isPlatformOwner(supabaseAdmin, userId);
+
+  if (!brand_id) {
+    if (!platformOwner) throw new Error("Select a brand to add this device to.");
+    return; // platform owner can create unassigned devices
+  }
+
+  const { data: brand, error: bErr } = await supabaseAdmin
+    .from("brands")
+    .select("id, created_by, device_limit, status")
+    .eq("id", brand_id)
+    .maybeSingle();
+  if (bErr || !brand) throw new Error("Brand not found");
+
+  if (!platformOwner) {
+    const isOwner = brand.created_by === userId;
+    let isAdmin = false;
+    if (!isOwner) {
+      const { data: mem } = await supabaseAdmin
+        .from("brand_members")
+        .select("role")
+        .eq("brand_id", brand_id)
+        .eq("user_id", userId)
+        .maybeSingle();
+      isAdmin = mem?.role === "brand_admin";
+    }
+    if (!isOwner && !isAdmin) {
+      throw new Error("You don't have permission to add devices to this brand.");
+    }
+  }
+
+  if (brand.status && brand.status !== "active") {
+    throw new Error("This brand is not active.");
+  }
+
+  const limit = Number(brand.device_limit ?? 0);
+  if (limit > 0) {
+    const { count } = await supabaseAdmin
+      .from("devices")
+      .select("id", { count: "exact", head: true })
+      .eq("brand_id", brand_id);
+    if ((count ?? 0) >= limit) {
+      throw new Error(
+        `Device limit reached for this brand (${count}/${limit}). Upgrade your plan to add more devices.`,
+      );
+    }
+  }
+}
+
+
 type Stats = {
   devices: number;
   devicesOnline: number;
