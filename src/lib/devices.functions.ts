@@ -295,6 +295,9 @@ export const pollDeviceLink = createServerFn({ method: "POST" })
     const root = info?.data ?? info ?? {};
     const unique: string | undefined =
       root.unique ?? root.account ?? root.device_unique_id ?? info?.unique;
+    const waId: string | undefined =
+      root.whatsapp ?? root.whatsapp_id ?? root.wid ?? root.phone ??
+      root.sim ?? root.number ?? root.msisdn ?? unique;
 
     if (!unique) {
       return { status: "pending" as const, message: info?.message ?? "Waiting for scan…" };
