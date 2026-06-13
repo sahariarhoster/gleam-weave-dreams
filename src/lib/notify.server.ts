@@ -21,7 +21,16 @@ async function getSender() {
 }
 
 function normalize(num: string): string {
-  return num.replace(/[^0-9+]/g, "");
+  if (!num) return "";
+  // Strip everything except digits (drop +, spaces, dashes, etc.)
+  let d = num.replace(/\D+/g, "");
+  if (!d) return "";
+  // BD local format: 01XXXXXXXXX (11 digits starting with 0) → 8801XXXXXXXXX
+  if (d.length === 11 && d.startsWith("01")) d = "880" + d.slice(1);
+  // Bare 10-digit MSISDN (1XXXXXXXXX) → assume BD
+  else if (d.length === 10 && d.startsWith("1")) d = "880" + d;
+  // Already E.164 BD (8801XXXXXXXXX) stays as-is
+  return d;
 }
 
 const DEFAULTS = {
