@@ -10,6 +10,7 @@ import {
   requestCancelSubscription,
 } from "@/lib/subscriptions.functions";
 import { listAllPackages } from "@/lib/orders.functions";
+import { CreateOrderDialog } from "./orders";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
