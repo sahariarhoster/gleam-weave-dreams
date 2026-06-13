@@ -283,34 +283,47 @@ async function ensureSession(force = false): Promise<PanelSession> {
 export async function panelAjaxPost(
   path: string,
   fields: Record<string, string | number | undefined>,
+  opts: { multipart?: boolean } = {},
 ): Promise<{ status: number; body: string; location: string | null }> {
   const base = panelBase();
   const url = `${base}${path.startsWith("/") ? path : `/${path}`}`;
 
   const doCall = async (sess: PanelSession) => {
-    const body = new URLSearchParams();
-    if (sess.token) body.set("_token", sess.token);
-    for (const [k, v] of Object.entries(fields)) {
-      if (v === undefined || v === null) continue;
-      body.set(k, String(v));
-    }
     const xsrf = tokenFromCookies(sess.jar);
-    const res = await fetch(url, {
-      method: "POST",
-      redirect: "manual",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent": "Mozilla/5.0 LovableBot",
-        Cookie: jarToHeader(sess.jar),
-        Referer: `${panelDashboardBase()}/hosts/whatsapp`,
-        Origin: base,
-        "X-Requested-With": "XMLHttpRequest",
-        Accept: "application/json, text/plain, */*",
-        ...(sess.token ? { "X-CSRF-TOKEN": sess.token } : {}),
-        ...(xsrf ? { "X-XSRF-TOKEN": xsrf } : {}),
-      },
-      body: body.toString(),
-    });
+    const headers: Record<string, string> = {
+      "User-Agent": "Mozilla/5.0 LovableBot",
+      Cookie: jarToHeader(sess.jar),
+      Referer: `${panelDashboardBase()}/hosts/whatsapp`,
+      Origin: base,
+      "X-Requested-With": "XMLHttpRequest",
+      Accept: "application/json, text/plain, */*",
+      ...(sess.token ? { "X-CSRF-TOKEN": sess.token } : {}),
+      ...(xsrf ? { "X-XSRF-TOKEN": xsrf } : {}),
+    };
+
+    let body: BodyInit;
+    if (opts.multipart) {
+      // Zender's [zender-form] submits as multipart/form-data (FormData).
+      // Some controllers (e.g. update/edit.whatsapp) only parse multipart input.
+      const fd = new FormData();
+      if (sess.token) fd.set("_token", sess.token);
+      for (const [k, v] of Object.entries(fields)) {
+        if (v === undefined || v === null) continue;
+        fd.set(k, String(v));
+      }
+      body = fd; // fetch sets Content-Type with boundary
+    } else {
+      const params = new URLSearchParams();
+      if (sess.token) params.set("_token", sess.token);
+      for (const [k, v] of Object.entries(fields)) {
+        if (v === undefined || v === null) continue;
+        params.set(k, String(v));
+      }
+      headers["Content-Type"] = "application/x-www-form-urlencoded";
+      body = params.toString();
+    }
+
+    const res = await fetch(url, { method: "POST", redirect: "manual", headers, body });
     const text = await res.text();
     return { status: res.status, body: text, location: res.headers.get("location") };
   };
