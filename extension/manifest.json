@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "WA Suite — WhatsApp Contact Exporter",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Export all contacts from your WhatsApp Web chat list as CSV.",
   "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": ["https://web.whatsapp.com/*"],
