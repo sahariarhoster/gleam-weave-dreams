@@ -120,6 +120,9 @@ export const adminUpdateSubscription = createServerFn({ method: "POST" })
     } else if (data.action === "clear_cancel") {
       patch.cancel_requested_at = null;
     } else if (data.action === "renew") {
+      if ((brand as any)?.packages?.is_trial) {
+        throw new Error("Trial subscriptions are not renewable. Use 'change package' to upgrade to a paid plan.");
+      }
       const days =
         data.extend_days ??
         (brand as any)?.packages?.duration_days ??
