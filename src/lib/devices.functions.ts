@@ -127,9 +127,7 @@ export const getDashboardStats = createServerFn({ method: "POST" })
     }).parse(d ?? {}),
   )
   .handler(async ({ data, context }): Promise<Stats> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: res, error } = await (supabaseAdmin as any).rpc("get_dashboard_stats_for_user", {
-      _user_id: context.userId,
+    const { data: res, error } = await (context.supabase as any).rpc("get_dashboard_stats_for_current_user", {
       _start: data?.start ?? null,
       _end: data?.end ?? null,
     });
