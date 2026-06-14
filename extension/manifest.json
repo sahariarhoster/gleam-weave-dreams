@@ -1,13 +1,21 @@
 {
   "manifest_version": 3,
   "name": "WA Suite — WhatsApp Contact Exporter",
-  "version": "1.0.0",
-  "description": "Export contacts and chat numbers from WhatsApp Web to a CSV file you can import into WA Suite.",
+  "version": "1.0.1",
+  "description": "Export all contacts from your WhatsApp Web chat list as CSV.",
   "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": ["https://web.whatsapp.com/*"],
   "action": {
     "default_popup": "popup.html",
-    "default_icon": "icon.png"
+    "default_icon": {
+      "16": "icon-16.png",
+      "48": "icon-48.png",
+      "128": "icon-128.png"
+    }
   },
-  "icons": { "48": "icon.png", "128": "icon.png" }
+  "icons": {
+    "16": "icon-16.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
+  }
 }
