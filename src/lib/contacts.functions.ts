@@ -67,26 +67,36 @@ export const importContacts = createServerFn({ method: "POST" })
       brand_id: z.string().uuid(),
       rows: z.array(z.object({
         name: z.string().max(200).optional(),
-        phone: z.string()
-          .transform((v) => v.replace(/[^\d+]/g, ""))
-          .pipe(z.string().regex(/^\+?\d{5,15}$/, "Invalid phone")),
+        phone: z.string().max(64),
         email: z.string().max(200).optional(),
       })).min(1).max(5000),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
-    const payload = data.rows.map((r) => ({
-      brand_id: data.brand_id,
-      name: r.name || null,
-      phone: r.phone.trim(),
-      email: r.email?.trim() || null,
-      created_by: context.userId,
-    }));
+    const phoneRe = /^\+?\d{5,15}$/;
+    const seen = new Set<string>();
+    const payload: any[] = [];
+    let skipped = 0;
+    for (const r of data.rows) {
+      const phone = (r.phone || "").replace(/[^\d+]/g, "");
+      if (!phoneRe.test(phone) || seen.has(phone)) { skipped++; continue; }
+      seen.add(phone);
+      payload.push({
+        brand_id: data.brand_id,
+        name: r.name?.trim() || null,
+        phone,
+        email: r.email?.trim() || null,
+        created_by: context.userId,
+      });
+    }
+    if (payload.length === 0) {
+      return { ok: true, inserted: 0, total: data.rows.length, skipped };
+    }
     const { error, count } = await context.supabase
       .from("contacts")
       .upsert(payload, { onConflict: "brand_id,phone", count: "exact", ignoreDuplicates: true });
     if (error) throw new Error(error.message);
-    return { ok: true, inserted: count ?? 0, total: data.rows.length };
+    return { ok: true, inserted: count ?? 0, total: data.rows.length, skipped };
   });
 
 // ============ GROUPS ============
