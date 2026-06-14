@@ -99,6 +99,34 @@ function NoticesPage() {
             </Label>
           </div>
 
+          <div className="grid grid-cols-2 gap-3 max-w-md">
+            <div className="space-y-1">
+              <Label htmlFor="min-delay" className="text-xs">Min delay (sec)</Label>
+              <Input
+                id="min-delay"
+                type="number"
+                min={1}
+                max={3600}
+                value={minDelay}
+                onChange={(e) => setMinDelay(Math.max(1, Number(e.target.value) || 1))}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="max-delay" className="text-xs">Max delay (sec)</Label>
+              <Input
+                id="max-delay"
+                type="number"
+                min={1}
+                max={3600}
+                value={maxDelay}
+                onChange={(e) => setMaxDelay(Math.max(1, Number(e.target.value) || 1))}
+              />
+            </div>
+            <p className="col-span-2 text-xs text-muted-foreground">
+              Random delay between each message. Max must be ≥ min.
+            </p>
+          </div>
+
           <div className="flex flex-wrap gap-2">
             <Button
               onClick={() => sendMut.mutate()}
