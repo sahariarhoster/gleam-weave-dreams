@@ -39,7 +39,9 @@ function scrapeFn() {
             let v;
             try { v = obj[k]; } catch { continue; }
             if (typeof v === "string") {
-              const m = v.match(/(\d{6,15})@(?:c\.us|s\.whatsapp\.net|lid)/);
+              // Only c.us / s.whatsapp.net are real phone JIDs. @lid is an opaque
+              // privacy id (NOT a phone number) — skip it.
+              const m = v.match(/(\d{7,15})@(?:c\.us|s\.whatsapp\.net)/);
               if (m) return m[1];
             } else if (v && typeof v === "object") {
               const r = scan(v, depth + 1);
