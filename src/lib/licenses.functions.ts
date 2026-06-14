@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-function genKey(): string {
+function genKey(prefix: "HS" | "WAN" = "HS"): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const bytes = crypto.getRandomValues(new Uint8Array(16));
   const groups: string[] = [];
@@ -11,7 +11,7 @@ function genKey(): string {
       Array.from(bytes.slice(g * 4, g * 4 + 4), (b) => chars[b % chars.length]).join(""),
     );
   }
-  return `HS-${groups.join("-")}`;
+  return `${prefix}-${groups.join("-")}`;
 }
 
 async function isOwner(supabase: any, userId: string) {
