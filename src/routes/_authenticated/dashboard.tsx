@@ -1,6 +1,8 @@
 import { createFileRoute, Link, ClientOnly } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
+import { getDashboardStats } from "@/lib/devices.functions";
 import { format } from "date-fns";
 import {
   Smartphone,
@@ -130,15 +132,13 @@ function DashboardPage() {
   const [customTo, setCustomTo] = useState<Date | undefined>();
   const range = resolveRange(preset, { from: customFrom, to: customTo });
 
+  const fetchStats = useServerFn(getDashboardStats);
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard-stats", user?.id ?? "anon", range.start, range.end],
     queryFn: async () => {
       if (!user?.id) return emptyStats;
-      const { data, error } = await supabase.rpc("get_dashboard_stats_for_user", {
-        _user_id: user.id, _start: range.start, _end: range.end,
-      });
-      if (error) throw new Error(error.message);
-      return normalizeStats(data as Partial<DashboardStats> | null);
+      const res = await fetchStats({ data: { start: range.start, end: range.end } });
+      return normalizeStats(res as Partial<DashboardStats> | null);
     },
     enabled: !!user?.id,
     staleTime: 60 * 1000,
