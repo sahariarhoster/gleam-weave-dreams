@@ -103,7 +103,7 @@ export const adminUpdateSubscription = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: brand } = await supabaseAdmin
       .from("brands")
-      .select("id, status, expires_at, current_package_id, packages:current_package_id(duration_days)")
+      .select("id, status, expires_at, current_package_id, packages:current_package_id(duration_days, is_trial)")
       .eq("id", data.brand_id)
       .maybeSingle();
     if (!brand) throw new Error("Brand not found");
