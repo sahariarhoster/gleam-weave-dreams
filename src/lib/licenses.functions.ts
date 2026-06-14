@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-function genKey(): string {
+function genKey(prefix: "HS" | "WAN" = "HS"): string {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   const bytes = crypto.getRandomValues(new Uint8Array(16));
   const groups: string[] = [];
@@ -11,7 +11,7 @@ function genKey(): string {
       Array.from(bytes.slice(g * 4, g * 4 + 4), (b) => chars[b % chars.length]).join(""),
     );
   }
-  return `HS-${groups.join("-")}`;
+  return `${prefix}-${groups.join("-")}`;
 }
 
 async function isOwner(supabase: any, userId: string) {
@@ -59,7 +59,12 @@ export const setBrandLicenseLimit = createServerFn({ method: "POST" })
 
 export const generateLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ brand_id: z.string().uuid() }).parse(d))
+  .inputValidator((d: unknown) =>
+    z.object({
+      brand_id: z.string().uuid(),
+      license_type: z.enum(["wordpress", "custom_site"]).optional().default("wordpress"),
+    }).parse(d),
+  )
   .handler(async ({ data, context }) => {
     const { data: brand, error: bErr } = await context.supabase
       .from("brands").select("id, created_by, license_limit").eq("id", data.brand_id).maybeSingle();
@@ -75,7 +80,8 @@ export const generateLicense = createServerFn({ method: "POST" })
       throw new Error(`Limit reached: ${limit} active license(s) per brand`);
     }
 
-    const key = genKey();
+    const prefix = data.license_type === "custom_site" ? "WAN" : "HS";
+    const key = genKey(prefix);
     const { data: row, error } = await context.supabase
       .from("plugin_licenses")
       .insert({ brand_id: data.brand_id, license_key: key, status: "active", created_by: context.userId })
