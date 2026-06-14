@@ -86,6 +86,13 @@ curl -X POST ${base}/api/public/plugin/select-device \\
         icon={Code2}
         title="Custom Site Integration"
         description="Send WhatsApp from any website (React, Vue, Next.js, plain PHP, etc.) using a Custom Site License."
+        actions={
+          <Button asChild size="sm" variant="outline" className="gap-1">
+            <a href="/wa-suite-custom-site-integration.pdf" download>
+              <Download className="h-4 w-4" /> Download PDF Guide
+            </a>
+          </Button>
+        }
       />
 
       <Card>
