@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/layout/page-header";
 import { previewBrandAdminRecipients, sendBrandAdminNotice } from "@/lib/notices.functions";
 
