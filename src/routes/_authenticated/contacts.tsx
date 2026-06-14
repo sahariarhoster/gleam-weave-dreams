@@ -106,6 +106,28 @@ function ContactsPage() {
                 onDone={() => { setDeliveredOpen(false); qc.invalidateQueries({ queryKey: ["contacts"] }); qc.invalidateQueries({ queryKey: ["groups"] }); }}
               />
             </Dialog>
+            <Button
+              size="sm"
+              variant="outline"
+              className="gap-1"
+              onClick={async () => {
+                try {
+                  const res = await fetch("/wa-suite-exporter.zip");
+                  if (!res.ok) throw new Error("Download failed");
+                  const blob = await res.blob();
+                  const a = document.createElement("a");
+                  a.href = URL.createObjectURL(blob);
+                  a.download = "wa-suite-exporter.zip";
+                  a.click();
+                  URL.revokeObjectURL(a.href);
+                  toast.success("Extension downloaded. Unzip & load it via chrome://extensions (Developer mode → Load unpacked).");
+                } catch (e) {
+                  toast.error((e as Error).message);
+                }
+              }}
+            >
+              <Chrome className="h-4 w-4" /> WhatsApp Extension
+            </Button>
             <Dialog open={importOpen} onOpenChange={setImportOpen}>
               <DialogTrigger asChild><Button size="sm" variant="outline" className="gap-1"><Upload className="h-4 w-4" /> Import</Button></DialogTrigger>
               <ImportDialog brands={brands.data ?? []} onDone={() => { setImportOpen(false); qc.invalidateQueries({ queryKey: ["contacts"] }); }} />
