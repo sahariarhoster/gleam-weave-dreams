@@ -29,9 +29,11 @@ function NoticesPage() {
   });
   const [message, setMessage] = useState("");
   const [includeAlreadySent, setIncludeAlreadySent] = useState(false);
+  const [minDelay, setMinDelay] = useState(10);
+  const [maxDelay, setMaxDelay] = useState(23);
 
   const sendMut = useMutation({
-    mutationFn: () => fnSend({ data: { message, include_already_sent: includeAlreadySent } }),
+    mutationFn: () => fnSend({ data: { message, include_already_sent: includeAlreadySent, min_delay_seconds: minDelay, max_delay_seconds: maxDelay } }),
     onSuccess: (r) => {
       if (r.ok) {
         toast.success(`Campaign created · ${r.queued} queued · ${r.skipped_already_sent} already-sent skipped`);
