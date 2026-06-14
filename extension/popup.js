@@ -1,30 +1,69 @@
 const statusEl = document.getElementById("status");
 const runBtn = document.getElementById("run");
 const copyBtn = document.getElementById("copy");
+const barEl = document.getElementById("bar");
+const pctEl = document.getElementById("pct");
+const cntEl = document.getElementById("cnt");
+const logEl = document.getElementById("log");
 
 function setStatus(msg, cls = "") {
   statusEl.innerHTML = cls === "count" ? `<span class="count">${msg}</span>` : msg;
 }
+function setProgress(pct, count) {
+  const p = Math.max(0, Math.min(100, Math.round(pct)));
+  barEl.style.width = p + "%";
+  pctEl.textContent = p + "%";
+  cntEl.textContent = (count || 0) + " contacts";
+}
+function appendLog(lines) {
+  if (!lines || !lines.length) return;
+  for (const l of lines) {
+    const div = document.createElement("div");
+    if (l.level === "err") div.className = "err";
+    else if (l.level === "ok") div.className = "ok";
+    div.textContent = l.msg;
+    logEl.appendChild(div);
+  }
+  logEl.scrollTop = logEl.scrollHeight;
+}
+function resetUI() {
+  logEl.innerHTML = "";
+  setProgress(0, 0);
+  setStatus("");
+}
 
-function scrapeFn() {
-  return new Promise(async (resolve, reject) => {
+// Runs in MAIN world. Writes state to window.__waScrape and returns immediately.
+function startScrape() {
+  if (window.__waScrape && !window.__waScrape.finished) return { already: true };
+  const state = {
+    started: Date.now(),
+    finished: false,
+    error: null,
+    count: 0,
+    scrollTop: 0,
+    scrollHeight: 1,
+    maxTop: 0,
+    logs: [],
+    result: null,
+  };
+  window.__waScrape = state;
+  const log = (msg, level) => state.logs.push({ msg: `[${new Date().toLocaleTimeString()}] ${msg}`, level: level || "" });
+
+  (async () => {
     try {
       const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-      const numbers = new Map();
-
       const pane =
         document.querySelector('[aria-label="Chat list"]') ||
         document.querySelector('#pane-side');
       if (!pane) throw new Error("Open web.whatsapp.com and sign in first.");
-
       const scroller =
         pane.querySelector('div[style*="overflow"][style*="scroll"]') ||
         pane.querySelector('div[style*="overflow-y"]') ||
         pane;
+      log("Found chat list pane", "ok");
 
-      const contacts = new Map(); // key = phone || "name:"+name
+      const contacts = new Map();
 
-      // Walk React fiber to find a JID like "1234567890@c.us" or "...@s.whatsapp.net"
       const findJid = (node) => {
         if (!node) return "";
         const key = Object.keys(node).find(
@@ -39,8 +78,6 @@ function scrapeFn() {
             let v;
             try { v = obj[k]; } catch { continue; }
             if (typeof v === "string") {
-              // Only c.us / s.whatsapp.net are real phone JIDs. @lid is an opaque
-              // privacy id (NOT a phone number) — skip it.
               const m = v.match(/(\d{7,15})@(?:c\.us|s\.whatsapp\.net)/);
               if (m) return m[1];
             } else if (v && typeof v === "object") {
@@ -57,20 +94,15 @@ function scrapeFn() {
         const rows = document.querySelectorAll(
           '#pane-side [role="listitem"], #pane-side [role="row"], #pane-side div[role="grid"] > div'
         );
+        let added = 0;
         rows.forEach((row) => {
           const titleEl = row.querySelector("span[title]");
           const title = titleEl?.getAttribute("title") || row.getAttribute("aria-label") || "";
           if (!title) return;
-
-          // 1) Try React fiber for JID (saved contacts)
           let phone = "";
           let name = title;
           const jid = findJid(row) || findJid(row.firstElementChild);
           if (jid) phone = jid;
-
-          // 2) Fallback: only if the title itself IS a phone number (unsaved
-          //    contacts render as "+1 234 567 8900"). Require a leading "+"
-          //    so we don't pick numbers out of names like "John 2".
           if (!phone) {
             const t = title.trim();
             if (/^\+[\d\s\-()]{7,}$/.test(t)) {
@@ -79,45 +111,79 @@ function scrapeFn() {
               name = "";
             }
           }
-
           const key = phone ? phone : "name:" + name;
           if (!key || key === "name:") return;
           const existing = contacts.get(key);
-          if (!existing || (!existing.phone && phone)) {
+          if (!existing) {
             contacts.set(key, { name: name || null, phone });
+            added++;
+          } else if (!existing.phone && phone) {
+            contacts.set(key, { name: existing.name || name || null, phone });
           }
         });
+        state.count = contacts.size;
+        state.scrollTop = scroller.scrollTop;
+        state.scrollHeight = Math.max(1, scroller.scrollHeight - scroller.clientHeight);
+        if (state.scrollTop > state.maxTop) state.maxTop = state.scrollTop;
+        return added;
       };
-
 
       scroller.scrollTop = 0;
       await sleep(600);
       collect();
+      log(`Initial pass: ${state.count} contacts`);
 
-      // Incremental scroll by ~80% of viewport so virtualized rows render
       let lastTop = -1;
       let stable = 0;
-      for (let i = 0; i < 2000; i++) {
+      let iter = 0;
+      for (; iter < 4000; iter++) {
+        const addedBefore = state.count;
         collect();
         const step = Math.max(200, Math.floor(scroller.clientHeight * 0.8));
         scroller.scrollTop = scroller.scrollTop + step;
         await sleep(350);
         collect();
+        if (iter % 5 === 0) {
+          log(`scroll ${state.scrollTop}/${state.scrollHeight} • ${state.count} contacts (+${state.count - addedBefore})`);
+        }
         if (scroller.scrollTop === lastTop) {
           stable++;
-          if (stable >= 5) break;
+          if (stable >= 6) { log("Reached bottom", "ok"); break; }
         } else {
           stable = 0;
           lastTop = scroller.scrollTop;
         }
       }
       collect();
-
-      resolve(Array.from(contacts.values()));
+      state.result = Array.from(contacts.values());
+      state.finished = true;
+      log(`Done. ${state.result.length} contacts collected.`, "ok");
     } catch (e) {
-      reject(e.message || String(e));
+      state.error = e.message || String(e);
+      state.finished = true;
+      log("Error: " + state.error, "err");
     }
-  });
+  })();
+
+  return { started: true };
+}
+
+// Poll: read state and return delta logs from cursor
+function pollScrape(cursor) {
+  const s = window.__waScrape;
+  if (!s) return { missing: true };
+  const newLogs = s.logs.slice(cursor);
+  return {
+    cursor: s.logs.length,
+    finished: s.finished,
+    error: s.error,
+    count: s.count,
+    scrollTop: s.scrollTop,
+    scrollHeight: s.scrollHeight,
+    maxTop: s.maxTop,
+    logs: newLogs,
+    result: s.finished ? s.result : null,
+  };
 }
 
 async function getTab() {
@@ -130,14 +196,35 @@ async function getTab() {
 
 async function runScrape() {
   const tab = await getTab();
-  setStatus("Scrolling chat list… keep this tab open.");
-  const [{ result, error }] = await chrome.scripting.executeScript({
+  resetUI();
+  setStatus("Starting…");
+  await chrome.scripting.executeScript({
     target: { tabId: tab.id },
     world: "MAIN",
-    func: scrapeFn,
+    func: startScrape,
   });
-  if (error) throw new Error(error);
-  return result || [];
+  let cursor = 0;
+  while (true) {
+    await new Promise((r) => setTimeout(r, 400));
+    const [{ result }] = await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      world: "MAIN",
+      func: pollScrape,
+      args: [cursor],
+    });
+    if (!result) continue;
+    if (result.missing) { setStatus("Lost connection to page."); break; }
+    cursor = result.cursor;
+    appendLog(result.logs);
+    const pct = result.scrollHeight > 0 ? (result.maxTop / result.scrollHeight) * 100 : 0;
+    setProgress(result.finished ? 100 : pct, result.count);
+    setStatus(result.finished ? "Finished" : `Scanning… ${result.count} contacts`);
+    if (result.finished) {
+      if (result.error) throw new Error(result.error);
+      return result.result || [];
+    }
+  }
+  return [];
 }
 
 function toCSV(rows) {
@@ -164,31 +251,21 @@ function download(csv) {
 }
 
 runBtn.addEventListener("click", async () => {
-  runBtn.disabled = true;
+  runBtn.disabled = true; copyBtn.disabled = true;
   try {
     const rows = await runScrape();
-    if (!rows.length) {
-      setStatus("No numbers found. Make sure the chat list is visible.");
-    } else {
-      download(toCSV(rows));
-      setStatus(`Exported ${rows.length} contacts ✓`, "count");
-    }
-  } catch (e) {
-    setStatus("Error: " + (e.message || e));
-  } finally {
-    runBtn.disabled = false;
-  }
+    if (!rows.length) setStatus("No numbers found. Make sure the chat list is visible.");
+    else { download(toCSV(rows)); setStatus(`Exported ${rows.length} contacts ✓`, "count"); }
+  } catch (e) { setStatus("Error: " + (e.message || e)); }
+  finally { runBtn.disabled = false; copyBtn.disabled = false; }
 });
 
 copyBtn.addEventListener("click", async () => {
-  copyBtn.disabled = true;
+  runBtn.disabled = true; copyBtn.disabled = true;
   try {
     const rows = await runScrape();
-    await navigator.clipboard.writeText(rows.map((r) => r.phone).join("\n"));
+    await navigator.clipboard.writeText(rows.map((r) => r.phone).filter(Boolean).join("\n"));
     setStatus(`Copied ${rows.length} numbers to clipboard ✓`, "count");
-  } catch (e) {
-    setStatus("Error: " + (e.message || e));
-  } finally {
-    copyBtn.disabled = false;
-  }
+  } catch (e) { setStatus("Error: " + (e.message || e)); }
+  finally { runBtn.disabled = false; copyBtn.disabled = false; }
 });
