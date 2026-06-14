@@ -67,7 +67,9 @@ export const importContacts = createServerFn({ method: "POST" })
       brand_id: z.string().uuid(),
       rows: z.array(z.object({
         name: z.string().max(200).optional(),
-        phone: z.string().min(5).max(64),
+        phone: z.string()
+          .transform((v) => v.replace(/[^\d+]/g, ""))
+          .pipe(z.string().regex(/^\+?\d{5,15}$/, "Invalid phone")),
         email: z.string().max(200).optional(),
       })).min(1).max(5000),
     }).parse(d),
