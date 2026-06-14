@@ -754,6 +754,7 @@ export const createOrderForMe = createServerFn({ method: "POST" })
     const { data: pkg, error: pErr } = await supabaseAdmin
       .from("packages").select("*").eq("id", data.package_id).eq("is_active", true).maybeSingle();
     if (pErr || !pkg) throw new Error("Package not found");
+    if (pkg.is_trial) throw new Error("Trial is for new customers only and cannot be renewed. Please choose a paid package.");
 
     // If brand_id provided, must be owned by this user
     let brandId: string | null = null;
