@@ -48,6 +48,7 @@ import { Route as ApiPublicPluginSelectDeviceRouteImport } from './routes/api/pu
 import { Route as ApiPublicPluginHeartbeatRouteImport } from './routes/api/public/plugin/heartbeat'
 import { Route as ApiPublicPluginDevicesRouteImport } from './routes/api/public/plugin/devices'
 import { Route as ApiPublicPluginActivateRouteImport } from './routes/api/public/plugin/activate'
+import { Route as ApiPublicHooksRefreshDeviceStatusesRouteImport } from './routes/api/public/hooks/refresh-device-statuses'
 import { Route as ApiPublicCronTickRouteImport } from './routes/api/public/cron/tick'
 import { Route as ApiPublicCronDailyReportRouteImport } from './routes/api/public/cron/daily-report'
 
@@ -249,6 +250,12 @@ const ApiPublicPluginActivateRoute = ApiPublicPluginActivateRouteImport.update({
   path: '/api/public/plugin/activate',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHooksRefreshDeviceStatusesRoute =
+  ApiPublicHooksRefreshDeviceStatusesRouteImport.update({
+    id: '/api/public/hooks/refresh-device-statuses',
+    path: '/api/public/hooks/refresh-device-statuses',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicCronTickRoute = ApiPublicCronTickRouteImport.update({
   id: '/api/public/cron/tick',
   path: '/api/public/cron/tick',
@@ -290,6 +297,7 @@ export interface FileRoutesByFullPath {
   '/users': typeof AuthenticatedUsersRoute
   '/api/public/cron/daily-report': typeof ApiPublicCronDailyReportRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
+  '/api/public/hooks/refresh-device-statuses': typeof ApiPublicHooksRefreshDeviceStatusesRoute
   '/api/public/plugin/activate': typeof ApiPublicPluginActivateRoute
   '/api/public/plugin/devices': typeof ApiPublicPluginDevicesRoute
   '/api/public/plugin/heartbeat': typeof ApiPublicPluginHeartbeatRoute
@@ -332,6 +340,7 @@ export interface FileRoutesByTo {
   '/users': typeof AuthenticatedUsersRoute
   '/api/public/cron/daily-report': typeof ApiPublicCronDailyReportRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
+  '/api/public/hooks/refresh-device-statuses': typeof ApiPublicHooksRefreshDeviceStatusesRoute
   '/api/public/plugin/activate': typeof ApiPublicPluginActivateRoute
   '/api/public/plugin/devices': typeof ApiPublicPluginDevicesRoute
   '/api/public/plugin/heartbeat': typeof ApiPublicPluginHeartbeatRoute
@@ -376,6 +385,7 @@ export interface FileRoutesById {
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/api/public/cron/daily-report': typeof ApiPublicCronDailyReportRoute
   '/api/public/cron/tick': typeof ApiPublicCronTickRoute
+  '/api/public/hooks/refresh-device-statuses': typeof ApiPublicHooksRefreshDeviceStatusesRoute
   '/api/public/plugin/activate': typeof ApiPublicPluginActivateRoute
   '/api/public/plugin/devices': typeof ApiPublicPluginDevicesRoute
   '/api/public/plugin/heartbeat': typeof ApiPublicPluginHeartbeatRoute
@@ -420,6 +430,7 @@ export interface FileRouteTypes {
     | '/users'
     | '/api/public/cron/daily-report'
     | '/api/public/cron/tick'
+    | '/api/public/hooks/refresh-device-statuses'
     | '/api/public/plugin/activate'
     | '/api/public/plugin/devices'
     | '/api/public/plugin/heartbeat'
@@ -462,6 +473,7 @@ export interface FileRouteTypes {
     | '/users'
     | '/api/public/cron/daily-report'
     | '/api/public/cron/tick'
+    | '/api/public/hooks/refresh-device-statuses'
     | '/api/public/plugin/activate'
     | '/api/public/plugin/devices'
     | '/api/public/plugin/heartbeat'
@@ -505,6 +517,7 @@ export interface FileRouteTypes {
     | '/_authenticated/users'
     | '/api/public/cron/daily-report'
     | '/api/public/cron/tick'
+    | '/api/public/hooks/refresh-device-statuses'
     | '/api/public/plugin/activate'
     | '/api/public/plugin/devices'
     | '/api/public/plugin/heartbeat'
@@ -526,6 +539,7 @@ export interface RootRouteChildren {
   OrderRoute: typeof OrderRoute
   ApiPublicCronDailyReportRoute: typeof ApiPublicCronDailyReportRoute
   ApiPublicCronTickRoute: typeof ApiPublicCronTickRoute
+  ApiPublicHooksRefreshDeviceStatusesRoute: typeof ApiPublicHooksRefreshDeviceStatusesRoute
   ApiPublicPluginActivateRoute: typeof ApiPublicPluginActivateRoute
   ApiPublicPluginDevicesRoute: typeof ApiPublicPluginDevicesRoute
   ApiPublicPluginHeartbeatRoute: typeof ApiPublicPluginHeartbeatRoute
@@ -815,6 +829,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicPluginActivateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/hooks/refresh-device-statuses': {
+      id: '/api/public/hooks/refresh-device-statuses'
+      path: '/api/public/hooks/refresh-device-statuses'
+      fullPath: '/api/public/hooks/refresh-device-statuses'
+      preLoaderRoute: typeof ApiPublicHooksRefreshDeviceStatusesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron/tick': {
       id: '/api/public/cron/tick'
       path: '/api/public/cron/tick'
@@ -894,6 +915,8 @@ const rootRouteChildren: RootRouteChildren = {
   OrderRoute: OrderRoute,
   ApiPublicCronDailyReportRoute: ApiPublicCronDailyReportRoute,
   ApiPublicCronTickRoute: ApiPublicCronTickRoute,
+  ApiPublicHooksRefreshDeviceStatusesRoute:
+    ApiPublicHooksRefreshDeviceStatusesRoute,
   ApiPublicPluginActivateRoute: ApiPublicPluginActivateRoute,
   ApiPublicPluginDevicesRoute: ApiPublicPluginDevicesRoute,
   ApiPublicPluginHeartbeatRoute: ApiPublicPluginHeartbeatRoute,
