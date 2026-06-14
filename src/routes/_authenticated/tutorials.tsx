@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { PageHeader } from "@/components/layout/page-header";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useServerFn } from "@tanstack/react-start";
+import { upsertTutorial, deleteTutorial } from "@/lib/tutorials.functions";
 
 export const Route = createFileRoute("/_authenticated/tutorials")({
   head: () => ({
@@ -106,10 +108,10 @@ function TutorialsPage() {
     });
   }, [tutorials, query, category]);
 
+  const deleteFn = useServerFn(deleteTutorial);
   const deleteMut = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("tutorials").delete().eq("id", id);
-      if (error) throw new Error(error.message);
+      await deleteFn({ data: { id } });
     },
     onSuccess: () => {
       toast.success("Tutorial deleted");
@@ -251,25 +253,22 @@ function TutorialDialog({
     }
   }, [open, editing]);
 
+  const upsertFn = useServerFn(upsertTutorial);
   const saveMut = useMutation({
     mutationFn: async () => {
       const videoId = extractVideoId(videoInput);
       if (!videoId) throw new Error("Invalid YouTube URL or video ID");
       if (!title.trim()) throw new Error("Title is required");
-      const payload = {
-        video_id: videoId,
-        title: title.trim(),
-        description: description.trim() || null,
-        category: category.trim() || "General",
-        sort_order: Number.isFinite(sortOrder) ? sortOrder : 0,
-      };
-      if (editing) {
-        const { error } = await supabase.from("tutorials").update(payload).eq("id", editing.id);
-        if (error) throw new Error(error.message);
-      } else {
-        const { error } = await supabase.from("tutorials").insert(payload);
-        if (error) throw new Error(error.message);
-      }
+      await upsertFn({
+        data: {
+          id: editing?.id,
+          video_id: videoId,
+          title: title.trim(),
+          description: description.trim() || null,
+          category: category.trim() || "General",
+          sort_order: Number.isFinite(sortOrder) ? sortOrder : 0,
+        },
+      });
     },
     onSuccess: () => {
       toast.success(editing ? "Tutorial updated" : "Tutorial added");

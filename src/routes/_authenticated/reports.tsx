@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { listBrandsLiteClient } from "@/lib/client-queries";
 import { getNotifySettings, saveNotifySettings, sendDailyReportNow } from "@/lib/notify-settings.functions";
+import { getReportStats } from "@/lib/reports.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/reports")({
@@ -44,18 +45,15 @@ function ReportsPage() {
 
   const brandsQ = useQuery({ queryKey: ["brands-lite"], queryFn: listBrandsLiteClient });
 
+  const fetchReport = useServerFn(getReportStats);
   const stats = useQuery({
     queryKey: ["report-stats", user?.id, start, end, brandId],
     queryFn: async () => {
       if (!user?.id) return null;
-      const { data, error } = await supabase.rpc("get_report_stats_for_user", {
-        _user_id: user.id,
-        _start: start,
-        _end: end,
-        _brand_id: brandId === "all" ? undefined : brandId,
+      const res = await fetchReport({
+        data: { start, end, brand_id: brandId === "all" ? null : brandId },
       });
-      if (error) throw new Error(error.message);
-      return data as ReportStats;
+      return res as ReportStats;
     },
     enabled: !!user?.id,
   });

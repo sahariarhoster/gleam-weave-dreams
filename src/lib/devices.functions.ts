@@ -118,14 +118,26 @@ type Stats = {
   topDevices: { id: string; name: string; status: string }[];
 };
 
-export const getDashboardStats = createServerFn({ method: "GET" })
+export const getDashboardStats = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<Stats> => {
-    const { data, error } = await (context.supabase as any).rpc("get_dashboard_stats_for_user", {
+  .inputValidator((d: unknown) =>
+    z.object({
+      start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+      end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    }).parse(d ?? {}),
+  )
+  .handler(async ({ data, context }): Promise<Stats> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: res, error } = await (supabaseAdmin as any).rpc("get_dashboard_stats_for_user", {
       _user_id: context.userId,
+      _start: data?.start ?? null,
+      _end: data?.end ?? null,
     });
-    if (error) throw new Error(error.message);
-    const stats = data as Partial<Stats> | null;
+    if (error) {
+      console.error("[dashboard.stats]", error.message);
+      throw new Error("Failed to load dashboard");
+    }
+    const stats = res as Partial<Stats> | null;
 
     return {
       devices: Number(stats?.devices ?? 0),
