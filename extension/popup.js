@@ -39,7 +39,9 @@ function scrapeFn() {
             let v;
             try { v = obj[k]; } catch { continue; }
             if (typeof v === "string") {
-              const m = v.match(/(\d{6,15})@(?:c\.us|s\.whatsapp\.net|lid)/);
+              // Only c.us / s.whatsapp.net are real phone JIDs. @lid is an opaque
+              // privacy id (NOT a phone number) — skip it.
+              const m = v.match(/(\d{7,15})@(?:c\.us|s\.whatsapp\.net)/);
               if (m) return m[1];
             } else if (v && typeof v === "object") {
               const r = scan(v, depth + 1);
@@ -66,13 +68,15 @@ function scrapeFn() {
           const jid = findJid(row) || findJid(row.firstElementChild);
           if (jid) phone = jid;
 
-          // 2) Fallback: parse number from title (unsaved contacts)
+          // 2) Fallback: only if the title itself IS a phone number (unsaved
+          //    contacts render as "+1 234 567 8900"). Require a leading "+"
+          //    so we don't pick numbers out of names like "John 2".
           if (!phone) {
-            const match = title.match(/\+?\d[\d\s\-()]{6,}\d/);
-            if (match) {
-              phone = match[0].replace(/[^\d+]/g, "");
-              if (phone.length < 8) phone = "";
-              name = title.replace(match[0], "").trim();
+            const t = title.trim();
+            if (/^\+[\d\s\-()]{7,}$/.test(t)) {
+              phone = t.replace(/[^\d+]/g, "");
+              if (phone.replace(/\D/g, "").length < 8) phone = "";
+              name = "";
             }
           }
 
