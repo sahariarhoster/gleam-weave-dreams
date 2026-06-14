@@ -34,6 +34,7 @@ function LandingPage() {
         <TrustStrip />
         <BulkSection />
         <PluginSection />
+        <ExtensionSection />
         <ProtectionSection />
         <Testimonials />
         <PricingSection />
