@@ -22,6 +22,7 @@ import {
   Tag,
   Repeat,
   PlayCircle,
+  Code2,
 } from "lucide-react";
 
 import {
