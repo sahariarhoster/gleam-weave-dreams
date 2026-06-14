@@ -7,7 +7,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 const contactInput = z.object({
   brand_id: z.string().uuid(),
   name: z.string().max(200).nullable().optional(),
-  phone: z.string().min(5).max(30),
+  phone: z.string().min(5).max(64),
   email: z.string().email().max(200).nullable().optional().or(z.literal("")),
   tags: z.array(z.string().max(50)).max(20).optional(),
   notes: z.string().max(2000).nullable().optional(),
