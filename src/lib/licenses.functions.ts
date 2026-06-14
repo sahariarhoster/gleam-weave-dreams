@@ -59,7 +59,12 @@ export const setBrandLicenseLimit = createServerFn({ method: "POST" })
 
 export const generateLicense = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ brand_id: z.string().uuid() }).parse(d))
+  .inputValidator((d: unknown) =>
+    z.object({
+      brand_id: z.string().uuid(),
+      license_type: z.enum(["wordpress", "custom_site"]).optional().default("wordpress"),
+    }).parse(d),
+  )
   .handler(async ({ data, context }) => {
     const { data: brand, error: bErr } = await context.supabase
       .from("brands").select("id, created_by, license_limit").eq("id", data.brand_id).maybeSingle();
@@ -75,7 +80,8 @@ export const generateLicense = createServerFn({ method: "POST" })
       throw new Error(`Limit reached: ${limit} active license(s) per brand`);
     }
 
-    const key = genKey();
+    const prefix = data.license_type === "custom_site" ? "WAN" : "HS";
+    const key = genKey(prefix);
     const { data: row, error } = await context.supabase
       .from("plugin_licenses")
       .insert({ brand_id: data.brand_id, license_key: key, status: "active", created_by: context.userId })
