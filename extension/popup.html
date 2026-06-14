@@ -4,17 +4,24 @@
 <meta charset="utf-8" />
 <title>WA Suite Exporter</title>
 <style>
-  body { font-family: -apple-system, system-ui, sans-serif; width: 320px; padding: 14px; margin: 0; background:#0f172a; color:#f1f5f9; }
+  body { font-family: -apple-system, system-ui, sans-serif; width: 340px; padding: 14px; margin: 0; background:#0f172a; color:#f1f5f9; }
   h1 { font-size: 15px; margin: 0 0 8px; }
   p { font-size: 12px; color:#94a3b8; margin: 6px 0 12px; line-height: 1.4; }
   button { width: 100%; padding: 10px; background:#22c55e; color:#062b13; border:0; border-radius:8px; font-weight:600; cursor:pointer; font-size: 13px; }
   button:hover { background:#16a34a; color:#fff; }
+  button:disabled { opacity:.6; cursor:not-allowed; }
   button.secondary { background:#1e293b; color:#e2e8f0; margin-top:8px; }
   .status { margin-top: 10px; font-size: 12px; color:#cbd5e1; min-height: 16px; }
   .count { color:#22c55e; font-weight:600; }
   ol { font-size: 12px; color:#94a3b8; padding-left: 18px; margin: 8px 0; line-height:1.5; }
   .brand { display:flex; align-items:center; gap:8px; margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid #1e293b; }
   .brand img { height:28px; width:auto; display:block; }
+  .bar { margin-top:10px; height:8px; background:#1e293b; border-radius:4px; overflow:hidden; }
+  .bar > div { height:100%; width:0%; background:#22c55e; transition: width .25s; }
+  .meta { display:flex; justify-content:space-between; font-size:11px; color:#94a3b8; margin-top:4px; }
+  .log { margin-top:10px; height:120px; overflow:auto; background:#020617; border:1px solid #1e293b; border-radius:6px; padding:6px 8px; font-family: ui-monospace, Menlo, monospace; font-size:11px; line-height:1.4; color:#cbd5e1; white-space:pre-wrap; }
+  .log .err { color:#f87171; }
+  .log .ok { color:#4ade80; }
 </style>
 </head>
 <body>
@@ -28,7 +35,10 @@
   </ol>
   <button id="run">Scan & Export CSV</button>
   <button id="copy" class="secondary">Copy numbers to clipboard</button>
+  <div class="bar"><div id="bar"></div></div>
+  <div class="meta"><span id="pct">0%</span><span id="cnt">0 contacts</span></div>
   <div class="status" id="status"></div>
+  <div class="log" id="log"></div>
   <script src="popup.js"></script>
 </body>
 </html>
