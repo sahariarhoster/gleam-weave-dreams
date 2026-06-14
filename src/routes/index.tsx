@@ -456,15 +456,14 @@ function ExtensionSection() {
                 সালমা,8801912345678<br />
                 <span className="text-muted-foreground">… +৪২০ আরও</span>
               </div>
-              <a
-                href="/wa-suite-exporter.zip"
-                download
+              <Link
+                to="/order"
                 className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-95"
               >
-                <Download className="h-4 w-4" /> এক্সটেনশন ডাউনলোড করুন (ফ্রি)
-              </a>
+                <Download className="h-4 w-4" /> সাবস্ক্রাইব করে এক্সটেনশন পান
+              </Link>
               <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
-                <Chrome className="h-3 w-3" /> Chrome / Edge / Brave-এ ইনস্টল করুন
+                <Chrome className="h-3 w-3" /> সক্রিয় সাবস্ক্রিপশনের পর ড্যাশবোর্ড থেকে ডাউনলোড করুন
               </p>
             </div>
           </div>
