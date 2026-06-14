@@ -95,6 +95,13 @@ export const createOrder = createServerFn({ method: "POST" })
       .maybeSingle();
     if (pErr || !pkg) throw new Error("Package not found");
 
+    // Trial is for new customers only — block if email has prior orders or existing brand
+    if (pkg.is_trial) {
+      const { data: priorOrder } = await supabaseAdmin
+        .from("orders").select("id").eq("email", data.email).limit(1).maybeSingle();
+      if (priorOrder) throw new Error("Trial is for new customers only and cannot be renewed. Please choose a paid package.");
+    }
+
     // Validate coupon if provided
     let couponId: string | null = null;
     let discount = 0;
