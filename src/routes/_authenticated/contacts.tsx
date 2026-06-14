@@ -321,15 +321,43 @@ function ImportDialog({ brands, onDone }: { brands: { id: string; name: string }
   const [fileName, setFileName] = useState("");
 
   const parseRows = (raw: string) => {
+    const split = (line: string) =>
+      line.split(/[,\t;]/).map((s) => s?.trim().replace(/^"|"$/g, "") ?? "");
     const lines = raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
     if (lines.length === 0) return [] as { phone: string; name?: string; email?: string }[];
-    const first = lines[0].split(/[,\t;]/)[0]?.trim().replace(/^"|"$/g, "") ?? "";
-    const startIdx = /^[+0-9]/.test(first) ? 0 : 1;
+
+    // Detect header and column order
+    const firstCells = split(lines[0]).map((c) => c.toLowerCase());
+    const looksLikeHeader = firstCells.some((c) => ["phone", "name", "email", "number", "mobile"].includes(c));
+    let phoneIdx = 0, nameIdx = 1, emailIdx = 2, startIdx = 0;
+    if (looksLikeHeader) {
+      startIdx = 1;
+      const find = (keys: string[]) => firstCells.findIndex((c) => keys.includes(c));
+      const p = find(["phone", "number", "mobile", "msisdn"]);
+      const n = find(["name", "contact", "full name", "fullname"]);
+      const e = find(["email", "mail", "e-mail"]);
+      if (p >= 0) phoneIdx = p;
+      if (n >= 0) nameIdx = n;
+      if (e >= 0) emailIdx = e;
+    }
     return lines.slice(startIdx).map((line) => {
-      const [phone, name, email] = line.split(/[,\t;]/).map((s) => s?.trim().replace(/^"|"$/g, ""));
+      const cells = split(line);
+      let phone = cells[phoneIdx] ?? "";
+      let name = cells[nameIdx] ?? "";
+      const email = cells[emailIdx] ?? "";
+      // Fallback: if expected phone cell isn't a phone but another cell is, swap
+      const isPhone = (v: string) => /^\+?[\d\s\-()]{5,}$/.test(v) && /\d{5,}/.test(v);
+      if (!isPhone(phone)) {
+        const alt = cells.find((c) => isPhone(c));
+        if (alt) {
+          if (isPhone(phone) === false && phone && !name) name = phone;
+          phone = alt;
+        }
+      }
       return { phone, name: name || undefined, email: email || undefined };
     }).filter((r) => r && r.phone);
   };
+
 
   const onFile = async (file: File) => {
     setFileName(file.name);
