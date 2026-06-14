@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Send, Shield, Zap, DollarSign, ShoppingCart, CheckCircle2, ArrowRight,
   MessageSquare, Sparkles, Users, BarChart3, Lock, Globe, Star,
-  TrendingUp, Quote, Mail, Wallet,
+  TrendingUp, Quote, Mail, Wallet, Download, FileSpreadsheet, Chrome,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
