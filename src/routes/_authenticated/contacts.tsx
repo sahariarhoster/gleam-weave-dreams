@@ -354,14 +354,36 @@ function ImportDialog({ brands, onDone }: { brands: { id: string; name: string }
     a.click(); URL.revokeObjectURL(url);
   };
 
+  const parsed = useMemo(() => {
+    const rows = parseRows(text);
+    const phoneRe = /^\+?\d{5,15}$/;
+    const seen = new Set<string>();
+    let valid = 0, invalid = 0, duplicates = 0;
+    const cleanRows: { phone: string; name?: string; email?: string }[] = [];
+    for (const r of rows) {
+      const phone = (r.phone || "").replace(/[^\d+]/g, "");
+      if (!phoneRe.test(phone)) { invalid++; continue; }
+      if (seen.has(phone)) { duplicates++; continue; }
+      seen.add(phone);
+      valid++;
+      cleanRows.push({ phone, name: r.name, email: r.email });
+    }
+    return { total: rows.length, valid, invalid, duplicates, cleanRows };
+  }, [text]);
+
+  const [confirming, setConfirming] = useState(false);
+
   const mut = useMutation({
     mutationFn: async () => {
-      const rows = parseRows(text);
-      if (rows.length === 0) throw new Error("Add at least one row");
-      return fn({ data: { brand_id: brandId, rows } });
+      if (parsed.cleanRows.length === 0) throw new Error("No valid rows to import");
+      return fn({ data: { brand_id: brandId, rows: parsed.cleanRows } });
     },
-    onSuccess: (r) => { toast.success(`Imported ${r.inserted} / ${r.total}`); onDone(); },
-    onError: (e) => toast.error((e as Error).message),
+    onSuccess: (r: any) => {
+      toast.success(`Imported ${r.inserted} new contact(s) out of ${parsed.valid} valid (${r.skipped ?? 0} skipped)`);
+      setConfirming(false);
+      onDone();
+    },
+    onError: (e) => { toast.error((e as Error).message); setConfirming(false); },
   });
   return (
     <DialogContent>
@@ -390,11 +412,37 @@ function ImportDialog({ brands, onDone }: { brands: { id: string; name: string }
           <Textarea rows={6} value={text} onChange={(e) => setText(e.target.value)} placeholder="+8801711000111, Karim, karim@example.com" className="font-mono text-xs" />
           <p className="text-xs text-muted-foreground">First column must be the phone. Header row optional. Existing phones are skipped.</p>
         </div>
+        {parsed.total > 0 && (
+          <div className="rounded-md border border-border/60 bg-muted/40 p-3 text-sm">
+            <div className="font-medium mb-1">Preview</div>
+            <div className="grid grid-cols-2 gap-1 text-xs">
+              <div>Parsed rows: <strong>{parsed.total}</strong></div>
+              <div>Ready to import: <strong className="text-emerald-600">{parsed.valid}</strong></div>
+              <div>Invalid phones: <strong className="text-rose-600">{parsed.invalid}</strong></div>
+              <div>Duplicates in file: <strong>{parsed.duplicates}</strong></div>
+            </div>
+          </div>
+        )}
       </div>
       <DialogFooter>
-        <Button disabled={!brandId || !text.trim() || mut.isPending} onClick={() => mut.mutate()} className="w-full">
-          {mut.isPending ? "Importing…" : "Import"}
-        </Button>
+        {!confirming ? (
+          <Button
+            disabled={!brandId || parsed.valid === 0}
+            onClick={() => setConfirming(true)}
+            className="w-full"
+          >
+            Check & Continue {parsed.valid > 0 ? `(${parsed.valid})` : ""}
+          </Button>
+        ) : (
+          <div className="flex w-full gap-2">
+            <Button variant="outline" className="flex-1" disabled={mut.isPending} onClick={() => setConfirming(false)}>
+              Back
+            </Button>
+            <Button className="flex-1" disabled={mut.isPending} onClick={() => mut.mutate()}>
+              {mut.isPending ? "Importing…" : `Yes, import ${parsed.valid}`}
+            </Button>
+          </div>
+        )}
       </DialogFooter>
     </DialogContent>
   );
