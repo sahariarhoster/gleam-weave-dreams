@@ -22,6 +22,7 @@ function scrapeFn() {
         pane.querySelector('div[style*="overflow-y"]') ||
         pane;
 
+      const contacts = new Map(); // key = phone || "name:"+name
       const collect = () => {
         const rows = document.querySelectorAll(
           '#pane-side [role="listitem"], #pane-side [role="row"], #pane-side div[role="grid"] > div'
@@ -31,34 +32,43 @@ function scrapeFn() {
           const title = titleEl?.getAttribute("title") || row.getAttribute("aria-label") || "";
           if (!title) return;
           const match = title.match(/\+?\d[\d\s\-()]{6,}\d/);
-          if (!match) return;
-          const phone = match[0].replace(/[^\d+]/g, "");
-          if (phone.length < 8) return;
-          const name = title.replace(match[0], "").trim() || null;
-          if (!numbers.has(phone)) numbers.set(phone, name);
+          let phone = "";
+          let name = title;
+          if (match) {
+            phone = match[0].replace(/[^\d+]/g, "");
+            if (phone.length < 8) phone = "";
+            name = title.replace(match[0], "").trim();
+          }
+          const key = phone ? phone : "name:" + name;
+          if (!key || key === "name:") return;
+          if (!contacts.has(key)) contacts.set(key, { name: name || null, phone });
         });
       };
 
       scroller.scrollTop = 0;
-      await sleep(500);
+      await sleep(600);
+      collect();
 
-      let lastHeight = -1;
+      // Incremental scroll by ~80% of viewport so virtualized rows render
+      let lastTop = -1;
       let stable = 0;
-      for (let i = 0; i < 300; i++) {
+      for (let i = 0; i < 2000; i++) {
         collect();
-        scroller.scrollTop = scroller.scrollHeight;
-        await sleep(450);
-        if (scroller.scrollHeight === lastHeight) {
+        const step = Math.max(200, Math.floor(scroller.clientHeight * 0.8));
+        scroller.scrollTop = scroller.scrollTop + step;
+        await sleep(350);
+        collect();
+        if (scroller.scrollTop === lastTop) {
           stable++;
-          if (stable >= 4) break;
+          if (stable >= 5) break;
         } else {
           stable = 0;
-          lastHeight = scroller.scrollHeight;
+          lastTop = scroller.scrollTop;
         }
       }
       collect();
 
-      resolve(Array.from(numbers.entries()).map(([phone, name]) => ({ name, phone })));
+      resolve(Array.from(contacts.values()));
     } catch (e) {
       reject(e.message || String(e));
     }
