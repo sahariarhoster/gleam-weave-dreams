@@ -68,13 +68,15 @@ function scrapeFn() {
           const jid = findJid(row) || findJid(row.firstElementChild);
           if (jid) phone = jid;
 
-          // 2) Fallback: parse number from title (unsaved contacts)
+          // 2) Fallback: only if the title itself IS a phone number (unsaved
+          //    contacts render as "+1 234 567 8900"). Require a leading "+"
+          //    so we don't pick numbers out of names like "John 2".
           if (!phone) {
-            const match = title.match(/\+?\d[\d\s\-()]{6,}\d/);
-            if (match) {
-              phone = match[0].replace(/[^\d+]/g, "");
-              if (phone.length < 8) phone = "";
-              name = title.replace(match[0], "").trim();
+            const t = title.trim();
+            if (/^\+[\d\s\-()]{7,}$/.test(t)) {
+              phone = t.replace(/[^\d+]/g, "");
+              if (phone.replace(/\D/g, "").length < 8) phone = "";
+              name = "";
             }
           }
 
