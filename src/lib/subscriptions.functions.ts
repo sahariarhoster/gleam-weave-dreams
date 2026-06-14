@@ -103,7 +103,7 @@ export const adminUpdateSubscription = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: brand } = await supabaseAdmin
       .from("brands")
-      .select("id, status, expires_at, current_package_id, packages:current_package_id(duration_days)")
+      .select("id, status, expires_at, current_package_id, packages:current_package_id(duration_days, is_trial)")
       .eq("id", data.brand_id)
       .maybeSingle();
     if (!brand) throw new Error("Brand not found");
@@ -120,6 +120,9 @@ export const adminUpdateSubscription = createServerFn({ method: "POST" })
     } else if (data.action === "clear_cancel") {
       patch.cancel_requested_at = null;
     } else if (data.action === "renew") {
+      if ((brand as any)?.packages?.is_trial) {
+        throw new Error("Trial subscriptions are not renewable. Use 'change package' to upgrade to a paid plan.");
+      }
       const days =
         data.extend_days ??
         (brand as any)?.packages?.duration_days ??

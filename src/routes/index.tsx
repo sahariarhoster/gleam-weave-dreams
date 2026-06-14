@@ -3,7 +3,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Send, Shield, Zap, DollarSign, ShoppingCart, CheckCircle2, ArrowRight,
   MessageSquare, Sparkles, Users, BarChart3, Lock, Globe, Star,
-  TrendingUp, Quote, Mail, Wallet,
+  TrendingUp, Quote, Mail, Wallet, Download, FileSpreadsheet, Chrome,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -34,6 +34,7 @@ function LandingPage() {
         <TrustStrip />
         <BulkSection />
         <PluginSection />
+        <ExtensionSection />
         <ProtectionSection />
         <Testimonials />
         <PricingSection />
@@ -415,6 +416,64 @@ function PluginSection() {
     />
   );
 }
+
+/* ---------------- Chrome Extension Section ---------------- */
+function ExtensionSection() {
+  return (
+    <FeatureSection
+      id="extension"
+      eyebrow="Chrome এক্সটেনশন"
+      title={<>WhatsApp Web থেকে <span className="text-primary">কন্টাক্ট এক্সপোর্ট</span> করুন</>}
+      description="আমাদের ফ্রি Chrome এক্সটেনশন দিয়ে আপনার WhatsApp Web–এর সব চ্যাটের ফোন নম্বর এক ক্লিকে CSV ফাইলে এক্সপোর্ট করুন — তারপর সেগুলো WA Suite–এ ইম্পোর্ট করে বাল্ক মেসেজ পাঠান।"
+      bullets={[
+        "অটো-স্ক্রল করে চ্যাট লিস্টের সব নম্বর সংগ্রহ করে",
+        "এক ক্লিকে CSV ডাউনলোড অথবা ক্লিপবোর্ডে কপি",
+        "১০০% ফ্রি — ইনস্টল করেই ব্যবহার শুরু করুন",
+        "ডেটা আপনার ব্রাউজারেই থাকে, কোনো সার্ভারে যায় না",
+      ]}
+      visual={
+        <div className="relative">
+          <div className="absolute -inset-6 -z-10 bg-[radial-gradient(60%_60%_at_50%_50%,color-mix(in_oklab,var(--primary)_15%,transparent)_0%,transparent_70%)] blur-2xl" />
+          <div className="overflow-hidden rounded-2xl border border-border card-elevated bg-background">
+            <div className="flex items-center gap-1.5 border-b border-border/60 bg-secondary/60 px-3 py-2">
+              <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
+              <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
+              <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+              <div className="ml-3 flex-1 rounded-md bg-background px-3 py-1 text-[10px] text-muted-foreground">
+                web.whatsapp.com · WA Suite Exporter
+              </div>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <FileSpreadsheet className="h-4 w-4 text-primary" />
+                <span className="text-sm font-semibold">contacts.csv</span>
+                <span className="ml-auto rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">৪২৩ contacts</span>
+              </div>
+              <div className="rounded-lg border border-border/60 bg-secondary/40 p-3 font-mono text-[11px] leading-relaxed text-foreground/80">
+                name,number<br />
+                রহিম,8801712345678<br />
+                করিম,8801812345678<br />
+                সালমা,8801912345678<br />
+                <span className="text-muted-foreground">… +৪২০ আরও</span>
+              </div>
+              <a
+                href="/wa-suite-exporter.zip"
+                download
+                className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:opacity-95"
+              >
+                <Download className="h-4 w-4" /> এক্সটেনশন ডাউনলোড করুন (ফ্রি)
+              </a>
+              <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
+                <Chrome className="h-3 w-3" /> Chrome / Edge / Brave-এ ইনস্টল করুন
+              </p>
+            </div>
+          </div>
+        </div>
+      }
+    />
+  );
+}
+
 
 /* ---------------- Protection Section ---------------- */
 function ProtectionSection() {

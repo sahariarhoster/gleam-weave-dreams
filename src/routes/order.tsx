@@ -215,7 +215,14 @@ function OrderPage() {
           <div className="flex items-center justify-center py-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {(packages.data ?? []).map((p: any) => {
+            {(packages.data ?? [])
+              .filter((p: any) => {
+                // Trial only for brand-new customers (no existing brands, choosing __new__)
+                if (!p.is_trial) return true;
+                const hasBrands = (myBrands.data?.length ?? 0) > 0;
+                return !hasBrands && brandChoice === "__new__";
+              })
+              .map((p: any) => {
               const active = selected === p.id;
               return (
                 <button
