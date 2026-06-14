@@ -23,6 +23,34 @@ function scrapeFn() {
         pane;
 
       const contacts = new Map(); // key = phone || "name:"+name
+
+      // Walk React fiber to find a JID like "1234567890@c.us" or "...@s.whatsapp.net"
+      const findJid = (node) => {
+        if (!node) return "";
+        const key = Object.keys(node).find(
+          (k) => k.startsWith("__reactProps$") || k.startsWith("__reactFiber$")
+        );
+        if (!key) return "";
+        const seen = new Set();
+        const scan = (obj, depth) => {
+          if (!obj || depth > 6 || typeof obj !== "object" || seen.has(obj)) return "";
+          seen.add(obj);
+          for (const k in obj) {
+            let v;
+            try { v = obj[k]; } catch { continue; }
+            if (typeof v === "string") {
+              const m = v.match(/(\d{6,15})@(?:c\.us|s\.whatsapp\.net|lid)/);
+              if (m) return m[1];
+            } else if (v && typeof v === "object") {
+              const r = scan(v, depth + 1);
+              if (r) return r;
+            }
+          }
+          return "";
+        };
+        return scan(node[key], 0);
+      };
+
       const collect = () => {
         const rows = document.querySelectorAll(
           '#pane-side [role="listitem"], #pane-side [role="row"], #pane-side div[role="grid"] > div'
@@ -31,19 +59,32 @@ function scrapeFn() {
           const titleEl = row.querySelector("span[title]");
           const title = titleEl?.getAttribute("title") || row.getAttribute("aria-label") || "";
           if (!title) return;
-          const match = title.match(/\+?\d[\d\s\-()]{6,}\d/);
+
+          // 1) Try React fiber for JID (saved contacts)
           let phone = "";
           let name = title;
-          if (match) {
-            phone = match[0].replace(/[^\d+]/g, "");
-            if (phone.length < 8) phone = "";
-            name = title.replace(match[0], "").trim();
+          const jid = findJid(row) || findJid(row.firstElementChild);
+          if (jid) phone = jid;
+
+          // 2) Fallback: parse number from title (unsaved contacts)
+          if (!phone) {
+            const match = title.match(/\+?\d[\d\s\-()]{6,}\d/);
+            if (match) {
+              phone = match[0].replace(/[^\d+]/g, "");
+              if (phone.length < 8) phone = "";
+              name = title.replace(match[0], "").trim();
+            }
           }
+
           const key = phone ? phone : "name:" + name;
           if (!key || key === "name:") return;
-          if (!contacts.has(key)) contacts.set(key, { name: name || null, phone });
+          const existing = contacts.get(key);
+          if (!existing || (!existing.phone && phone)) {
+            contacts.set(key, { name: name || null, phone });
+          }
         });
       };
+
 
       scroller.scrollTop = 0;
       await sleep(600);
