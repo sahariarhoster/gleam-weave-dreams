@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { PageHeader } from "@/components/layout/page-header";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useServerFn } from "@tanstack/react-start";
+import { upsertTutorial, deleteTutorial } from "@/lib/tutorials.functions";
 
 export const Route = createFileRoute("/_authenticated/tutorials")({
   head: () => ({
