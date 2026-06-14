@@ -83,6 +83,10 @@ export const sendBrandAdminNotice = createServerFn({ method: "POST" })
     z.object({
       message: z.string().min(1).max(4000),
       include_already_sent: z.boolean().optional().default(false),
+      min_delay_seconds: z.number().int().min(1).max(3600).optional().default(10),
+      max_delay_seconds: z.number().int().min(1).max(3600).optional().default(23),
+    }).refine((v) => v.max_delay_seconds >= v.min_delay_seconds, {
+      message: "max_delay_seconds must be >= min_delay_seconds",
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
