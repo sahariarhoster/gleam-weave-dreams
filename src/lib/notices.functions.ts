@@ -83,6 +83,10 @@ export const sendBrandAdminNotice = createServerFn({ method: "POST" })
     z.object({
       message: z.string().min(1).max(4000),
       include_already_sent: z.boolean().optional().default(false),
+      min_delay_seconds: z.number().int().min(1).max(3600).optional().default(10),
+      max_delay_seconds: z.number().int().min(1).max(3600).optional().default(23),
+    }).refine((v) => v.max_delay_seconds >= v.min_delay_seconds, {
+      message: "max_delay_seconds must be >= min_delay_seconds",
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -144,8 +148,8 @@ export const sendBrandAdminNotice = createServerFn({ method: "POST" })
         message: data.message,
         status: "running",
         send_mode: "safety_basic",
-        min_delay_seconds: 10,
-        max_delay_seconds: 23,
+        min_delay_seconds: data.min_delay_seconds,
+        max_delay_seconds: data.max_delay_seconds,
         send_window_start: "00:00",
         send_window_end: "23:59",
         daily_limit: 5000,

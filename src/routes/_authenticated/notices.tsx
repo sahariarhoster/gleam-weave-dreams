@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
 import { PageHeader } from "@/components/layout/page-header";
 import { previewBrandAdminRecipients, sendBrandAdminNotice } from "@/lib/notices.functions";
 
@@ -28,9 +29,11 @@ function NoticesPage() {
   });
   const [message, setMessage] = useState("");
   const [includeAlreadySent, setIncludeAlreadySent] = useState(false);
+  const [minDelay, setMinDelay] = useState(10);
+  const [maxDelay, setMaxDelay] = useState(23);
 
   const sendMut = useMutation({
-    mutationFn: () => fnSend({ data: { message, include_already_sent: includeAlreadySent } }),
+    mutationFn: () => fnSend({ data: { message, include_already_sent: includeAlreadySent, min_delay_seconds: minDelay, max_delay_seconds: maxDelay } }),
     onSuccess: (r) => {
       if (r.ok) {
         toast.success(`Campaign created · ${r.queued} queued · ${r.skipped_already_sent} already-sent skipped`);
@@ -94,6 +97,34 @@ function NoticesPage() {
             <Label htmlFor="include-already" className="text-sm font-normal cursor-pointer">
               Also include recipients already notified in the last 24h
             </Label>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 max-w-md">
+            <div className="space-y-1">
+              <Label htmlFor="min-delay" className="text-xs">Min delay (sec)</Label>
+              <Input
+                id="min-delay"
+                type="number"
+                min={1}
+                max={3600}
+                value={minDelay}
+                onChange={(e) => setMinDelay(Math.max(1, Number(e.target.value) || 1))}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="max-delay" className="text-xs">Max delay (sec)</Label>
+              <Input
+                id="max-delay"
+                type="number"
+                min={1}
+                max={3600}
+                value={maxDelay}
+                onChange={(e) => setMaxDelay(Math.max(1, Number(e.target.value) || 1))}
+              />
+            </div>
+            <p className="col-span-2 text-xs text-muted-foreground">
+              Random delay between each message. Max must be ≥ min.
+            </p>
           </div>
 
           <div className="flex flex-wrap gap-2">
