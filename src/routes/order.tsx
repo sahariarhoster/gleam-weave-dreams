@@ -91,10 +91,10 @@ function OrderPage() {
 
   const pkg = selected?.kind === "sub" ? (packages.data ?? []).find((p: any) => p.id === selected.id) : null;
   const creditPkg = selected?.kind === "credit" ? (creditPackages.data ?? []).find((p: any) => p.id === selected.id) : null;
-  const original = pkg ? Number(pkg.price) : creditPkg ? Number(creditPkg.min_topup_tk) : 0;
+  const original = pkg ? (pkg.is_trial ? 0 : Number(pkg.price)) : creditPkg ? Number(creditPkg.min_topup_tk) : 0;
   const final = discount?.valid ? (discount.final ?? original) : original;
   const planName = pkg?.name ?? creditPkg?.name ?? "";
-  const planSub = pkg ? `${pkg.duration_days} days` : creditPkg ? `${Math.floor(Number(creditPkg.min_topup_tk) / Number(creditPkg.tk_per_credit)).toLocaleString()} credits` : "";
+  const planSub = pkg ? (pkg.is_trial ? "50 free credits" : `${pkg.duration_days} days`) : creditPkg ? `${Math.floor(Number(creditPkg.min_topup_tk) / Number(creditPkg.tk_per_credit)).toLocaleString()} credits` : "";
 
   async function checkCoupon() {
     if (!selected || !form.coupon_code.trim()) return;
