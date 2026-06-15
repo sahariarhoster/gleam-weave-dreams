@@ -28,7 +28,7 @@ export const listAllSubscriptions = createServerFn({ method: "GET" })
     const { data, error } = await supabaseAdmin
       .from("brands")
       .select(
-        "id, name, status, expires_at, message_limit, device_limit, license_limit, created_by, created_at, cancel_requested_at, current_package_id, packages:current_package_id(id, name, duration_days, price)",
+        "id, name, status, expires_at, message_limit, device_limit, license_limit, created_by, created_at, cancel_requested_at, current_package_id, pricing_model, packages:current_package_id(id, name, duration_days, price)",
       )
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
@@ -49,6 +49,7 @@ export const listAllSubscriptions = createServerFn({ method: "GET" })
       expires_at: r.expires_at,
       days_left: daysUntil(r.expires_at),
       cancel_requested_at: r.cancel_requested_at,
+      pricing_model: r.pricing_model,
       package: r.packages ? { id: r.packages.id, name: r.packages.name, duration_days: r.packages.duration_days, price: r.packages.price } : null,
       owner: {
         id: r.created_by,
@@ -93,7 +94,7 @@ export const adminUpdateSubscription = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({
       brand_id: z.string().uuid(),
-      action: z.enum(["suspend", "activate", "hold", "renew", "change_package", "clear_cancel"]),
+      action: z.enum(["suspend", "activate", "hold", "renew", "change_package", "clear_cancel", "convert_to_credits"]),
       package_id: z.string().uuid().optional().nullable(),
       extend_days: z.number().int().min(1).max(3650).optional(),
     }).parse(d),
@@ -152,6 +153,12 @@ export const adminUpdateSubscription = createServerFn({ method: "POST" })
       patch.expires_at = exp.toISOString();
       patch.status = "active";
       patch.cancel_requested_at = null;
+    } else if (data.action === "convert_to_credits") {
+      patch.pricing_model = "credits";
+      // Ensure a wallet row exists (zero balance) so top-ups can land
+      await supabaseAdmin
+        .from("credit_wallets")
+        .upsert({ brand_id: data.brand_id, balance: 0 } as any, { onConflict: "brand_id", ignoreDuplicates: true } as any);
     }
 
     const { error } = await supabaseAdmin.from("brands").update(patch as any).eq("id", data.brand_id);

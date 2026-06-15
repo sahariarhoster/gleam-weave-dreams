@@ -212,6 +212,27 @@ function AdminView() {
                     packages={pkgs.data ?? []}
                     onSubmit={(package_id) => m.mutate({ brand_id: s.id, action: "change_package", package_id })}
                   />
+                  {s.pricing_model !== "credits" && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button size="sm" variant="secondary">To credits</Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Shift to credit model?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            {s.brand_name} will stop using its subscription package and start consuming credits per SMS. A wallet will be created (starting at 0). The customer must top up before sending.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => m.mutate({ brand_id: s.id, action: "convert_to_credits" })}>
+                            Shift to credits
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
                   {s.cancel_requested_at && (
                     <Button size="sm" variant="ghost"
                       onClick={() => m.mutate({ brand_id: s.id, action: "clear_cancel" })}>
