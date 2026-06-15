@@ -155,8 +155,8 @@ export const adminUpdateSubscription = createServerFn({ method: "POST" })
       patch.cancel_requested_at = null;
     } else if (data.action === "convert_to_credits") {
       patch.pricing_model = "credits";
-      // Cancel the legacy monthly subscription
-      patch.status = "expired";
+      // Brand remains active on the credits model; only the legacy subscription is cancelled.
+      patch.status = "active";
       patch.expires_at = new Date().toISOString();
       patch.cancel_requested_at = new Date().toISOString();
       patch.current_package_id = null;
