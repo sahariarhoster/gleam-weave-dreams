@@ -203,7 +203,13 @@ export const createOrder = createServerFn({ method: "POST" })
       business_doc_number: data.business_doc_number,
     };
     if (pkg) {
-      brandPayload.message_limit = pkg.message_limit;
+      // Trial = credit-model brand seeded on approval (no legacy subscription)
+      if (pkg.is_trial) {
+        brandPayload.pricing_model = "credits";
+        brandPayload.message_limit = 0;
+      } else {
+        brandPayload.message_limit = pkg.message_limit;
+      }
       brandPayload.device_limit = pkg.device_limit;
       brandPayload.license_limit = pkg.license_count;
     } else {
@@ -212,6 +218,8 @@ export const createOrder = createServerFn({ method: "POST" })
       brandPayload.device_limit = creditPkg.device_limit;
       brandPayload.license_limit = creditPkg.wp_site_limit;
     }
+
+
     const { data: brand, error: bErr } = await supabaseAdmin
       .from("brands").insert(brandPayload).select("id").single();
     if (bErr || !brand) throw new Error(bErr?.message ?? "Could not create brand");
@@ -318,7 +326,7 @@ export const decideOrder = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: order, error: oErr } = await supabaseAdmin
       .from("orders")
-      .select("id, brand_id, coupon_id, status, package_id, user_id, kind, credit_package_id, credits_purchased, final_amount, addon_kind, packages(duration_days, message_limit, device_limit, license_count)")
+      .select("id, brand_id, coupon_id, status, package_id, user_id, kind, credit_package_id, credits_purchased, final_amount, addon_kind, packages(duration_days, message_limit, device_limit, license_count, is_trial)")
       .eq("id", data.id)
       .maybeSingle();
     if (oErr || !order) throw new Error("Order not found");
@@ -396,10 +404,34 @@ export const decideOrder = createServerFn({ method: "POST" })
         }).eq("id", data.id);
         return { ok: true };
       }
-      // ===== Legacy subscription =====
+      // ===== Trial → credit model (50 free credits, no expiry tied to sub) =====
       const pkgInfo = (order as any).packages ?? {};
+      if (pkgInfo.is_trial && order.brand_id) {
+        const TRIAL_CREDITS = 50;
+        if (!wasApproved) {
+          const { error: rpcErr } = await supabaseAdmin.rpc("top_up_credits", {
+            _brand_id: order.brand_id,
+            _credits: TRIAL_CREDITS,
+            _package_id: null as unknown as string,
+
+            _tk: 0,
+            _order_id: order.id,
+          });
+          if (rpcErr) throw new Error(rpcErr.message);
+          await supabaseAdmin.from("brands")
+            .update({ status: "active", pricing_model: "credits", message_limit: 0, current_package_id: null, cancel_requested_at: null } as any)
+            .eq("id", order.brand_id);
+        }
+        await supabaseAdmin.from("orders").update({
+          status: "approved", approved_at: new Date().toISOString(),
+          approved_by: context.userId, admin_notes: data.notes ?? null,
+        }).eq("id", data.id);
+        return { ok: true };
+      }
+      // ===== Legacy subscription =====
       const days = pkgInfo.duration_days ?? 30;
       const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+
       if (order.brand_id) {
         await supabaseAdmin
           .from("brands")
