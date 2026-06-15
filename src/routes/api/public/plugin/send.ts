@@ -241,6 +241,11 @@ export const Route = createFileRoute("/api/public/plugin/send")({
           .eq("id", lic.id);
 
         if (res.status !== 200) return jsonResponse({ error: res.message || "Send failed" }, 502);
+
+        // Deduct 1 credit on successful delivery (no-op for legacy brands)
+        if (brandId) {
+          await supabaseAdmin.rpc("deduct_credit", { _brand_id: brandId, _message_ref: `plugin:${lic.id}` });
+        }
         return jsonResponse({ ok: true, message: res.message });
       },
     },
