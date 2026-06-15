@@ -28,7 +28,7 @@ export const listAllSubscriptions = createServerFn({ method: "GET" })
     const { data, error } = await supabaseAdmin
       .from("brands")
       .select(
-        "id, name, status, expires_at, message_limit, device_limit, license_limit, created_by, created_at, cancel_requested_at, current_package_id, packages:current_package_id(id, name, duration_days, price)",
+        "id, name, status, expires_at, message_limit, device_limit, license_limit, created_by, created_at, cancel_requested_at, current_package_id, pricing_model, packages:current_package_id(id, name, duration_days, price)",
       )
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
