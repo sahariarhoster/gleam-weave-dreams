@@ -383,6 +383,17 @@ function DeviceDialog({
   const fnCreate = useServerFn(createDevice);
   const [mode, setMode] = useState<"qr" | "manual">("qr");
   const [manual, setManual] = useState({ device_unique_id: "", api_secret: "" });
+
+  const [form, setForm] = useState({
+    name: editing?.name ?? "",
+    sim_info: editing?.sim_info ?? "",
+    brand_id: editing?.brand_id ?? "",
+  });
+  const [brandSearch, setBrandSearch] = useState("");
+  const filteredBrands = brands.filter((b) =>
+    b.name.toLowerCase().includes(brandSearch.toLowerCase()),
+  );
+
   const createMut = useMutation({
     mutationFn: () => fnCreate({
       data: {
@@ -396,16 +407,6 @@ function DeviceDialog({
     onSuccess: () => { toast.success("Device added"); onDone(); },
     onError: (e) => toast.error((e as Error).message),
   });
-
-  const [form, setForm] = useState({
-    name: editing?.name ?? "",
-    sim_info: editing?.sim_info ?? "",
-    brand_id: editing?.brand_id ?? "",
-  });
-  const [brandSearch, setBrandSearch] = useState("");
-  const filteredBrands = brands.filter((b) =>
-    b.name.toLowerCase().includes(brandSearch.toLowerCase()),
-  );
 
   // Edit mode → simple update
   const editMut = useMutation({
