@@ -70,7 +70,16 @@ export const generateLicense = createServerFn({ method: "POST" })
       .from("brands").select("id, created_by, license_limit").eq("id", data.brand_id).maybeSingle();
     if (bErr || !brand) throw new Error("Brand not found");
     const elevated = await isElevated(context.supabase, context.userId);
-    if (!elevated && brand.created_by !== context.userId) throw new Error("Only the brand owner can generate licenses");
+    const { data: membership } = await context.supabase
+      .from("brand_members")
+      .select("role")
+      .eq("brand_id", data.brand_id)
+      .eq("user_id", context.userId)
+      .eq("role", "brand_admin")
+      .maybeSingle();
+    if (!elevated && brand.created_by !== context.userId && !membership) {
+      throw new Error("Only the brand owner or a brand admin can generate licenses");
+    }
 
     const limit = brand.license_limit ?? 1;
     const { count } = await context.supabase
