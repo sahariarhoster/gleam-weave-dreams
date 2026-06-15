@@ -19,15 +19,27 @@ export const Route = createFileRoute("/_authenticated/credits")({
 function CreditsPage() {
   const fnWallet = useServerFn(getWallet);
   const fnTxns = useServerFn(listCreditTransactions);
-  const [brands, setBrands] = useState<Array<{ id: string; name: string }>>([]);
+  const [brands, setBrands] = useState<Array<{ id: string; name: string; balance: number; pkg: string | null }>>([]);
   const [brandId, setBrandId] = useState<string>("");
 
   useEffect(() => {
     (async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return;
-      const { data } = await supabase.from("brands").select("id, name").order("created_at", { ascending: false });
-      const list = (data ?? []).map((b) => ({ id: b.id as string, name: b.name as string }));
+      const { data } = await supabase
+        .from("brands")
+        .select("id, name, credit_wallets(balance, credit_packages(name))")
+        .eq("pricing_model", "credits")
+        .order("created_at", { ascending: false });
+      const list = (data ?? []).map((b: any) => {
+        const wal = Array.isArray(b.credit_wallets) ? b.credit_wallets[0] : b.credit_wallets;
+        return {
+          id: b.id as string,
+          name: b.name as string,
+          balance: wal?.balance ?? 0,
+          pkg: wal?.credit_packages?.name ?? null,
+        };
+      });
       setBrands(list);
       if (list.length && !brandId) setBrandId(list[0].id);
     })();
@@ -56,11 +68,21 @@ function CreditsPage() {
     <div className="mx-auto max-w-4xl space-y-4">
       <PageHeader icon={Wallet} title="Credits" description="Your SMS credit balance, top-ups, and transaction history." />
 
+      {brands.length === 0 && (
+        <Card><CardContent className="p-6 text-sm text-muted-foreground">
+          No credit-mode brands yet. <Link to="/credit-plan" className="text-primary underline">Pick a credit plan</Link> or top up to switch.
+        </CardContent></Card>
+      )}
+
       {brands.length > 1 && (
         <Select value={brandId} onValueChange={setBrandId}>
-          <SelectTrigger className="w-full sm:w-72"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-full sm:w-96"><SelectValue /></SelectTrigger>
           <SelectContent>
-            {brands.map((br) => <SelectItem key={br.id} value={br.id}>{br.name}</SelectItem>)}
+            {brands.map((br) => (
+              <SelectItem key={br.id} value={br.id}>
+                {br.name} — {br.balance.toLocaleString()} credits{br.pkg ? ` · ${br.pkg}` : ""}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       )}
