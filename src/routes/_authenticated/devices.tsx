@@ -511,7 +511,52 @@ function DeviceDialog({
   return (
     <DialogContent>
       <DialogHeader><DialogTitle>Add Device</DialogTitle></DialogHeader>
-      {!qr ? (
+      {isOwner && !qr && (
+        <div className="flex gap-2 rounded-md border p-1">
+          <Button type="button" size="sm" variant={mode === "qr" ? "default" : "ghost"} className="flex-1" onClick={() => setMode("qr")}>QR Link</Button>
+          <Button type="button" size="sm" variant={mode === "manual" ? "default" : "ghost"} className="flex-1" onClick={() => setMode("manual")}>Manual</Button>
+        </div>
+      )}
+      {isOwner && mode === "manual" && !qr ? (
+        <form onSubmit={(e) => { e.preventDefault(); createMut.mutate(); }} className="space-y-3">
+          <div className="space-y-1.5">
+            <Label>Device Name</Label>
+            <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="My Device" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Device Unique ID</Label>
+            <Input required value={manual.device_unique_id} onChange={(e) => setManual({ ...manual, device_unique_id: e.target.value })} placeholder="WA account unique id" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>API Secret</Label>
+            <Input required value={manual.api_secret} onChange={(e) => setManual({ ...manual, api_secret: e.target.value })} placeholder="Panel API secret" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>SIM Info (optional)</Label>
+            <Input value={form.sim_info} onChange={(e) => setForm({ ...form, sim_info: e.target.value })} placeholder="+8801XXXXXXXXX" />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Linked Brand (optional)</Label>
+            <Select value={form.brand_id || "none"} onValueChange={(v) => setForm({ ...form, brand_id: v === "none" ? "" : v })}>
+              <SelectTrigger><SelectValue placeholder="No brand" /></SelectTrigger>
+              <SelectContent>
+                <div className="sticky top-0 z-10 bg-popover p-1.5 border-b">
+                  <Input placeholder="Search brands…" value={brandSearch}
+                    onChange={(e) => setBrandSearch(e.target.value)}
+                    onKeyDown={(e) => e.stopPropagation()} className="h-8" />
+                </div>
+                <SelectItem value="none">No brand</SelectItem>
+                {filteredBrands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button type="submit" disabled={createMut.isPending || !form.name || !manual.device_unique_id || !manual.api_secret} className="w-full">
+              {createMut.isPending ? "Adding…" : "Add Device"}
+            </Button>
+          </DialogFooter>
+        </form>
+      ) : !qr ? (
         <form onSubmit={(e) => { e.preventDefault(); if (form.name && form.brand_id) startMut.mutate(); }} className="space-y-3">
           <div className="space-y-1.5">
             <Label>Device Name</Label>
