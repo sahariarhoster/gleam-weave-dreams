@@ -23,7 +23,7 @@ import {
 import {
   updateDevice, deleteDevice, testDeviceConnection,
   listWaServers, linkDeviceQR, startDeviceLink, pollDeviceLink,
-  refreshDeviceStatuses, applyDeviceDefaults,
+  refreshDeviceStatuses, applyDeviceDefaults, createDevice,
 } from "@/lib/devices.functions";
 
 import { PageHeader } from "@/components/layout/page-header";
