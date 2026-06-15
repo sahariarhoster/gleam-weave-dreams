@@ -328,6 +328,31 @@ function OrderPage() {
                         <Input required type="password" minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
                         <p className="text-[11px] text-muted-foreground mt-1">Used to sign in once your account is approved.</p>
                       </div>
+                      <div>
+                        <Label>Document type</Label>
+                        <Select
+                          value={form.business_doc_type}
+                          onValueChange={(v) => setForm({ ...form, business_doc_type: v as "nid" | "trade_license" })}
+                        >
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="nid">National ID (NID)</SelectItem>
+                            <SelectItem value="trade_license">Trade License</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>{form.business_doc_type === "nid" ? "NID number" : "Trade license number"}</Label>
+                        <Input
+                          required
+                          minLength={4}
+                          maxLength={64}
+                          value={form.business_doc_number}
+                          onChange={(e) => setForm({ ...form, business_doc_number: e.target.value })}
+                          placeholder={form.business_doc_type === "nid" ? "e.g. 1234567890123" : "e.g. TRAD/DSCC/123456"}
+                        />
+                        <p className="text-[11px] text-muted-foreground mt-1">Required for KYC verification.</p>
+                      </div>
                     </div>
                   </div>
                 )}
