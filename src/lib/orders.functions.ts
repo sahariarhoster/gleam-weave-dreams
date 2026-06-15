@@ -378,7 +378,19 @@ export const decideOrder = createServerFn({ method: "POST" })
           status: "approved", approved_at: new Date().toISOString(),
           approved_by: context.userId, admin_notes: data.notes ?? null,
         }).eq("id", data.id);
+        try {
+          const { data: full } = await supabaseAdmin
+            .from("orders").select("full_name, phone").eq("id", data.id).maybeSingle();
+          if (full?.phone) {
+            const { sendWhatsApp, getOrderTemplate, fillTemplate } = await import("@/lib/notify.server");
+            const tpl = await getOrderTemplate("tpl_order_approved");
+            await sendWhatsApp(full.phone, fillTemplate(tpl, {
+              name: full.full_name, package: `${credits} credits top-up`, days: "—",
+            }));
+          }
+        } catch { /* ignore */ }
         return { ok: true };
+
       }
       // ===== Add-on purchase =====
       if (orderKind === "addon" && order.brand_id) {
