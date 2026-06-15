@@ -404,10 +404,33 @@ export const decideOrder = createServerFn({ method: "POST" })
         }).eq("id", data.id);
         return { ok: true };
       }
-      // ===== Legacy subscription =====
+      // ===== Trial → credit model (50 free credits, no expiry tied to sub) =====
       const pkgInfo = (order as any).packages ?? {};
+      if (pkgInfo.is_trial && order.brand_id) {
+        const TRIAL_CREDITS = 50;
+        if (!wasApproved) {
+          const { error: rpcErr } = await supabaseAdmin.rpc("top_up_credits", {
+            _brand_id: order.brand_id,
+            _credits: TRIAL_CREDITS,
+            _package_id: null,
+            _tk: 0,
+            _order_id: order.id,
+          });
+          if (rpcErr) throw new Error(rpcErr.message);
+          await supabaseAdmin.from("brands")
+            .update({ status: "active", pricing_model: "credits", message_limit: 0, current_package_id: null, cancel_requested_at: null } as any)
+            .eq("id", order.brand_id);
+        }
+        await supabaseAdmin.from("orders").update({
+          status: "approved", approved_at: new Date().toISOString(),
+          approved_by: context.userId, admin_notes: data.notes ?? null,
+        }).eq("id", data.id);
+        return { ok: true };
+      }
+      // ===== Legacy subscription =====
       const days = pkgInfo.duration_days ?? 30;
       const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+
       if (order.brand_id) {
         await supabaseAdmin
           .from("brands")
