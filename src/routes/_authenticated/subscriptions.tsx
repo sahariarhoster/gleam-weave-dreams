@@ -108,6 +108,36 @@ function AdminView() {
     onError: (e: any) => toast.error(e?.message ?? "Failed"),
   });
 
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const allIds: string[] = rows.map((s: any) => s.id as string);
+  const allSelected = allIds.length > 0 && allIds.every((id: string) => selected.has(id));
+  const someSelected = selected.size > 0 && !allSelected;
+  const toggleAll = (on: boolean) => setSelected(on ? new Set<string>(allIds) : new Set<string>());
+  const toggleOne = (id: string, on: boolean) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (on) next.add(id); else next.delete(id);
+      return next;
+    });
+  };
+
+  const bulkMut = useMutation({
+    mutationFn: async (payloads: any[]) => {
+      const results = await Promise.allSettled(payloads.map((p) => fnUpdate({ data: p })));
+      const failed = results.filter((r) => r.status === "rejected").length;
+      return { ok: payloads.length - failed, failed };
+    },
+    onSuccess: (r) => {
+      if (r.failed === 0) toast.success(`Applied to ${r.ok} subscription${r.ok === 1 ? "" : "s"}`);
+      else toast.warning(`Applied to ${r.ok}, failed ${r.failed}`);
+      setSelected(new Set());
+      qc.invalidateQueries({ queryKey: ["subs-admin"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Failed"),
+  });
+  const runBulk = (action: string, extra: Record<string, any> = {}) =>
+    bulkMut.mutate(Array.from(selected).map((id) => ({ brand_id: id, action, ...extra })));
+
   return (
     <Card>
       <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
