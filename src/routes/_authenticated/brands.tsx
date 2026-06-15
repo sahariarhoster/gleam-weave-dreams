@@ -97,18 +97,58 @@ function BrandsPage() {
       />
       <Card className="border-border/60 shadow-sm">
         <CardContent className="pt-6">
-          <div className="relative mb-4 max-w-sm">
-            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search brands…"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="pl-8"
-            />
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <div className="relative max-w-sm flex-1 min-w-[200px]">
+              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search brands…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[160px]"><SelectValue placeholder="All statuses" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All statuses</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="suspended">Suspended</SelectItem>
+                <SelectItem value="expired">Expired</SelectItem>
+              </SelectContent>
+            </Select>
+            {selected.size > 0 && (
+              <div className="ml-auto flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">{selected.size} selected</span>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" variant="outline" className="h-8 gap-1 text-rose-600 hover:bg-rose-50 hover:text-rose-700">
+                      <Trash2 className="h-3.5 w-3.5" /> Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete {selected.size} brand{selected.size === 1 ? "" : "s"}?</AlertDialogTitle>
+                      <AlertDialogDescription>All contacts, groups, campaigns and devices linked to these brands will be deleted.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => bulkDelMut.mutate(Array.from(selected))} className="bg-rose-600 hover:bg-rose-700">Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            )}
           </div>
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                    onCheckedChange={(v) => toggleAll(!!v)}
+                    aria-label="Select all"
+                  />
+                </TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Devices</TableHead>
@@ -120,15 +160,22 @@ function BrandsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {brands.isLoading && <TableRow><TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">Loading…</TableCell></TableRow>}
+              {brands.isLoading && <TableRow><TableCell colSpan={9} className="py-10 text-center text-sm text-muted-foreground">Loading…</TableCell></TableRow>}
               {!brands.isLoading && (brands.data?.length ?? 0) === 0 && (
-                <TableRow><TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">No brands yet.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="py-10 text-center text-sm text-muted-foreground">No brands yet.</TableCell></TableRow>
               )}
               {!brands.isLoading && filtered.length === 0 && (brands.data?.length ?? 0) > 0 && (
-                <TableRow><TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">No brands match "{query}".</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="py-10 text-center text-sm text-muted-foreground">No brands match your filters.</TableCell></TableRow>
               )}
               {filtered.map((b: any) => (
-                <TableRow key={b.id}>
+                <TableRow key={b.id} data-state={selected.has(b.id) ? "selected" : undefined}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selected.has(b.id)}
+                      onCheckedChange={(v) => toggleOne(b.id, !!v)}
+                      aria-label={`Select ${b.name}`}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">{b.name}</TableCell>
                   <TableCell>
                     <Badge className={
