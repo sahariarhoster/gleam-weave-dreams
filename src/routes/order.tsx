@@ -22,7 +22,7 @@ export const Route = createFileRoute("/order")({
   validateSearch: (s: Record<string, unknown>): { upgrade?: string } => ({
     upgrade: typeof s.upgrade === "string" ? s.upgrade : undefined,
   }),
-  head: () => ({ meta: [{ title: "Place an Order — WA Suite" }] }),
+  head: () => ({ meta: [{ title: "Create your account — WA Suite" }] }),
   component: OrderPage,
 });
 
@@ -52,6 +52,8 @@ function OrderPage() {
     password: "",
     phone: "",
     brand_name: "",
+    business_doc_type: "nid" as "nid" | "trade_license",
+    business_doc_number: "",
     bkash_number: "",
     txid: "",
     coupon_code: "",
@@ -131,6 +133,8 @@ function OrderPage() {
             password: form.password,
             phone: form.phone,
             brand_name: form.brand_name,
+            business_doc_type: form.business_doc_type,
+            business_doc_number: form.business_doc_number,
             bkash_number: requirePayment ? form.bkash_number : null,
             txid: requirePayment ? form.txid : null,
             coupon_code: form.coupon_code || null,
@@ -201,12 +205,12 @@ function OrderPage() {
       <main className="mx-auto max-w-5xl px-4 py-8 space-y-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            {upgrading ? "Upgrade your subscription" : "Choose a package"}
+            {upgrading ? "Upgrade your subscription" : loggedIn ? "Add a new brand" : "Create your account"}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {requirePayment
-              ? "Pay via bKash, share your transaction ID, and we'll activate your account."
-              : "Pick a package to get started."}
+            {loggedIn
+              ? (requirePayment ? "Pay via bKash and we'll activate it." : "Pick a package to get started.")
+              : "Start your free trial — we'll create your account and activate it after a quick KYC review."}
           </p>
         </div>
 
@@ -323,6 +327,31 @@ function OrderPage() {
                         <Label>Password</Label>
                         <Input required type="password" minLength={6} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
                         <p className="text-[11px] text-muted-foreground mt-1">Used to sign in once your account is approved.</p>
+                      </div>
+                      <div>
+                        <Label>Document type</Label>
+                        <Select
+                          value={form.business_doc_type}
+                          onValueChange={(v) => setForm({ ...form, business_doc_type: v as "nid" | "trade_license" })}
+                        >
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="nid">National ID (NID)</SelectItem>
+                            <SelectItem value="trade_license">Trade License</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label>{form.business_doc_type === "nid" ? "NID number" : "Trade license number"}</Label>
+                        <Input
+                          required
+                          minLength={4}
+                          maxLength={64}
+                          value={form.business_doc_number}
+                          onChange={(e) => setForm({ ...form, business_doc_number: e.target.value })}
+                          placeholder={form.business_doc_type === "nid" ? "e.g. 1234567890123" : "e.g. TRAD/DSCC/123456"}
+                        />
+                        <p className="text-[11px] text-muted-foreground mt-1">Required for KYC verification.</p>
                       </div>
                     </div>
                   </div>

@@ -41,6 +41,8 @@ export const createOrder = createServerFn({ method: "POST" })
         password: z.string().min(6).max(72),
         phone: z.string().trim().min(6).max(30),
         brand_name: z.string().trim().min(1).max(100),
+        business_doc_type: z.enum(["nid", "trade_license"]),
+        business_doc_number: z.string().trim().min(4).max(64),
         bkash_number: z.string().trim().max(30).optional().nullable(),
         txid: z.string().trim().max(64).optional().nullable(),
         coupon_code: z.string().trim().max(64).optional().nullable(),
@@ -172,6 +174,8 @@ export const createOrder = createServerFn({ method: "POST" })
         device_limit: pkg.device_limit,
         license_limit: pkg.license_count,
         created_by: userId,
+        business_doc_type: data.business_doc_type,
+        business_doc_number: data.business_doc_number,
       } as any)
       .select("id")
       .single();
