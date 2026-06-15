@@ -205,12 +205,12 @@ function OrderPage() {
       <main className="mx-auto max-w-5xl px-4 py-8 space-y-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
-            {upgrading ? "Upgrade your subscription" : "Choose a package"}
+            {upgrading ? "Upgrade your subscription" : loggedIn ? "Add a new brand" : "Create your account"}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {requirePayment
-              ? "Pay via bKash, share your transaction ID, and we'll activate your account."
-              : "Pick a package to get started."}
+            {loggedIn
+              ? (requirePayment ? "Pay via bKash and we'll activate it." : "Pick a package to get started.")
+              : "Start your free trial — we'll create your account and activate it after a quick KYC review."}
           </p>
         </div>
 
