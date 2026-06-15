@@ -594,51 +594,50 @@ function PricingSection() {
   const plans = [
     {
       name: "ট্রায়াল",
-      price: "১০০",
-      period: "/৭ দিন",
-      tagline: "প্রথমে পরীক্ষা করে দেখুন — মাত্র ১০০ টাকায়",
+      price: "ফ্রি",
+      period: "/একবার",
+      tagline: "নতুন ব্র্যান্ডের জন্য — লাইফটাইমে একবার",
       features: [
-        "৭ দিনের ট্রায়াল",
-        "১ নাম্বার / ডিভাইস",
+        "৩০ SMS ক্রেডিট",
+        "১ ডিভাইস",
         "১ WordPress প্লাগইন লাইসেন্স",
-        "আনলিমিটেড মেসেজ",
         "৬-লেয়ার অ্যান্টি-ব্যান প্রোটেকশন",
-        "বাংলায় সাপোর্ট",
+        "ট্রায়াল শেষে অটো ক্রেডিট মডেলে শিফট",
       ],
       highlighted: false,
       cta: "ট্রায়াল নিন",
     },
     {
-      name: "স্টার্টার",
-      price: "৬০০",
-      period: "/মাস",
-      tagline: "ছোট ব্যবসা ও সিঙ্গেল স্টোরের জন্য পারফেক্ট",
+      name: "SME প্যাক",
+      price: "০.৮০",
+      period: "৳ / ক্রেডিট",
+      tagline: "ছোট ব্যবসার জন্য — ন্যূনতম ৳৫০০ টপ-আপ",
       features: [
-        "আনলিমিটেড মেসেজ",
-        "১ নাম্বার / ডিভাইস",
-        "আনলিমিটেড এজেন্ট",
-        "১ WordPress প্লাগইন লাইসেন্স",
-        "৬-লেয়ার অ্যান্টি-ব্যান প্রোটেকশন",
+        "১ ডেলিভার্ড SMS = ১ ক্রেডিট",
+        "১ ডিভাইস ইনক্লুডেড",
+        "৩ WordPress প্লাগইন লাইসেন্স",
+        "ন্যূনতম টপ-আপ ৳৫০০ (৬২৫ ক্রেডিট)",
+        "৬-মাস ক্রেডিট ভ্যালিডিটি",
         "বাংলায় ২৪/৭ সাপোর্ট",
       ],
       highlighted: false,
-      cta: "প্ল্যান নিন",
+      cta: "SME প্যাক নিন",
     },
     {
-      name: "প্রো",
-      price: "৮০০",
-      period: "/মাস",
-      tagline: "একাধিক ব্র্যান্ড ও বড় টিমের জন্য",
+      name: "Corporate প্যাক",
+      price: "০.৬৫",
+      period: "৳ / ক্রেডিট",
+      tagline: "বড় টিম ও মাল্টি-ব্র্যান্ড — ন্যূনতম ৳১০০০ টপ-আপ",
       features: [
-        "আনলিমিটেড মেসেজ",
-        "৩ নাম্বার / ডিভাইস",
-        "আনলিমিটেড এজেন্ট",
-        "৩ WordPress প্লাগইন লাইসেন্স",
-        "৬-লেয়ার অ্যান্টি-ব্যান প্রোটেকশন",
+        "১ ডেলিভার্ড SMS = ১ ক্রেডিট",
+        "৩ ডিভাইস ইনক্লুডেড",
+        "৫ WordPress প্লাগইন লাইসেন্স",
+        "ন্যূনতম টপ-আপ ৳১০০০ (~১৫৩৮ ক্রেডিট)",
+        "৬-মাস ক্রেডিট ভ্যালিডিটি",
         "প্রায়োরিটি সাপোর্ট",
       ],
       highlighted: true,
-      cta: "প্রো নিন",
+      cta: "Corporate নিন",
     },
   ];
 
@@ -647,13 +646,13 @@ function PricingSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="mx-auto max-w-2xl text-center">
           <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
-            <DollarSign className="mr-1 h-3 w-3" /> সহজ ও স্বচ্ছ প্রাইসিং
+            <DollarSign className="mr-1 h-3 w-3" /> পে-অ্যাজ-ইউ-গো ক্রেডিট মডেল
           </span>
           <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-5xl">
-            আপনার জন্য সেরা <span className="text-primary">প্ল্যান</span> বেছে নিন
+            শুধু <span className="text-primary">ডেলিভার্ড SMS</span>-এর জন্য পে করুন
           </h2>
           <p className="mt-4 text-muted-foreground">
-            কোনো লুকানো চার্জ নেই। প্রতিটি প্ল্যানে আনলিমিটেড মেসেজ অন্তর্ভুক্ত। শুরু করুন ৳২৮০ ট্রায়াল দিয়ে।
+            কোনো মাসিক ফি নেই। ফেইলড SMS-এ চার্জ নেই। টপ-আপ করুন, ৬ মাস পর্যন্ত ব্যবহার করুন।
           </p>
         </div>
 
@@ -701,10 +700,11 @@ function PricingSection() {
         </div>
 
         <div className="mx-auto mt-8 max-w-3xl rounded-2xl border border-border bg-secondary/30 p-6 text-center">
-          <p className="text-sm font-semibold text-foreground">অ্যাড-অন চার্জ</p>
+          <p className="text-sm font-semibold text-foreground">অ্যাড-অন চার্জ (এককালীন)</p>
           <p className="mt-2 text-sm text-muted-foreground">
-            অতিরিক্ত ডিভাইস <span className="font-bold text-foreground">৳২০০</span> প্রতি ডিভাইস ·
-            অতিরিক্ত WordPress প্লাগইন লাইসেন্স <span className="font-bold text-foreground">৳১৫০</span> প্রতি লাইসেন্স
+            অতিরিক্ত ডিভাইস <span className="font-bold text-foreground">৳৪০০</span> ·
+            অতিরিক্ত WordPress লাইসেন্স <span className="font-bold text-foreground">৳৪০০</span> ·
+            ডিভাইস + লাইসেন্স কম্বো <span className="font-bold text-foreground">৳৭০০</span>
           </p>
         </div>
       </div>
