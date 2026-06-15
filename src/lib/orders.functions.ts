@@ -419,7 +419,19 @@ export const decideOrder = createServerFn({ method: "POST" })
           status: "approved", approved_at: new Date().toISOString(),
           approved_by: context.userId, admin_notes: data.notes ?? null,
         }).eq("id", data.id);
+        try {
+          const { data: full } = await supabaseAdmin
+            .from("orders").select("full_name, phone, addon_kind").eq("id", data.id).maybeSingle();
+          if (full?.phone) {
+            const { sendWhatsApp, getOrderTemplate, fillTemplate } = await import("@/lib/notify.server");
+            const tpl = await getOrderTemplate("tpl_order_approved");
+            await sendWhatsApp(full.phone, fillTemplate(tpl, {
+              name: full.full_name, package: `Add-on: ${(full as any).addon_kind}`, days: "—",
+            }));
+          }
+        } catch { /* ignore */ }
         return { ok: true };
+
       }
       // ===== Trial → credit model (50 free credits, no expiry tied to sub) =====
       const pkgInfo = (order as any).packages ?? {};
