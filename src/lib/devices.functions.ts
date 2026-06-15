@@ -479,6 +479,20 @@ export const startDeviceLink = createServerFn({ method: "POST" })
     }
     const pick = keys[Math.floor(Math.random() * keys.length)];
     const { bdwebs } = await import("@/lib/bdwebs.server");
+
+    // Snapshot existing accounts on this panel key BEFORE generating the QR,
+    // so the poller can detect a brand-new account if the infolink does not
+    // surface the linked `unique` directly.
+    let seenUniques: string[] = [];
+    try {
+      const accRes = await bdwebs.getWhatsAppAccounts(pick.secret);
+      seenUniques = ((accRes?.data ?? []) as any[])
+        .map((a) => String(a.unique ?? a.account ?? a.device_unique_id ?? ""))
+        .filter(Boolean);
+    } catch (e) {
+      console.warn("snapshot wa.accounts failed", e);
+    }
+
     const res = await bdwebs.linkWhatsApp({ secret: pick.secret, sid: pick.sid });
     if (res.status !== 200) throw new Error(res.message || "Failed to generate QR");
     const d = res.data as { qrstring?: string; qrimagelink?: string; infolink?: string };
@@ -487,6 +501,7 @@ export const startDeviceLink = createServerFn({ method: "POST" })
       qrimagelink: d.qrimagelink ?? "",
       infolink: d.infolink ?? "",
       expires_at: new Date(Date.now() + 180_000).toISOString(),
+      seen_uniques: seenUniques,
     };
   });
 
