@@ -331,7 +331,7 @@ function LicensesPage() {
                 </TableRow>
               ))}
               {(licenses.data ?? []).length === 0 && (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">No licenses yet</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground">No licenses yet</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
