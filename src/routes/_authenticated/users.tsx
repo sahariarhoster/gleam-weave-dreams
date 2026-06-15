@@ -65,6 +65,7 @@ function UsersPage() {
 
   const [openFor, setOpenFor] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const q = search.trim().toLowerCase();
   const filteredUsers = (users.data ?? []).filter((u: any) => {
     if (!q) return true;
@@ -74,6 +75,35 @@ function UsersPage() {
       (u.phone ?? "").toLowerCase().includes(q) ||
       (u.memberships ?? []).some((m: any) => (m.brand_name ?? "").toLowerCase().includes(q))
     );
+  });
+
+  const selectableIds: string[] = filteredUsers
+    .filter((u: any) => u.id !== me?.id)
+    .map((u: any) => u.id as string);
+  const allSelected = selectableIds.length > 0 && selectableIds.every((id: string) => selected.has(id));
+  const someSelected = selected.size > 0 && !allSelected;
+  const toggleAll = (on: boolean) => setSelected(on ? new Set<string>(selectableIds) : new Set<string>());
+  const toggleOne = (id: string, on: boolean) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (on) next.add(id); else next.delete(id);
+      return next;
+    });
+  };
+
+  const bulkDeleteMut = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const results = await Promise.allSettled(ids.map((id) => fnDelete({ data: { user_id: id } })));
+      const failed = results.filter((r) => r.status === "rejected").length;
+      return { ok: ids.length - failed, failed };
+    },
+    onSuccess: (r) => {
+      if (r.failed === 0) toast.success(`Deleted ${r.ok} user${r.ok === 1 ? "" : "s"}`);
+      else toast.warning(`Deleted ${r.ok}, failed ${r.failed}`);
+      setSelected(new Set());
+      qc.invalidateQueries({ queryKey: ["users"] });
+    },
+    onError: (e) => toast.error((e as Error).message),
   });
 
   if (users.isError) {
