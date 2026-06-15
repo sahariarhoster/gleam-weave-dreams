@@ -326,7 +326,7 @@ export const decideOrder = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: order, error: oErr } = await supabaseAdmin
       .from("orders")
-      .select("id, brand_id, coupon_id, status, package_id, user_id, kind, credit_package_id, credits_purchased, final_amount, addon_kind, packages(duration_days, message_limit, device_limit, license_count)")
+      .select("id, brand_id, coupon_id, status, package_id, user_id, kind, credit_package_id, credits_purchased, final_amount, addon_kind, packages(duration_days, message_limit, device_limit, license_count, is_trial)")
       .eq("id", data.id)
       .maybeSingle();
     if (oErr || !order) throw new Error("Order not found");
