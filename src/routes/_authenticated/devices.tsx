@@ -166,6 +166,7 @@ function DevicesPage() {
                   key={editing?.id ?? "new"}
                   editing={editing}
                   brands={editing ? (brands.data ?? []) : availableBrands}
+                  isOwner={isOwner}
                   onDone={() => { setOpen(false); setEditing(null); qc.invalidateQueries({ queryKey: ["devices"] }); }}
                 />
               </Dialog>
