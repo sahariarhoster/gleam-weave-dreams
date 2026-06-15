@@ -195,9 +195,19 @@ function LicensesPage() {
               </SelectContent>
             </Select>
           </div>
+          <div className="min-w-[200px] space-y-1">
+            <label className="text-xs text-muted-foreground">License Type</label>
+            <Select value={licenseType} onValueChange={(v) => setLicenseType(v as "wordpress" | "custom_site")}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="wordpress">WordPress Plugin (HS-)</SelectItem>
+                <SelectItem value="custom_site">External / Custom Site (WAN-)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <Button
             disabled={!brandId || genMut.isPending}
-            onClick={() => genMut.mutate(brandId)}
+            onClick={() => genMut.mutate({ brand_id: brandId, license_type: licenseType })}
             className="gap-1"
           >
             <Plus className="h-4 w-4" /> Generate
