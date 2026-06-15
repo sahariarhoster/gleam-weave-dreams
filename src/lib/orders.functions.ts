@@ -412,7 +412,8 @@ export const decideOrder = createServerFn({ method: "POST" })
           const { error: rpcErr } = await supabaseAdmin.rpc("top_up_credits", {
             _brand_id: order.brand_id,
             _credits: TRIAL_CREDITS,
-            _package_id: null,
+            _package_id: null as unknown as string,
+
             _tk: 0,
             _order_id: order.id,
           });
