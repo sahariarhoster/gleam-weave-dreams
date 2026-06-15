@@ -48,6 +48,7 @@ function LicensesPage() {
   const canManage = isOwner || isSupport;
 
   const [brandId, setBrandId] = useState<string>("");
+  const [licenseType, setLicenseType] = useState<"wordpress" | "custom_site">("wordpress");
   const [editing, setEditing] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<number>(1);
   const [rel, setRel] = useState<{ version: string; url: string; changelog: string; tested: string; requires: string; requires_php: string }>({
@@ -67,7 +68,7 @@ function LicensesPage() {
   }
 
   const genMut = useMutation({
-    mutationFn: (b: string) => fnGen({ data: { brand_id: b } }),
+    mutationFn: (p: { brand_id: string; license_type: "wordpress" | "custom_site" }) => fnGen({ data: p }),
     onSuccess: () => { toast.success("License generated"); qc.invalidateQueries({ queryKey: ["licenses"] }); },
     onError: (e) => toast.error((e as Error).message),
   });
@@ -194,9 +195,19 @@ function LicensesPage() {
               </SelectContent>
             </Select>
           </div>
+          <div className="min-w-[200px] space-y-1">
+            <label className="text-xs text-muted-foreground">License Type</label>
+            <Select value={licenseType} onValueChange={(v) => setLicenseType(v as "wordpress" | "custom_site")}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="wordpress">WordPress Plugin (HS-)</SelectItem>
+                <SelectItem value="custom_site">External / Custom Site (WAN-)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <Button
             disabled={!brandId || genMut.isPending}
-            onClick={() => genMut.mutate(brandId)}
+            onClick={() => genMut.mutate({ brand_id: brandId, license_type: licenseType })}
             className="gap-1"
           >
             <Plus className="h-4 w-4" /> Generate
@@ -278,6 +289,7 @@ function LicensesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>License Key</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Brand</TableHead>
                 <TableHead>Device</TableHead>
                 <TableHead>Site</TableHead>
@@ -293,6 +305,9 @@ function LicensesPage() {
                     <button onClick={() => copy(l.license_key)} className="inline-flex items-center gap-1 hover:underline">
                       {l.license_key} <Copy className="h-3 w-3" />
                     </button>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{String(l.license_key ?? "").startsWith("WAN") ? "External" : "WordPress"}</Badge>
                   </TableCell>
                   <TableCell>{l.brand_name}</TableCell>
                   <TableCell>{l.device_name ?? <span className="text-muted-foreground">—</span>}</TableCell>
@@ -316,7 +331,7 @@ function LicensesPage() {
                 </TableRow>
               ))}
               {(licenses.data ?? []).length === 0 && (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">No licenses yet</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground">No licenses yet</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
