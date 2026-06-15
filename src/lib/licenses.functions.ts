@@ -106,7 +106,11 @@ async function assertLicenseManager(supabase: any, userId: string, licenseId: st
   if (await isElevated(supabase, userId)) return;
   const { data: brand } = await supabase
     .from("brands").select("created_by").eq("id", lic.brand_id).maybeSingle();
-  if (brand?.created_by !== userId) throw new Error("Forbidden: not your license");
+  if (brand?.created_by === userId) return;
+  const { data: membership } = await supabase
+    .from("brand_members").select("role")
+    .eq("brand_id", lic.brand_id).eq("user_id", userId).eq("role", "brand_admin").maybeSingle();
+  if (!membership) throw new Error("Forbidden: not your license");
 }
 
 async function assertLicenseDeleter(supabase: any, userId: string, licenseId: string) {
