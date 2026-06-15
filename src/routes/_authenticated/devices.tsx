@@ -97,10 +97,10 @@ function DevicesPage() {
       return next;
     });
   };
-  const allIds = (devices.data ?? []).map((d: any) => d.id as string);
-  const allSelected = allIds.length > 0 && allIds.every((id) => selected.has(id));
+  const allIds: string[] = (devices.data ?? []).map((d: any) => d.id as string);
+  const allSelected = allIds.length > 0 && allIds.every((id: string) => selected.has(id));
   const someSelected = selected.size > 0 && !allSelected;
-  const toggleAll = (on: boolean) => setSelected(on ? new Set(allIds) : new Set());
+  const toggleAll = (on: boolean) => setSelected(on ? new Set<string>(allIds) : new Set<string>());
 
   const bulkDeleteMut = useMutation({
     mutationFn: async (ids: string[]) => {
