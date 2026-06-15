@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { listActivePackages, validateCoupon, createOrder, createOrderForMe, listMyBrandsForOrder } from "@/lib/orders.functions";
+import { listActivePackages, listActiveCreditPackages, validateCoupon, createOrder, createOrderForMe, listMyBrandsForOrder } from "@/lib/orders.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 
