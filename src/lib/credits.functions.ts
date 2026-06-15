@@ -195,7 +195,7 @@ export const createCreditTopupOrder = createServerFn({ method: "POST" })
         package_id: z.string().uuid(),
         amount_tk: z.number().positive().max(1_000_000),
         bkash_number: z.string().trim().min(8).max(30),
-        txid: z.string().trim().min(4).max(64),
+        txid: z.string().trim().min(1).max(64),
       })
       .parse(d),
   )
@@ -259,7 +259,7 @@ export const createAddonOrder = createServerFn({ method: "POST" })
         addon_kind: z.enum(["device", "wp_license", "combo"]),
         quantity: z.number().int().min(1).max(20).default(1),
         bkash_number: z.string().trim().min(8).max(30),
-        txid: z.string().trim().min(4).max(64),
+        txid: z.string().trim().min(1).max(64),
       })
       .parse(d),
   )
