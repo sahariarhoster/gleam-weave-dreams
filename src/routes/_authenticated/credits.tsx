@@ -114,10 +114,10 @@ function CreditsPage() {
 
       <div className="flex gap-2">
         <Button asChild>
-          <Link to="/order" search={{ topup: brandId } as any}><Plus className="h-4 w-4 mr-1" /> Top up credits</Link>
+          <Link to="/topup" search={{ brand: brandId, tab: "topup" } as any}><Plus className="h-4 w-4 mr-1" /> Top up credits</Link>
         </Button>
         <Button asChild variant="outline">
-          <Link to="/order" search={{ addon: brandId } as any}>Buy add-on</Link>
+          <Link to="/topup" search={{ brand: brandId, tab: "addon" } as any}>Buy add-on</Link>
         </Button>
       </div>
 

@@ -217,8 +217,9 @@ function OrderPage() {
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {(packages.data ?? [])
               .filter((p: any) => {
-                // Trial only for brand-new customers (no existing brands, choosing __new__)
-                if (!p.is_trial) return true;
+                // Only the trial package is purchasable from the public order page now.
+                // Existing legacy customers can still upgrade their existing brands (handled below).
+                if (!p.is_trial) return upgrading; // show legacy packages only when upgrading an existing brand
                 const hasBrands = (myBrands.data?.length ?? 0) > 0;
                 return !hasBrands && brandChoice === "__new__";
               })
@@ -249,6 +250,20 @@ function OrderPage() {
               );
             })}
           </div>
+        )}
+
+        {loggedIn && (myBrands.data?.length ?? 0) > 0 && !upgrading && (
+          <Card className="border-primary/30 bg-primary/5">
+            <CardContent className="p-4 text-sm flex items-center justify-between flex-wrap gap-3">
+              <div>
+                <strong>Already have a brand?</strong> Top up SMS credits or buy add-ons (extra device / license) from your dashboard.
+              </div>
+              <div className="flex gap-2">
+                <Button asChild size="sm"><Link to="/topup">Top up credits</Link></Button>
+                <Button asChild size="sm" variant="outline"><Link to="/credits">View balance</Link></Button>
+              </div>
+            </CardContent>
+          </Card>
         )}
 
         {selected && pkg && (
