@@ -152,6 +152,12 @@ export const adminUpdateSubscription = createServerFn({ method: "POST" })
       patch.expires_at = exp.toISOString();
       patch.status = "active";
       patch.cancel_requested_at = null;
+    } else if (data.action === "convert_to_credits") {
+      patch.pricing_model = "credits";
+      // Ensure a wallet row exists (zero balance) so top-ups can land
+      await supabaseAdmin
+        .from("credit_wallets")
+        .upsert({ brand_id: data.brand_id, balance: 0 } as any, { onConflict: "brand_id", ignoreDuplicates: true } as any);
     }
 
     const { error } = await supabaseAdmin.from("brands").update(patch as any).eq("id", data.brand_id);
