@@ -406,14 +406,19 @@ function DeviceDialog({
   });
 
   // Add mode → QR linking flow
-  const [qr, setQr] = useState<{ qrimagelink: string; infolink: string; api_key_id: string } | null>(null);
+  const [qr, setQr] = useState<{ qrimagelink: string; infolink: string; api_key_id: string; seen_uniques: string[] } | null>(null);
   const [expiresAt, setExpiresAt] = useState<number | null>(null);
   const [linked, setLinked] = useState(false);
 
   const startMut = useMutation({
     mutationFn: () => fnStart({ data: { brand_id: form.brand_id || null } }),
     onSuccess: (res) => {
-      setQr({ qrimagelink: res.qrimagelink, infolink: res.infolink, api_key_id: res.api_key_id });
+      setQr({
+        qrimagelink: res.qrimagelink,
+        infolink: res.infolink,
+        api_key_id: res.api_key_id,
+        seen_uniques: res.seen_uniques ?? [],
+      });
       setExpiresAt(new Date(res.expires_at).getTime());
       setLinked(false);
     },
@@ -430,6 +435,7 @@ function DeviceDialog({
         name: form.name,
         sim_info: form.sim_info || null,
         brand_id: form.brand_id || null,
+        seen_uniques: qr!.seen_uniques,
       },
     }),
     enabled: !!qr && !linked && (expiresAt ? Date.now() < expiresAt : true),
