@@ -380,11 +380,12 @@ function ChangePackageDialog({
 }
 
 function RenewDialog({
-  brandName, defaultDays, onSubmit,
+  brandName, defaultDays, onSubmit, triggerLabel,
 }: {
   brandName: string;
   defaultDays: number;
   onSubmit: (days: number) => void;
+  triggerLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [days, setDays] = useState<string>(String(defaultDays || 30));
@@ -393,7 +394,7 @@ function RenewDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline">Renew</Button>
+        <Button size="sm" variant="outline">{triggerLabel ?? "Renew"}</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
