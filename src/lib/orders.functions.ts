@@ -49,7 +49,8 @@ export const createOrder = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z
       .object({
-        package_id: z.string().uuid(),
+        package_id: z.string().uuid().optional().nullable(),
+        credit_package_id: z.string().uuid().optional().nullable(),
         full_name: z.string().trim().min(2).max(100),
         email: z.string().trim().email().max(255),
         password: z.string().min(6).max(72),
@@ -61,8 +62,12 @@ export const createOrder = createServerFn({ method: "POST" })
         txid: z.string().trim().max(64).optional().nullable(),
         coupon_code: z.string().trim().max(64).optional().nullable(),
       })
+      .refine((v) => !!v.package_id !== !!v.credit_package_id, {
+        message: "Pick exactly one of package_id or credit_package_id",
+      })
       .parse(d),
   )
+
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
