@@ -119,7 +119,7 @@ export const createOrder = createServerFn({ method: "POST" })
         .from("packages").select("*").eq("id", data.package_id).eq("is_active", true).maybeSingle();
       if (pErr || !p) throw new Error("Package not found");
       pkg = p;
-      original = Number(p.price);
+      original = p.is_trial ? 0 : Number(p.price);
       planName = p.name;
 
       // Trial is for new customers only

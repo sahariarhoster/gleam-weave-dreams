@@ -91,10 +91,10 @@ function OrderPage() {
 
   const pkg = selected?.kind === "sub" ? (packages.data ?? []).find((p: any) => p.id === selected.id) : null;
   const creditPkg = selected?.kind === "credit" ? (creditPackages.data ?? []).find((p: any) => p.id === selected.id) : null;
-  const original = pkg ? Number(pkg.price) : creditPkg ? Number(creditPkg.min_topup_tk) : 0;
+  const original = pkg ? (pkg.is_trial ? 0 : Number(pkg.price)) : creditPkg ? Number(creditPkg.min_topup_tk) : 0;
   const final = discount?.valid ? (discount.final ?? original) : original;
   const planName = pkg?.name ?? creditPkg?.name ?? "";
-  const planSub = pkg ? `${pkg.duration_days} days` : creditPkg ? `${Math.floor(Number(creditPkg.min_topup_tk) / Number(creditPkg.tk_per_credit)).toLocaleString()} credits` : "";
+  const planSub = pkg ? (pkg.is_trial ? "50 free credits" : `${pkg.duration_days} days`) : creditPkg ? `${Math.floor(Number(creditPkg.min_topup_tk) / Number(creditPkg.tk_per_credit)).toLocaleString()} credits` : "";
 
   async function checkCoupon() {
     if (!selected || !form.coupon_code.trim()) return;
@@ -249,14 +249,14 @@ function OrderPage() {
                       <h3 className="font-semibold">{p.name}</h3>
                       {p.is_trial && <Badge variant="secondary">Trial</Badge>}
                     </div>
-                    <div className="mt-2 text-2xl font-bold">৳{Number(p.price).toFixed(0)}</div>
-                    <p className="text-xs text-muted-foreground">for {p.duration_days} days</p>
+                    <div className="mt-2 text-2xl font-bold">{p.is_trial ? "Free" : `৳${Number(p.price).toFixed(0)}`}</div>
+                    <p className="text-xs text-muted-foreground">{p.is_trial ? `${p.duration_days}-day trial · 50 credits` : `for ${p.duration_days} days`}</p>
                     {p.description && <p className="mt-2 text-xs text-muted-foreground">{p.description}</p>}
                     <ul className="mt-3 space-y-1 text-xs">
                       <li className="flex items-center gap-1.5"><Smartphone className="h-3.5 w-3.5" /> {p.device_limit} device{p.device_limit > 1 ? "s" : ""}</li>
                       <li className="flex items-center gap-1.5"><KeyRound className="h-3.5 w-3.5" /> {p.license_count} WordPress license{p.license_count > 1 ? "s" : ""}</li>
                       <li className="flex items-center gap-1.5">
-                        {p.message_limit ? <><Calendar className="h-3.5 w-3.5" /> {p.message_limit.toLocaleString()} messages</> : <><InfinityIcon className="h-3.5 w-3.5" /> Unlimited SMS</>}
+                        {p.is_trial ? <><Calendar className="h-3.5 w-3.5" /> 50 credits on approval</> : p.message_limit ? <><Calendar className="h-3.5 w-3.5" /> {p.message_limit.toLocaleString()} messages</> : <><InfinityIcon className="h-3.5 w-3.5" /> Unlimited SMS</>}
                       </li>
                     </ul>
                   </button>
