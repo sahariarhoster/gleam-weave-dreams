@@ -52,6 +52,8 @@ function OrderPage() {
     password: "",
     phone: "",
     brand_name: "",
+    business_doc_type: "nid" as "nid" | "trade_license",
+    business_doc_number: "",
     bkash_number: "",
     txid: "",
     coupon_code: "",
