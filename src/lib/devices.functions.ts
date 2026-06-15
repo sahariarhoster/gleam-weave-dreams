@@ -752,7 +752,11 @@ export const sendSingleMessage = createServerFn({ method: "POST" })
     }
     // Deduct on success
     if (device.brand_id) {
-      await supabaseAdmin.rpc("deduct_credit", { _brand_id: device.brand_id, _message_ref: `single:${context.userId}` });
+      const { data: newBal } = await supabaseAdmin.rpc("deduct_credit", { _brand_id: device.brand_id, _message_ref: `single:${context.userId}` });
+      if (typeof newBal === "number" && newBal >= 0) {
+        const { notifyLowBalanceMaybe } = await import("@/lib/credits.server");
+        void notifyLowBalanceMaybe(device.brand_id, newBal);
+      }
     }
     return { ok: true, message: res.message };
   });

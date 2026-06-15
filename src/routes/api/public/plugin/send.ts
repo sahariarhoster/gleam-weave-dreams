@@ -244,7 +244,11 @@ export const Route = createFileRoute("/api/public/plugin/send")({
 
         // Deduct 1 credit on successful delivery (no-op for legacy brands)
         if (brandId) {
-          await supabaseAdmin.rpc("deduct_credit", { _brand_id: brandId, _message_ref: `plugin:${lic.id}` });
+          const { data: newBal } = await supabaseAdmin.rpc("deduct_credit", { _brand_id: brandId, _message_ref: `plugin:${lic.id}` });
+          if (typeof newBal === "number" && newBal >= 0) {
+            const { notifyLowBalanceMaybe } = await import("@/lib/credits.server");
+            void notifyLowBalanceMaybe(brandId, newBal);
+          }
         }
         return jsonResponse({ ok: true, message: res.message });
       },
