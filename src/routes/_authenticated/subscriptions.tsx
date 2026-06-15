@@ -173,9 +173,56 @@ function AdminView() {
         </div>
       </CardHeader>
       <CardContent className="overflow-x-auto">
+        {selected.size > 0 && (
+          <div className="mb-3 flex flex-wrap items-center gap-2 rounded-md border bg-muted/30 px-3 py-2">
+            <span className="text-sm font-medium">{selected.size} selected</span>
+            <Button size="sm" variant="outline" disabled={bulkMut.isPending} onClick={() => runBulk("activate")}>Activate</Button>
+            <Button size="sm" variant="outline" disabled={bulkMut.isPending} onClick={() => runBulk("suspend")}>Suspend</Button>
+            <Button size="sm" variant="outline" disabled={bulkMut.isPending} onClick={() => runBulk("hold")}>Hold</Button>
+            <Button size="sm" variant="outline" disabled={bulkMut.isPending} onClick={() => runBulk("clear_cancel")}>Dismiss cancel</Button>
+            <RenewDialog
+              brandName={`${selected.size} subscription${selected.size === 1 ? "" : "s"}`}
+              defaultDays={30}
+              onSubmit={(extend_days) => runBulk("renew", { extend_days })}
+              triggerLabel="Bulk renew"
+            />
+            <ChangePackageDialog
+              brandId="bulk"
+              currentPkgId={null}
+              packages={pkgs.data ?? []}
+              onSubmit={(package_id) => runBulk("change_package", { package_id })}
+              triggerLabel="Bulk change package"
+            />
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button size="sm" variant="secondary" disabled={bulkMut.isPending}>To credits</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Shift {selected.size} to credits?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Each selected brand will stop using its subscription package and consume credits per SMS. Wallets start at 0.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => runBulk("convert_to_credits")}>Shift to credits</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            <Button size="sm" variant="ghost" className="ml-auto" onClick={() => setSelected(new Set())}>Clear</Button>
+          </div>
+        )}
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-10">
+                <Checkbox
+                  checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                  onCheckedChange={(v) => toggleAll(!!v)}
+                  aria-label="Select all"
+                />
+              </TableHead>
               <TableHead>Brand</TableHead>
               <TableHead>Owner</TableHead>
               <TableHead>Package</TableHead>
@@ -185,12 +232,19 @@ function AdminView() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {q.isLoading && <TableRow><TableCell colSpan={6}>Loading…</TableCell></TableRow>}
+            {q.isLoading && <TableRow><TableCell colSpan={7}>Loading…</TableCell></TableRow>}
             {!q.isLoading && rows.length === 0 && (
-              <TableRow><TableCell colSpan={6} className="text-muted-foreground">No subscriptions.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-muted-foreground">No subscriptions.</TableCell></TableRow>
             )}
             {rows.map((s: any) => (
-              <TableRow key={s.id}>
+              <TableRow key={s.id} data-state={selected.has(s.id) ? "selected" : undefined}>
+                <TableCell>
+                  <Checkbox
+                    checked={selected.has(s.id)}
+                    onCheckedChange={(v) => toggleOne(s.id, !!v)}
+                    aria-label={`Select ${s.brand_name}`}
+                  />
+                </TableCell>
                 <TableCell className="font-medium">
                   {s.brand_name}
                   {s.cancel_requested_at && (
