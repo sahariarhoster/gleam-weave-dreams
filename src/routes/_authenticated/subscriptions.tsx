@@ -16,6 +16,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -107,6 +108,36 @@ function AdminView() {
     onError: (e: any) => toast.error(e?.message ?? "Failed"),
   });
 
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const allIds: string[] = rows.map((s: any) => s.id as string);
+  const allSelected = allIds.length > 0 && allIds.every((id: string) => selected.has(id));
+  const someSelected = selected.size > 0 && !allSelected;
+  const toggleAll = (on: boolean) => setSelected(on ? new Set<string>(allIds) : new Set<string>());
+  const toggleOne = (id: string, on: boolean) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (on) next.add(id); else next.delete(id);
+      return next;
+    });
+  };
+
+  const bulkMut = useMutation({
+    mutationFn: async (payloads: any[]) => {
+      const results = await Promise.allSettled(payloads.map((p) => fnUpdate({ data: p })));
+      const failed = results.filter((r) => r.status === "rejected").length;
+      return { ok: payloads.length - failed, failed };
+    },
+    onSuccess: (r) => {
+      if (r.failed === 0) toast.success(`Applied to ${r.ok} subscription${r.ok === 1 ? "" : "s"}`);
+      else toast.warning(`Applied to ${r.ok}, failed ${r.failed}`);
+      setSelected(new Set());
+      qc.invalidateQueries({ queryKey: ["subs-admin"] });
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Failed"),
+  });
+  const runBulk = (action: string, extra: Record<string, any> = {}) =>
+    bulkMut.mutate(Array.from(selected).map((id) => ({ brand_id: id, action, ...extra })));
+
   return (
     <Card>
       <CardHeader className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -142,9 +173,56 @@ function AdminView() {
         </div>
       </CardHeader>
       <CardContent className="overflow-x-auto">
+        {selected.size > 0 && (
+          <div className="mb-3 flex flex-wrap items-center gap-2 rounded-md border bg-muted/30 px-3 py-2">
+            <span className="text-sm font-medium">{selected.size} selected</span>
+            <Button size="sm" variant="outline" disabled={bulkMut.isPending} onClick={() => runBulk("activate")}>Activate</Button>
+            <Button size="sm" variant="outline" disabled={bulkMut.isPending} onClick={() => runBulk("suspend")}>Suspend</Button>
+            <Button size="sm" variant="outline" disabled={bulkMut.isPending} onClick={() => runBulk("hold")}>Hold</Button>
+            <Button size="sm" variant="outline" disabled={bulkMut.isPending} onClick={() => runBulk("clear_cancel")}>Dismiss cancel</Button>
+            <RenewDialog
+              brandName={`${selected.size} subscription${selected.size === 1 ? "" : "s"}`}
+              defaultDays={30}
+              onSubmit={(extend_days) => runBulk("renew", { extend_days })}
+              triggerLabel="Bulk renew"
+            />
+            <ChangePackageDialog
+              brandId="bulk"
+              currentPkgId={null}
+              packages={pkgs.data ?? []}
+              onSubmit={(package_id) => runBulk("change_package", { package_id })}
+              triggerLabel="Bulk change package"
+            />
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button size="sm" variant="secondary" disabled={bulkMut.isPending}>To credits</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Shift {selected.size} to credits?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Each selected brand will stop using its subscription package and consume credits per SMS. Wallets start at 0.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => runBulk("convert_to_credits")}>Shift to credits</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            <Button size="sm" variant="ghost" className="ml-auto" onClick={() => setSelected(new Set())}>Clear</Button>
+          </div>
+        )}
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-10">
+                <Checkbox
+                  checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                  onCheckedChange={(v) => toggleAll(!!v)}
+                  aria-label="Select all"
+                />
+              </TableHead>
               <TableHead>Brand</TableHead>
               <TableHead>Owner</TableHead>
               <TableHead>Package</TableHead>
@@ -154,12 +232,19 @@ function AdminView() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {q.isLoading && <TableRow><TableCell colSpan={6}>Loading…</TableCell></TableRow>}
+            {q.isLoading && <TableRow><TableCell colSpan={7}>Loading…</TableCell></TableRow>}
             {!q.isLoading && rows.length === 0 && (
-              <TableRow><TableCell colSpan={6} className="text-muted-foreground">No subscriptions.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-muted-foreground">No subscriptions.</TableCell></TableRow>
             )}
             {rows.map((s: any) => (
-              <TableRow key={s.id}>
+              <TableRow key={s.id} data-state={selected.has(s.id) ? "selected" : undefined}>
+                <TableCell>
+                  <Checkbox
+                    checked={selected.has(s.id)}
+                    onCheckedChange={(v) => toggleOne(s.id, !!v)}
+                    aria-label={`Select ${s.brand_name}`}
+                  />
+                </TableCell>
                 <TableCell className="font-medium">
                   {s.brand_name}
                   {s.cancel_requested_at && (
@@ -250,19 +335,20 @@ function AdminView() {
 }
 
 function ChangePackageDialog({
-  brandId, currentPkgId, packages, onSubmit,
+  brandId, currentPkgId, packages, onSubmit, triggerLabel,
 }: {
   brandId: string;
   currentPkgId: string | null;
   packages: any[];
   onSubmit: (packageId: string) => void;
+  triggerLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [pkg, setPkg] = useState<string>(currentPkgId ?? "");
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline">Change</Button>
+        <Button size="sm" variant="outline">{triggerLabel ?? "Change"}</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -294,11 +380,12 @@ function ChangePackageDialog({
 }
 
 function RenewDialog({
-  brandName, defaultDays, onSubmit,
+  brandName, defaultDays, onSubmit, triggerLabel,
 }: {
   brandName: string;
   defaultDays: number;
   onSubmit: (days: number) => void;
+  triggerLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [days, setDays] = useState<string>(String(defaultDays || 30));
@@ -307,7 +394,7 @@ function RenewDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline">Renew</Button>
+        <Button size="sm" variant="outline">{triggerLabel ?? "Renew"}</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
