@@ -93,7 +93,7 @@ export const adminUpdateSubscription = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z.object({
       brand_id: z.string().uuid(),
-      action: z.enum(["suspend", "activate", "hold", "renew", "change_package", "clear_cancel"]),
+      action: z.enum(["suspend", "activate", "hold", "renew", "change_package", "clear_cancel", "convert_to_credits"]),
       package_id: z.string().uuid().optional().nullable(),
       extend_days: z.number().int().min(1).max(3650).optional(),
     }).parse(d),
