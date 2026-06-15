@@ -174,6 +174,8 @@ export const createOrder = createServerFn({ method: "POST" })
         device_limit: pkg.device_limit,
         license_limit: pkg.license_count,
         created_by: userId,
+        business_doc_type: data.business_doc_type,
+        business_doc_number: data.business_doc_number,
       } as any)
       .select("id")
       .single();
