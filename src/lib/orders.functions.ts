@@ -298,6 +298,61 @@ export const decideOrder = createServerFn({ method: "POST" })
     const orderKind = (order as any).kind ?? "subscription";
 
     if (data.action === "approve") {
+      // ===== Credit top-up =====
+      if (orderKind === "credit_topup" && order.brand_id) {
+        const credits = (order as any).credits_purchased ?? 0;
+        const pkgId = (order as any).credit_package_id ?? null;
+        const tk = Number((order as any).final_amount ?? 0);
+        if (!wasApproved && credits > 0) {
+          const { error: rpcErr } = await supabaseAdmin.rpc("top_up_credits", {
+            _brand_id: order.brand_id,
+            _credits: credits,
+            _package_id: pkgId,
+            _tk: tk,
+            _order_id: order.id,
+          });
+          if (rpcErr) throw new Error(rpcErr.message);
+          // Activate brand if currently pending/suspended
+          await supabaseAdmin.from("brands")
+            .update({ status: "active", pricing_model: "credits", cancel_requested_at: null } as any)
+            .eq("id", order.brand_id);
+        }
+        await supabaseAdmin.from("orders").update({
+          status: "approved", approved_at: new Date().toISOString(),
+          approved_by: context.userId, admin_notes: data.notes ?? null,
+        }).eq("id", data.id);
+        return { ok: true };
+      }
+      // ===== Add-on purchase =====
+      if (orderKind === "addon" && order.brand_id) {
+        const kind = (order as any).addon_kind;
+        const total = Number((order as any).final_amount ?? 0);
+        if (!wasApproved && kind) {
+          await supabaseAdmin.from("addon_purchases").insert({
+            brand_id: order.brand_id, kind, quantity: 1,
+            unit_price_tk: total, total_tk: total, order_id: order.id,
+          } as any);
+          // Bump limits on the brand
+          const { data: b } = await supabaseAdmin.from("brands")
+            .select("device_limit, license_limit").eq("id", order.brand_id).maybeSingle();
+          const patch: any = {};
+          if (kind === "device") patch.device_limit = (b?.device_limit ?? 1) + 1;
+          else if (kind === "wp_license") patch.license_limit = (b?.license_limit ?? 1) + 1;
+          else if (kind === "combo") {
+            patch.device_limit = (b?.device_limit ?? 1) + 1;
+            patch.license_limit = (b?.license_limit ?? 1) + 1;
+          }
+          if (Object.keys(patch).length) {
+            await supabaseAdmin.from("brands").update(patch).eq("id", order.brand_id);
+          }
+        }
+        await supabaseAdmin.from("orders").update({
+          status: "approved", approved_at: new Date().toISOString(),
+          approved_by: context.userId, admin_notes: data.notes ?? null,
+        }).eq("id", data.id);
+        return { ok: true };
+      }
+      // ===== Legacy subscription =====
       const pkgInfo = (order as any).packages ?? {};
       const days = pkgInfo.duration_days ?? 30;
       const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
