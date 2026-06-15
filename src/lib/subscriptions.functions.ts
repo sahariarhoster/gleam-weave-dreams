@@ -155,6 +155,11 @@ export const adminUpdateSubscription = createServerFn({ method: "POST" })
       patch.cancel_requested_at = null;
     } else if (data.action === "convert_to_credits") {
       patch.pricing_model = "credits";
+      // Cancel the legacy monthly subscription: end it now and clear plan limits.
+      patch.expires_at = new Date().toISOString();
+      patch.cancel_requested_at = new Date().toISOString();
+      patch.current_package_id = null;
+      patch.message_limit = 0;
       // Ensure a wallet row exists (zero balance) so top-ups can land
       await supabaseAdmin
         .from("credit_wallets")
