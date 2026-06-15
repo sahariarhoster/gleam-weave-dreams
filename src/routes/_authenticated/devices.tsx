@@ -217,13 +217,56 @@ function DevicesPage() {
         }
       />
       <Card className="border-border/60 shadow-sm">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex flex-row items-center justify-between gap-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">All Devices</CardTitle>
+          {canManage && selected.size > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">{selected.size} selected</span>
+              {isOwner && (
+                <Button
+                  size="sm" variant="outline" className="h-8 gap-1"
+                  onClick={() => bulkDisableMut.mutate(Array.from(selected))}
+                  disabled={bulkDisableMut.isPending}
+                >
+                  <BellOff className="h-3.5 w-3.5" /> Disable Receive
+                </Button>
+              )}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="outline" className="h-8 gap-1 text-rose-600 hover:bg-rose-50 hover:text-rose-700">
+                    <Trash2 className="h-3.5 w-3.5" /> Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete {selected.size} device{selected.size === 1 ? "" : "s"}?</AlertDialogTitle>
+                    <AlertDialogDescription>This cannot be undone. Campaigns linked to these devices may fail.</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => bulkDeleteMut.mutate(Array.from(selected))}
+                      className="bg-rose-600 hover:bg-rose-700"
+                    >Delete</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
+                {canManage && (
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                      onCheckedChange={(v) => toggleAll(!!v)}
+                      aria-label="Select all"
+                    />
+                  </TableHead>
+                )}
                 <TableHead>Name</TableHead>
                 {isOwner && <TableHead>Device ID</TableHead>}
                 <TableHead>SIM</TableHead>
@@ -234,15 +277,24 @@ function DevicesPage() {
             </TableHeader>
             <TableBody>
               {devices.isLoading && (
-                <TableRow><TableCell colSpan={isOwner ? 6 : 5} className="py-10 text-center text-sm text-muted-foreground">Loading…</TableCell></TableRow>
+                <TableRow><TableCell colSpan={(isOwner ? 6 : 5) + (canManage ? 1 : 0)} className="py-10 text-center text-sm text-muted-foreground">Loading…</TableCell></TableRow>
               )}
               {!devices.isLoading && (devices.data?.length ?? 0) === 0 && (
-                <TableRow><TableCell colSpan={isOwner ? 6 : 5} className="py-10 text-center text-sm text-muted-foreground">
+                <TableRow><TableCell colSpan={(isOwner ? 6 : 5) + (canManage ? 1 : 0)} className="py-10 text-center text-sm text-muted-foreground">
                   No devices yet.
                 </TableCell></TableRow>
               )}
               {(devices.data ?? []).map((d: any) => (
-                <TableRow key={d.id}>
+                <TableRow key={d.id} data-state={selected.has(d.id) ? "selected" : undefined}>
+                  {canManage && (
+                    <TableCell>
+                      <Checkbox
+                        checked={selected.has(d.id)}
+                        onCheckedChange={(v) => toggleOne(d.id, !!v)}
+                        aria-label={`Select ${d.name}`}
+                      />
+                    </TableCell>
+                  )}
                   <TableCell className="font-medium">{d.name}</TableCell>
                   {isOwner && <TableCell className="max-w-[280px] truncate font-mono text-xs">{d.device_unique_id}</TableCell>}
                   <TableCell className="text-sm">{formatSim(d.sim_info)}</TableCell>
