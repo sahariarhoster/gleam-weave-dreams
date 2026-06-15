@@ -203,7 +203,10 @@ export const createOrder = createServerFn({ method: "POST" })
       business_doc_number: data.business_doc_number,
     };
     if (pkg) {
-      brandPayload.message_limit = pkg.message_limit;
+      // Trial = credit-model brand seeded on approval (no legacy subscription)
+      const isTrial = !!pkg.is_trial;
+      brandPayload.pricing_model = isTrial ? "credits" : "legacy_subscription";
+      brandPayload.message_limit = isTrial ? 0 : pkg.message_limit;
       brandPayload.device_limit = pkg.device_limit;
       brandPayload.license_limit = pkg.license_count;
     } else {
@@ -212,6 +215,7 @@ export const createOrder = createServerFn({ method: "POST" })
       brandPayload.device_limit = creditPkg.device_limit;
       brandPayload.license_limit = creditPkg.wp_site_limit;
     }
+
     const { data: brand, error: bErr } = await supabaseAdmin
       .from("brands").insert(brandPayload).select("id").single();
     if (bErr || !brand) throw new Error(bErr?.message ?? "Could not create brand");
