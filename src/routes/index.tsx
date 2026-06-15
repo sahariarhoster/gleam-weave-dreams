@@ -716,7 +716,7 @@ function PricingSection() {
 /* ---------------- Compare with Official API ---------------- */
 function CompareSection() {
   const rows = [
-    { f: "প্রতি ডেলিভার্ড SMS", ours: "৳০.৬৫ – ৳০.৮০", api: "৳১.৫০ – ৳৩.০০" },
+    { f: "প্রতি ডেলিভার্ড SMS", ours: "৳০.৬৫ – ৳০.৮০", api: "৳৯.৮০" },
     { f: "মাসিক ফি", ours: "নেই (পে-অ্যাজ-ইউ-গো)", api: "$XXX + ডেভেলপার ফি" },
     { f: "ফেইলড SMS-এ চার্জ", ours: "নেই", api: "হ্যাঁ" },
     { f: "সেটআপ সময়", ours: "৫ মিনিট", api: "২–৪ সপ্তাহ" },
