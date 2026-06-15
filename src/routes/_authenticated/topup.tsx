@@ -25,9 +25,10 @@ const ADDON_LABELS = {
 } as const;
 
 export const Route = createFileRoute("/_authenticated/topup")({
-  validateSearch: (s: Record<string, unknown>): { brand?: string; tab?: "topup" | "addon" } => ({
+  validateSearch: (s: Record<string, unknown>): { brand?: string; tab?: "topup" | "addon"; pkg?: string } => ({
     brand: typeof s.brand === "string" ? s.brand : undefined,
     tab: s.tab === "addon" ? "addon" : "topup",
+    pkg: typeof s.pkg === "string" ? s.pkg : undefined,
   }),
   head: () => ({ meta: [{ title: "Top up credits — WA Suite" }] }),
   component: TopupPage,

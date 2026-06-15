@@ -31,6 +31,7 @@ import { Route as AuthenticatedGroupsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedDevicesRouteImport } from './routes/_authenticated/devices'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedCreditsRouteImport } from './routes/_authenticated/credits'
+import { Route as AuthenticatedCreditPlanRouteImport } from './routes/_authenticated/credit-plan'
 import { Route as AuthenticatedCreditPackagesRouteImport } from './routes/_authenticated/credit-packages'
 import { Route as AuthenticatedCouponsRouteImport } from './routes/_authenticated/coupons'
 import { Route as AuthenticatedContactsRouteImport } from './routes/_authenticated/contacts'
@@ -165,6 +166,11 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
 const AuthenticatedCreditsRoute = AuthenticatedCreditsRouteImport.update({
   id: '/credits',
   path: '/credits',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCreditPlanRoute = AuthenticatedCreditPlanRouteImport.update({
+  id: '/credit-plan',
+  path: '/credit-plan',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCreditPackagesRoute =
@@ -307,6 +313,7 @@ export interface FileRoutesByFullPath {
   '/contacts': typeof AuthenticatedContactsRoute
   '/coupons': typeof AuthenticatedCouponsRoute
   '/credit-packages': typeof AuthenticatedCreditPackagesRoute
+  '/credit-plan': typeof AuthenticatedCreditPlanRoute
   '/credits': typeof AuthenticatedCreditsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/devices': typeof AuthenticatedDevicesRoute
@@ -354,6 +361,7 @@ export interface FileRoutesByTo {
   '/contacts': typeof AuthenticatedContactsRoute
   '/coupons': typeof AuthenticatedCouponsRoute
   '/credit-packages': typeof AuthenticatedCreditPackagesRoute
+  '/credit-plan': typeof AuthenticatedCreditPlanRoute
   '/credits': typeof AuthenticatedCreditsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/devices': typeof AuthenticatedDevicesRoute
@@ -403,6 +411,7 @@ export interface FileRoutesById {
   '/_authenticated/contacts': typeof AuthenticatedContactsRoute
   '/_authenticated/coupons': typeof AuthenticatedCouponsRoute
   '/_authenticated/credit-packages': typeof AuthenticatedCreditPackagesRoute
+  '/_authenticated/credit-plan': typeof AuthenticatedCreditPlanRoute
   '/_authenticated/credits': typeof AuthenticatedCreditsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/devices': typeof AuthenticatedDevicesRoute
@@ -452,6 +461,7 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/coupons'
     | '/credit-packages'
+    | '/credit-plan'
     | '/credits'
     | '/dashboard'
     | '/devices'
@@ -499,6 +509,7 @@ export interface FileRouteTypes {
     | '/contacts'
     | '/coupons'
     | '/credit-packages'
+    | '/credit-plan'
     | '/credits'
     | '/dashboard'
     | '/devices'
@@ -547,6 +558,7 @@ export interface FileRouteTypes {
     | '/_authenticated/contacts'
     | '/_authenticated/coupons'
     | '/_authenticated/credit-packages'
+    | '/_authenticated/credit-plan'
     | '/_authenticated/credits'
     | '/_authenticated/dashboard'
     | '/_authenticated/devices'
@@ -760,6 +772,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCreditsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/credit-plan': {
+      id: '/_authenticated/credit-plan'
+      path: '/credit-plan'
+      fullPath: '/credit-plan'
+      preLoaderRoute: typeof AuthenticatedCreditPlanRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/credit-packages': {
       id: '/_authenticated/credit-packages'
       path: '/credit-packages'
@@ -941,6 +960,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedContactsRoute: typeof AuthenticatedContactsRoute
   AuthenticatedCouponsRoute: typeof AuthenticatedCouponsRoute
   AuthenticatedCreditPackagesRoute: typeof AuthenticatedCreditPackagesRoute
+  AuthenticatedCreditPlanRoute: typeof AuthenticatedCreditPlanRoute
   AuthenticatedCreditsRoute: typeof AuthenticatedCreditsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDevicesRoute: typeof AuthenticatedDevicesRoute
@@ -971,6 +991,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedContactsRoute: AuthenticatedContactsRoute,
   AuthenticatedCouponsRoute: AuthenticatedCouponsRoute,
   AuthenticatedCreditPackagesRoute: AuthenticatedCreditPackagesRoute,
+  AuthenticatedCreditPlanRoute: AuthenticatedCreditPlanRoute,
   AuthenticatedCreditsRoute: AuthenticatedCreditsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDevicesRoute: AuthenticatedDevicesRoute,
