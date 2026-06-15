@@ -48,6 +48,7 @@ function LicensesPage() {
   const canManage = isOwner || isSupport;
 
   const [brandId, setBrandId] = useState<string>("");
+  const [licenseType, setLicenseType] = useState<"wordpress" | "custom_site">("wordpress");
   const [editing, setEditing] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<number>(1);
   const [rel, setRel] = useState<{ version: string; url: string; changelog: string; tested: string; requires: string; requires_php: string }>({
