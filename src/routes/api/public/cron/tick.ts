@@ -127,10 +127,14 @@ export const Route = createFileRoute("/api/public/cron/tick")({
                   status: "sent", sent_at: new Date().toISOString(), gateway_response: res as any,
                 }).eq("id", m.id);
                 if (c.brand_id) {
-                  const { error: dErr } = await supabaseAdmin.rpc("deduct_credit", { _brand_id: c.brand_id, _message_ref: m.id });
+                  const { data: newBal, error: dErr } = await supabaseAdmin.rpc("deduct_credit", { _brand_id: c.brand_id, _message_ref: m.id });
                   if (dErr) {
                     // out of credits mid-batch — campaign is auto-paused inside the function
                     break;
+                  }
+                  if (typeof newBal === "number" && newBal >= 0) {
+                    const { notifyLowBalanceMaybe } = await import("@/lib/credits.server");
+                    await notifyLowBalanceMaybe(c.brand_id, newBal);
                   }
                 }
               } else {

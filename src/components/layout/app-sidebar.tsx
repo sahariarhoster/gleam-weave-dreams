@@ -67,6 +67,7 @@ const items = [
   { title: "Coupons", url: "/coupons", icon: Tag, anyRole: ["owner", "support_agent"] as string[] },
   { title: "Subscriptions", url: "/subscriptions", icon: Repeat },
   { title: "Credits", url: "/credits", icon: Wallet },
+  { title: "Top up", url: "/topup", icon: ShoppingBag },
   { title: "Credit Packages", url: "/credit-packages", icon: Package, ownerOnly: true },
   { title: "Tutorials", url: "/tutorials", icon: PlayCircle },
 
