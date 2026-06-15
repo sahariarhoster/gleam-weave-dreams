@@ -184,3 +184,125 @@ export const adminUpdateLowBalanceSettings = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// ---------- Authenticated: create a credit-topup order (pending approval) ----------
+export const createCreditTopupOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        brand_id: z.string().uuid(),
+        package_id: z.string().uuid(),
+        amount_tk: z.number().positive().max(1_000_000),
+        bkash_number: z.string().trim().min(8).max(30),
+        txid: z.string().trim().min(4).max(64),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: brand } = await supabaseAdmin
+      .from("brands").select("id, name, created_by").eq("id", data.brand_id).maybeSingle();
+    if (!brand) throw new Error("Brand not found");
+    const { data: member } = await supabaseAdmin
+      .from("brand_members").select("role").eq("brand_id", data.brand_id).eq("user_id", context.userId).maybeSingle();
+    const isAdmin = (member?.role === "brand_admin") || brand.created_by === context.userId;
+    if (!isAdmin) throw new Error("Only the brand admin can top up");
+
+    const { data: pkg } = await supabaseAdmin
+      .from("credit_packages").select("*").eq("id", data.package_id).eq("is_active", true).maybeSingle();
+    if (!pkg) throw new Error("Package not found");
+    if (data.amount_tk < Number(pkg.min_topup_tk)) {
+      throw new Error(`Minimum top-up for ${pkg.name} is ৳${pkg.min_topup_tk}`);
+    }
+
+    const { data: dup } = await supabaseAdmin.from("orders").select("id").eq("txid", data.txid).maybeSingle();
+    if (dup) throw new Error("This bKash TXID has already been submitted.");
+
+    const credits = Math.floor(data.amount_tk / Number(pkg.tk_per_credit));
+
+    const { data: profile } = await supabaseAdmin
+      .from("profiles").select("email, full_name, phone").eq("id", context.userId).maybeSingle();
+
+    const { data: order, error } = await supabaseAdmin
+      .from("orders")
+      .insert({
+        user_id: context.userId,
+        brand_id: data.brand_id,
+        full_name: profile?.full_name ?? "",
+        email: profile?.email ?? "",
+        phone: profile?.phone ?? null,
+        bkash_number: data.bkash_number,
+        txid: data.txid,
+        original_amount: data.amount_tk,
+        discount_amount: 0,
+        final_amount: data.amount_tk,
+        status: "pending",
+        kind: "credit_topup",
+        credit_package_id: data.package_id,
+        credits_purchased: credits,
+      } as any)
+      .select("id").single();
+    if (error || !order) throw new Error(error?.message ?? "Could not create order");
+
+    return { ok: true, order_id: order.id, credits };
+  });
+
+// ---------- Authenticated: create an add-on order (extra device / WP license / combo) ----------
+export const createAddonOrder = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z
+      .object({
+        brand_id: z.string().uuid(),
+        addon_kind: z.enum(["device", "wp_license", "combo"]),
+        quantity: z.number().int().min(1).max(20).default(1),
+        bkash_number: z.string().trim().min(8).max(30),
+        txid: z.string().trim().min(4).max(64),
+      })
+      .parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: brand } = await supabaseAdmin
+      .from("brands").select("id, created_by").eq("id", data.brand_id).maybeSingle();
+    if (!brand) throw new Error("Brand not found");
+    const { data: member } = await supabaseAdmin
+      .from("brand_members").select("role").eq("brand_id", data.brand_id).eq("user_id", context.userId).maybeSingle();
+    const isAdmin = (member?.role === "brand_admin") || brand.created_by === context.userId;
+    if (!isAdmin) throw new Error("Only the brand admin can purchase add-ons");
+
+    const PRICES = { device: 400, wp_license: 400, combo: 700 } as const;
+    const unit = PRICES[data.addon_kind];
+    const total = unit * data.quantity;
+
+    const { data: dup } = await supabaseAdmin.from("orders").select("id").eq("txid", data.txid).maybeSingle();
+    if (dup) throw new Error("This bKash TXID has already been submitted.");
+
+    const { data: profile } = await supabaseAdmin
+      .from("profiles").select("email, full_name, phone").eq("id", context.userId).maybeSingle();
+
+    const { data: order, error } = await supabaseAdmin
+      .from("orders")
+      .insert({
+        user_id: context.userId,
+        brand_id: data.brand_id,
+        full_name: profile?.full_name ?? "",
+        email: profile?.email ?? "",
+        phone: profile?.phone ?? null,
+        bkash_number: data.bkash_number,
+        txid: data.txid,
+        original_amount: total,
+        discount_amount: 0,
+        final_amount: total,
+        status: "pending",
+        kind: "addon",
+        addon_kind: data.addon_kind,
+      } as any)
+      .select("id").single();
+    if (error || !order) throw new Error(error?.message ?? "Could not create order");
+
+    return { ok: true, order_id: order.id, total };
+  });
