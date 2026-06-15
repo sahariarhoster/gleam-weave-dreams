@@ -163,7 +163,6 @@ export const adminUpdateLowBalanceSettings = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z
       .object({
-        id: z.string().uuid(),
         low_balance_threshold: z.number().int().min(0).max(100000),
         low_balance_wa_template: z.string().max(2000).optional().nullable(),
         zero_balance_wa_template: z.string().max(2000).optional().nullable(),
@@ -181,7 +180,7 @@ export const adminUpdateLowBalanceSettings = createServerFn({ method: "POST" })
         low_balance_wa_template: data.low_balance_wa_template ?? null,
         zero_balance_wa_template: data.zero_balance_wa_template ?? null,
       } as any)
-      .eq("id", data.id);
+      .eq("id", true);
     if (error) throw new Error(error.message);
     return { ok: true };
   });
