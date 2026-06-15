@@ -838,7 +838,8 @@ export const createOrderForMe = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z
       .object({
-        package_id: z.string().uuid(),
+        package_id: z.string().uuid().optional().nullable(),
+        credit_package_id: z.string().uuid().optional().nullable(),
         brand_id: z.string().uuid().optional().nullable(),
         brand_name: z.string().trim().min(1).max(100).optional().nullable(),
         phone: z.string().trim().max(30).optional().nullable(),
@@ -846,15 +847,34 @@ export const createOrderForMe = createServerFn({ method: "POST" })
         txid: z.string().trim().max(64).optional().nullable(),
         coupon_code: z.string().trim().max(64).optional().nullable(),
       })
+      .refine((v) => !!v.package_id !== !!v.credit_package_id, {
+        message: "Pick exactly one of package_id or credit_package_id",
+      })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { data: pkg, error: pErr } = await supabaseAdmin
-      .from("packages").select("*").eq("id", data.package_id).eq("is_active", true).maybeSingle();
-    if (pErr || !pkg) throw new Error("Package not found");
-    if (pkg.is_trial) throw new Error("Trial is for new customers only and cannot be renewed. Please choose a paid package.");
+    let pkg: any = null;
+    let creditPkg: any = null;
+    let original = 0;
+    let creditsPurchased = 0;
+
+    if (data.package_id) {
+      const { data: p, error: pErr } = await supabaseAdmin
+        .from("packages").select("*").eq("id", data.package_id).eq("is_active", true).maybeSingle();
+      if (pErr || !p) throw new Error("Package not found");
+      if (p.is_trial) throw new Error("Trial is for new customers only and cannot be renewed. Please choose a paid package.");
+      pkg = p;
+      original = Number(p.price);
+    } else {
+      const { data: cp, error: cErr } = await supabaseAdmin
+        .from("credit_packages").select("*").eq("id", data.credit_package_id!).eq("is_active", true).maybeSingle();
+      if (cErr || !cp) throw new Error("Credit package not found");
+      creditPkg = cp;
+      original = Number(cp.min_topup_tk);
+      creditsPurchased = Math.floor(original / Number(cp.tk_per_credit));
+    }
 
     // If brand_id provided, must be owned by this user
     let brandId: string | null = null;
@@ -874,7 +894,7 @@ export const createOrderForMe = createServerFn({ method: "POST" })
     let discount = 0;
     if (data.coupon_code && data.coupon_code.trim()) {
       const { data: cres, error: cErr } = await supabaseAdmin.rpc("validate_coupon", {
-        _code: data.coupon_code, _amount: Number(pkg.price),
+        _code: data.coupon_code, _amount: original,
       });
       if (cErr) throw new Error(cErr.message);
       const r = cres as any;
@@ -882,7 +902,6 @@ export const createOrderForMe = createServerFn({ method: "POST" })
       couponId = r.id;
       discount = Number(r.discount ?? 0);
     }
-    const original = Number(pkg.price);
     const final = Math.max(original - discount, 0);
     if (final > 0) {
       if (!data.bkash_number || data.bkash_number.trim().length < 8) throw new Error("bKash number required");
@@ -897,17 +916,23 @@ export const createOrderForMe = createServerFn({ method: "POST" })
 
     // If new brand, create as pending
     if (!brandId) {
+      const brandPayload: any = {
+        name: brandName,
+        status: "pending",
+        created_by: context.userId,
+      };
+      if (pkg) {
+        brandPayload.message_limit = pkg.message_limit;
+        brandPayload.device_limit = pkg.device_limit;
+        brandPayload.license_limit = pkg.license_count;
+      } else {
+        brandPayload.pricing_model = "credits";
+        brandPayload.message_limit = 0;
+        brandPayload.device_limit = creditPkg.device_limit;
+        brandPayload.license_limit = creditPkg.wp_site_limit;
+      }
       const { data: nb, error: bErr } = await supabaseAdmin
-        .from("brands")
-        .insert({
-          name: brandName,
-          status: "pending" as any,
-          message_limit: pkg.message_limit,
-          device_limit: pkg.device_limit,
-          license_limit: pkg.license_count,
-          created_by: context.userId,
-        } as any)
-        .select("id").single();
+        .from("brands").insert(brandPayload).select("id").single();
       if (bErr || !nb) throw new Error(bErr?.message ?? "Could not create brand");
       brandId = nb.id;
       await supabaseAdmin.from("brand_members").upsert(
@@ -916,26 +941,33 @@ export const createOrderForMe = createServerFn({ method: "POST" })
       );
     }
 
+    const orderPayload: any = {
+      user_id: context.userId,
+      brand_id: brandId,
+      coupon_id: couponId,
+      full_name: profile?.full_name ?? "",
+      email: profile?.email ?? "",
+      phone: data.phone ?? profile?.phone ?? null,
+      bkash_number: data.bkash_number ?? "",
+      txid: data.txid ?? "",
+      original_amount: original,
+      discount_amount: discount,
+      final_amount: final,
+      status: "pending",
+    };
+    if (pkg) {
+      orderPayload.package_id = pkg.id;
+      orderPayload.kind = "subscription";
+    } else {
+      orderPayload.credit_package_id = creditPkg.id;
+      orderPayload.credits_purchased = creditsPurchased;
+      orderPayload.kind = "credit_topup";
+    }
     const { data: order, error: oErr } = await supabaseAdmin
-      .from("orders")
-      .insert({
-        package_id: pkg.id,
-        user_id: context.userId,
-        brand_id: brandId,
-        coupon_id: couponId,
-        full_name: profile?.full_name ?? "",
-        email: profile?.email ?? "",
-        phone: data.phone ?? profile?.phone ?? null,
-        bkash_number: data.bkash_number ?? "",
-        txid: data.txid ?? "",
-        original_amount: original,
-        discount_amount: discount,
-        final_amount: final,
-        status: "pending",
-      })
-      .select("id").single();
+      .from("orders").insert(orderPayload).select("id").single();
     if (oErr || !order) throw new Error(oErr?.message ?? "Could not create order");
 
     return { ok: true, order_id: order.id, brand_id: brandId };
   });
+
 
