@@ -126,6 +126,13 @@ export const Route = createFileRoute("/api/public/cron/tick")({
                 await supabaseAdmin.from("campaign_messages").update({
                   status: "sent", sent_at: new Date().toISOString(), gateway_response: res as any,
                 }).eq("id", m.id);
+                if (c.brand_id) {
+                  const { error: dErr } = await supabaseAdmin.rpc("deduct_credit", { _brand_id: c.brand_id, _message_ref: m.id });
+                  if (dErr) {
+                    // out of credits mid-batch — campaign is auto-paused inside the function
+                    break;
+                  }
+                }
               } else {
                 failed++;
                 await supabaseAdmin.from("campaign_messages").update({
