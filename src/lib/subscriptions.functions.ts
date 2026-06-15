@@ -49,6 +49,7 @@ export const listAllSubscriptions = createServerFn({ method: "GET" })
       expires_at: r.expires_at,
       days_left: daysUntil(r.expires_at),
       cancel_requested_at: r.cancel_requested_at,
+      pricing_model: r.pricing_model,
       package: r.packages ? { id: r.packages.id, name: r.packages.name, duration_days: r.packages.duration_days, price: r.packages.price } : null,
       owner: {
         id: r.created_by,
