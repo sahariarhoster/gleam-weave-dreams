@@ -226,46 +226,70 @@ function OrderPage() {
         </div>
 
         {/* Packages */}
-        {packages.isLoading ? (
+        {packages.isLoading || creditPackages.isLoading ? (
           <div className="flex items-center justify-center py-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {(packages.data ?? [])
               .filter((p: any) => {
-                // Only the trial package is purchasable from the public order page now.
-                // Existing legacy customers can still upgrade their existing brands (handled below).
-                if (!p.is_trial) return upgrading; // show legacy packages only when upgrading an existing brand
+                if (!p.is_trial) return upgrading; // legacy subs only when upgrading existing brand
                 const hasBrands = (myBrands.data?.length ?? 0) > 0;
                 return !hasBrands && brandChoice === "__new__";
               })
               .map((p: any) => {
-              const active = selected === p.id;
+                const active = selected?.kind === "sub" && selected.id === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => { setSelected({ kind: "sub", id: p.id }); setDiscount(null); }}
+                    className={`text-left rounded-xl border bg-white p-4 transition shadow-sm hover:shadow-md ${active ? "border-primary ring-2 ring-primary/20" : "border-border"}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold">{p.name}</h3>
+                      {p.is_trial && <Badge variant="secondary">Trial</Badge>}
+                    </div>
+                    <div className="mt-2 text-2xl font-bold">৳{Number(p.price).toFixed(0)}</div>
+                    <p className="text-xs text-muted-foreground">for {p.duration_days} days</p>
+                    {p.description && <p className="mt-2 text-xs text-muted-foreground">{p.description}</p>}
+                    <ul className="mt-3 space-y-1 text-xs">
+                      <li className="flex items-center gap-1.5"><Smartphone className="h-3.5 w-3.5" /> {p.device_limit} device{p.device_limit > 1 ? "s" : ""}</li>
+                      <li className="flex items-center gap-1.5"><KeyRound className="h-3.5 w-3.5" /> {p.license_count} WordPress license{p.license_count > 1 ? "s" : ""}</li>
+                      <li className="flex items-center gap-1.5">
+                        {p.message_limit ? <><Calendar className="h-3.5 w-3.5" /> {p.message_limit.toLocaleString()} messages</> : <><InfinityIcon className="h-3.5 w-3.5" /> Unlimited SMS</>}
+                      </li>
+                    </ul>
+                  </button>
+                );
+              })}
+
+            {!upgrading && (creditPackages.data ?? []).map((cp: any) => {
+              const active = selected?.kind === "credit" && selected.id === cp.id;
+              const credits = Math.floor(Number(cp.min_topup_tk) / Number(cp.tk_per_credit));
               return (
                 <button
-                  key={p.id}
+                  key={cp.id}
                   type="button"
-                  onClick={() => { setSelected(p.id); setDiscount(null); }}
+                  onClick={() => { setSelected({ kind: "credit", id: cp.id }); setDiscount(null); }}
                   className={`text-left rounded-xl border bg-white p-4 transition shadow-sm hover:shadow-md ${active ? "border-primary ring-2 ring-primary/20" : "border-border"}`}
                 >
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold">{p.name}</h3>
-                    {p.is_trial && <Badge variant="secondary">Trial</Badge>}
+                    <h3 className="font-semibold">{cp.name}</h3>
+                    <Badge variant="outline" className="uppercase text-[10px]">{cp.code}</Badge>
                   </div>
-                  <div className="mt-2 text-2xl font-bold">৳{Number(p.price).toFixed(0)}</div>
-                  <p className="text-xs text-muted-foreground">for {p.duration_days} days</p>
-                  {p.description && <p className="mt-2 text-xs text-muted-foreground">{p.description}</p>}
+                  <div className="mt-2 text-2xl font-bold">৳{Number(cp.min_topup_tk).toFixed(0)}</div>
+                  <p className="text-xs text-muted-foreground">৳{cp.tk_per_credit} / credit · pay as you go</p>
                   <ul className="mt-3 space-y-1 text-xs">
-                    <li className="flex items-center gap-1.5"><Smartphone className="h-3.5 w-3.5" /> {p.device_limit} device{p.device_limit > 1 ? "s" : ""}</li>
-                    <li className="flex items-center gap-1.5"><KeyRound className="h-3.5 w-3.5" /> {p.license_count} WordPress license{p.license_count > 1 ? "s" : ""}</li>
-                    <li className="flex items-center gap-1.5">
-                      {p.message_limit ? <><Calendar className="h-3.5 w-3.5" /> {p.message_limit.toLocaleString()} messages</> : <><InfinityIcon className="h-3.5 w-3.5" /> Unlimited SMS</>}
-                    </li>
+                    <li className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> {credits.toLocaleString()} credits included</li>
+                    <li className="flex items-center gap-1.5"><Smartphone className="h-3.5 w-3.5" /> {cp.device_limit} device{cp.device_limit > 1 ? "s" : ""}</li>
+                    <li className="flex items-center gap-1.5"><KeyRound className="h-3.5 w-3.5" /> {cp.wp_site_limit} WordPress site{cp.wp_site_limit > 1 ? "s" : ""}</li>
                   </ul>
                 </button>
               );
             })}
           </div>
         )}
+
 
         {loggedIn && (myBrands.data?.length ?? 0) > 0 && !upgrading && (
           <Card className="border-primary/30 bg-primary/5">
