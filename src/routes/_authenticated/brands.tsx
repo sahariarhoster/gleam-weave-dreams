@@ -38,14 +38,45 @@ function BrandsPage() {
   const [editing, setEditing] = useState<Brand | null>(null);
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const q = query.trim().toLowerCase();
-  const filtered = (brands.data ?? []).filter((b: any) =>
-    !q || b.name?.toLowerCase().includes(q) || b.status?.toLowerCase().includes(q),
-  );
+  const filtered = (brands.data ?? []).filter((b: any) => {
+    if (statusFilter !== "all" && b.status !== statusFilter) return false;
+    if (!q) return true;
+    return b.name?.toLowerCase().includes(q) || b.status?.toLowerCase().includes(q);
+  });
+
+  const allIds: string[] = filtered.map((b: any) => b.id as string);
+  const allSelected = allIds.length > 0 && allIds.every((id: string) => selected.has(id));
+  const someSelected = selected.size > 0 && !allSelected;
+  const toggleAll = (on: boolean) => setSelected(on ? new Set<string>(allIds) : new Set<string>());
+  const toggleOne = (id: string, on: boolean) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (on) next.add(id); else next.delete(id);
+      return next;
+    });
+  };
 
   const delMut = useMutation({
     mutationFn: (id: string) => deleteBrandClient(id),
     onSuccess: () => { toast.success("Brand deleted"); qc.invalidateQueries({ queryKey: ["brands"] }); },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const bulkDelMut = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const results = await Promise.allSettled(ids.map((id) => deleteBrandClient(id)));
+      const failed = results.filter((r) => r.status === "rejected").length;
+      return { ok: ids.length - failed, failed };
+    },
+    onSuccess: (r) => {
+      if (r.failed === 0) toast.success(`Deleted ${r.ok} brand${r.ok === 1 ? "" : "s"}`);
+      else toast.warning(`Deleted ${r.ok}, failed ${r.failed}`);
+      setSelected(new Set());
+      qc.invalidateQueries({ queryKey: ["brands"] });
+    },
     onError: (e) => toast.error((e as Error).message),
   });
 
