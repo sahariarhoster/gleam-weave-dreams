@@ -514,12 +514,11 @@ export const pollDeviceLink = createServerFn({ method: "POST" })
       name: z.string().min(1).max(100),
       sim_info: z.string().max(50).nullable().optional(),
       brand_id: z.string().uuid().nullable().optional(),
+      seen_uniques: z.array(z.string()).optional(),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
     await assertOwner(context.supabase, context.userId);
-    // Permission only — we recheck the device_limit once we know `unique`
-    // so re-linking an existing device doesn't trip the cap.
     await assertCanAddDeviceToBrand(context.userId, data.brand_id ?? null, {
       skipLimitCheck: true,
     });
@@ -550,11 +549,31 @@ export const pollDeviceLink = createServerFn({ method: "POST" })
       root.whatsapp ?? root.whatsapp_id ?? root.wid ?? root.phone ??
       root.sim ?? root.number ?? root.msisdn ?? unique;
 
-    // Only treat as linked when the infolink itself reports the scanned
-    // account. Do NOT fall back to wa.accounts here — it would pick up an
-    // unrelated existing device on the same panel API key and falsely mark
-    // the new QR as "linked" before the user has scanned anything (also
-    // blocking second-device adds by re-linking the first device instead).
+    // Fallback: infolink doesn't always surface the linked `unique` after the
+    // scan. Diff wa.accounts against the snapshot taken at QR generation; any
+    // new account appeared on this key must be the one the user just scanned.
+    if (!unique) {
+      try {
+        const { bdwebs } = await import("@/lib/bdwebs.server");
+        const accRes = await bdwebs.getWhatsAppAccounts(key.secret);
+        const accounts = ((accRes?.data ?? []) as any[]);
+        const before = new Set(data.seen_uniques ?? []);
+        const fresh = accounts.filter((a) => {
+          const u = String(a.unique ?? a.account ?? a.device_unique_id ?? "");
+          return u && !before.has(u);
+        });
+        if (fresh.length === 1) {
+          const a = fresh[0];
+          unique = String(a.unique ?? a.account ?? a.device_unique_id);
+          waId = String(a.whatsapp ?? a.phone ?? a.sim ?? a.number ?? unique);
+          // copy id into root so the panel-defaults step below picks it up
+          root.id = root.id ?? a.id;
+        }
+      } catch (e) {
+        console.warn("wa.accounts diff fallback failed", e);
+      }
+    }
+
     if (!unique) {
       console.log("pollDeviceLink waiting — info payload:", JSON.stringify(info).slice(0, 600));
       return { status: "pending" as const, message: info?.message ?? "Waiting for scan…" };
