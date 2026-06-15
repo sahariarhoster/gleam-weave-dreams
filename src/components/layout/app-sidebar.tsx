@@ -15,6 +15,7 @@ import {
   FolderOpen,
   KeyRound,
   CreditCard,
+  Wallet,
   Wrench,
   BarChart3,
   ShoppingBag,
