@@ -29,6 +29,7 @@ import { Route as AuthenticatedIntegrationsRouteImport } from './routes/_authent
 import { Route as AuthenticatedGroupsRouteImport } from './routes/_authenticated/groups'
 import { Route as AuthenticatedDevicesRouteImport } from './routes/_authenticated/devices'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedCreditsRouteImport } from './routes/_authenticated/credits'
 import { Route as AuthenticatedCouponsRouteImport } from './routes/_authenticated/coupons'
 import { Route as AuthenticatedContactsRouteImport } from './routes/_authenticated/contacts'
 import { Route as AuthenticatedCampaignsRouteImport } from './routes/_authenticated/campaigns'
@@ -152,6 +153,11 @@ const AuthenticatedDevicesRoute = AuthenticatedDevicesRouteImport.update({
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCreditsRoute = AuthenticatedCreditsRouteImport.update({
+  id: '/credits',
+  path: '/credits',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedCouponsRoute = AuthenticatedCouponsRouteImport.update({
@@ -287,6 +293,7 @@ export interface FileRoutesByFullPath {
   '/campaigns': typeof AuthenticatedCampaignsRoute
   '/contacts': typeof AuthenticatedContactsRoute
   '/coupons': typeof AuthenticatedCouponsRoute
+  '/credits': typeof AuthenticatedCreditsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/devices': typeof AuthenticatedDevicesRoute
   '/groups': typeof AuthenticatedGroupsRoute
@@ -331,6 +338,7 @@ export interface FileRoutesByTo {
   '/campaigns': typeof AuthenticatedCampaignsRoute
   '/contacts': typeof AuthenticatedContactsRoute
   '/coupons': typeof AuthenticatedCouponsRoute
+  '/credits': typeof AuthenticatedCreditsRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/devices': typeof AuthenticatedDevicesRoute
   '/groups': typeof AuthenticatedGroupsRoute
@@ -377,6 +385,7 @@ export interface FileRoutesById {
   '/_authenticated/campaigns': typeof AuthenticatedCampaignsRoute
   '/_authenticated/contacts': typeof AuthenticatedContactsRoute
   '/_authenticated/coupons': typeof AuthenticatedCouponsRoute
+  '/_authenticated/credits': typeof AuthenticatedCreditsRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/devices': typeof AuthenticatedDevicesRoute
   '/_authenticated/groups': typeof AuthenticatedGroupsRoute
@@ -423,6 +432,7 @@ export interface FileRouteTypes {
     | '/campaigns'
     | '/contacts'
     | '/coupons'
+    | '/credits'
     | '/dashboard'
     | '/devices'
     | '/groups'
@@ -467,6 +477,7 @@ export interface FileRouteTypes {
     | '/campaigns'
     | '/contacts'
     | '/coupons'
+    | '/credits'
     | '/dashboard'
     | '/devices'
     | '/groups'
@@ -512,6 +523,7 @@ export interface FileRouteTypes {
     | '/_authenticated/campaigns'
     | '/_authenticated/contacts'
     | '/_authenticated/coupons'
+    | '/_authenticated/credits'
     | '/_authenticated/dashboard'
     | '/_authenticated/devices'
     | '/_authenticated/groups'
@@ -709,6 +721,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/credits': {
+      id: '/_authenticated/credits'
+      path: '/credits'
+      fullPath: '/credits'
+      preLoaderRoute: typeof AuthenticatedCreditsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/coupons': {
       id: '/_authenticated/coupons'
       path: '/coupons'
@@ -882,6 +901,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCampaignsRoute: typeof AuthenticatedCampaignsRoute
   AuthenticatedContactsRoute: typeof AuthenticatedContactsRoute
   AuthenticatedCouponsRoute: typeof AuthenticatedCouponsRoute
+  AuthenticatedCreditsRoute: typeof AuthenticatedCreditsRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDevicesRoute: typeof AuthenticatedDevicesRoute
   AuthenticatedGroupsRoute: typeof AuthenticatedGroupsRoute
@@ -909,6 +929,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCampaignsRoute: AuthenticatedCampaignsRoute,
   AuthenticatedContactsRoute: AuthenticatedContactsRoute,
   AuthenticatedCouponsRoute: AuthenticatedCouponsRoute,
+  AuthenticatedCreditsRoute: AuthenticatedCreditsRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDevicesRoute: AuthenticatedDevicesRoute,
   AuthenticatedGroupsRoute: AuthenticatedGroupsRoute,
