@@ -61,7 +61,9 @@ export const bdwebs = {
       account: args.account,
       recipient: args.recipient,
       message: args.message,
-      priority: args.priority ?? 1,
+      // Zender returns "Failed sending priority WhatsApp chat!" when priority=1
+      // (instant) can't reach the device. Default to queued so its cron retries.
+      priority: args.priority ?? 2,
     });
   },
   getWaServers(secret: string) {
