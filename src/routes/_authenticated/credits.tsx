@@ -66,9 +66,10 @@ function CreditsPage() {
       )}
 
       {pricingModel === "legacy_subscription" && (
-        <Card className="border-amber-300 bg-amber-50">
+        <Card className="border-sky-300 bg-sky-50">
           <CardContent className="p-4 text-sm">
-            <strong>Legacy subscription:</strong> this brand is on the older subscription plan and does not use credits. Sending continues based on your package limits.
+            <strong>Legacy subscription active.</strong> Sends are covered by your plan until it expires. Any credits you buy stay on your wallet and automatically take over once the subscription ends.{" "}
+            <Link to="/credit-plan" className="text-primary underline">Compare credit plans</Link>
           </CardContent>
         </Card>
       )}
