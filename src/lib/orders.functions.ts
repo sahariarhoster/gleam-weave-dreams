@@ -15,6 +15,20 @@ export const listActivePackages = createServerFn({ method: "GET" }).handler(asyn
   return data ?? [];
 });
 
+// Public: list active credit packages (SME / Corporate / …)
+export const listActiveCreditPackages = createServerFn({ method: "GET" }).handler(async () => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
+    .from("credit_packages")
+    .select("id, name, code, tk_per_credit, min_topup_tk, device_limit, wp_site_limit, sort_order")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .order("min_topup_tk", { ascending: true });
+  if (error) throw new Error(error.message);
+  return data ?? [];
+});
+
+
 // Public: validate coupon
 export const validateCoupon = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
