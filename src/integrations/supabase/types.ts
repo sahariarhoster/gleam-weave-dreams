@@ -159,6 +159,8 @@ export type Database = {
       }
       brands: {
         Row: {
+          business_doc_number: string | null
+          business_doc_type: string | null
           cancel_requested_at: string | null
           created_at: string
           created_by: string | null
@@ -177,6 +179,8 @@ export type Database = {
           whmcs_service_id: string | null
         }
         Insert: {
+          business_doc_number?: string | null
+          business_doc_type?: string | null
           cancel_requested_at?: string | null
           created_at?: string
           created_by?: string | null
@@ -195,6 +199,8 @@ export type Database = {
           whmcs_service_id?: string | null
         }
         Update: {
+          business_doc_number?: string | null
+          business_doc_type?: string | null
           cancel_requested_at?: string | null
           created_at?: string
           created_by?: string | null
