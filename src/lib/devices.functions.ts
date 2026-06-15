@@ -725,6 +725,13 @@ export const sendSingleMessage = createServerFn({ method: "POST" })
       .eq("id", data.device_id)
       .single();
     if (error || !device) throw new Error("Device not found");
+
+    // Credit gate
+    if (device.brand_id) {
+      const { data: canSend } = await supabaseAdmin.rpc("can_send", { _brand_id: device.brand_id });
+      if (!canSend) throw new Error("Insufficient credits. Please top up to continue sending.");
+    }
+
     let recipient = data.recipient.trim();
     if (!recipient.startsWith("+")) recipient = "+880" + recipient.replace(/^0+/, "");
     const { bdwebs } = await import("@/lib/bdwebs.server");
@@ -742,6 +749,10 @@ export const sendSingleMessage = createServerFn({ method: "POST" })
     });
     if (res.status !== 200) {
       throw new Error(res.message || "Failed to send");
+    }
+    // Deduct on success
+    if (device.brand_id) {
+      await supabaseAdmin.rpc("deduct_credit", { _brand_id: device.brand_id, _message_ref: `single:${context.userId}` });
     }
     return { ok: true, message: res.message };
   });
