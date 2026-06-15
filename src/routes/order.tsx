@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { listActivePackages, validateCoupon, createOrder, createOrderForMe, listMyBrandsForOrder } from "@/lib/orders.functions";
+import { listActivePackages, listActiveCreditPackages, validateCoupon, createOrder, createOrderForMe, listMyBrandsForOrder } from "@/lib/orders.functions";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -28,6 +28,7 @@ export const Route = createFileRoute("/order")({
 
 function OrderPage() {
   const fnList = useServerFn(listActivePackages);
+  const fnCredits = useServerFn(listActiveCreditPackages);
   const fnCoupon = useServerFn(validateCoupon);
   const fnCreate = useServerFn(createOrder);
   const fnCreateMe = useServerFn(createOrderForMe);
@@ -38,13 +39,16 @@ function OrderPage() {
   const loggedIn = !!user;
 
   const packages = useQuery({ queryKey: ["public-packages"], queryFn: () => fnList() });
+  const creditPackages = useQuery({ queryKey: ["public-credit-packages"], queryFn: () => fnCredits() });
   const myBrands = useQuery({
     queryKey: ["my-brands-for-order", user?.id ?? "anon"],
     queryFn: () => fnMyBrands(),
     enabled: loggedIn,
   });
 
-  const [selected, setSelected] = useState<string>("");
+  // selection: { kind: "sub" | "credit", id: string }
+  const [selected, setSelected] = useState<{ kind: "sub" | "credit"; id: string } | null>(null);
+
   const [brandChoice, setBrandChoice] = useState<string>("__new__"); // brand_id or __new__
   const [form, setForm] = useState({
     full_name: "",
@@ -85,12 +89,15 @@ function OrderPage() {
     }
   }, [search.upgrade, myBrands.data]);
 
-  const pkg = (packages.data ?? []).find((p: any) => p.id === selected);
-  const original = pkg ? Number(pkg.price) : 0;
+  const pkg = selected?.kind === "sub" ? (packages.data ?? []).find((p: any) => p.id === selected.id) : null;
+  const creditPkg = selected?.kind === "credit" ? (creditPackages.data ?? []).find((p: any) => p.id === selected.id) : null;
+  const original = pkg ? Number(pkg.price) : creditPkg ? Number(creditPkg.min_topup_tk) : 0;
   const final = discount?.valid ? (discount.final ?? original) : original;
+  const planName = pkg?.name ?? creditPkg?.name ?? "";
+  const planSub = pkg ? `${pkg.duration_days} days` : creditPkg ? `${Math.floor(Number(creditPkg.min_topup_tk) / Number(creditPkg.tk_per_credit)).toLocaleString()} credits` : "";
 
   async function checkCoupon() {
-    if (!pkg || !form.coupon_code.trim()) return;
+    if (!selected || !form.coupon_code.trim()) return;
     setCouponChecking(true);
     try {
       const res = await fnCoupon({ data: { code: form.coupon_code.trim(), amount: original } });
@@ -109,13 +116,16 @@ function OrderPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selected) return toast.error("Pick a package");
+    if (!selected) return toast.error("Pick a plan");
     setSubmitting(true);
     try {
+      const idFields = selected.kind === "sub"
+        ? { package_id: selected.id, credit_package_id: null }
+        : { package_id: null, credit_package_id: selected.id };
       if (loggedIn) {
         await fnCreateMe({
           data: {
-            package_id: selected,
+            ...idFields,
             brand_id: upgrading ? brandChoice : null,
             brand_name: upgrading ? null : form.brand_name,
             phone: form.phone || null,
@@ -127,7 +137,7 @@ function OrderPage() {
       } else {
         await fnCreate({
           data: {
-            package_id: selected,
+            ...idFields,
             full_name: form.full_name,
             email: form.email,
             password: form.password,
@@ -144,6 +154,7 @@ function OrderPage() {
       setDone(true);
     } catch (e) {
       toast.error((e as Error).message);
+
     } finally {
       setSubmitting(false);
     }
@@ -215,46 +226,70 @@ function OrderPage() {
         </div>
 
         {/* Packages */}
-        {packages.isLoading ? (
+        {packages.isLoading || creditPackages.isLoading ? (
           <div className="flex items-center justify-center py-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {(packages.data ?? [])
               .filter((p: any) => {
-                // Only the trial package is purchasable from the public order page now.
-                // Existing legacy customers can still upgrade their existing brands (handled below).
-                if (!p.is_trial) return upgrading; // show legacy packages only when upgrading an existing brand
+                if (!p.is_trial) return upgrading; // legacy subs only when upgrading existing brand
                 const hasBrands = (myBrands.data?.length ?? 0) > 0;
                 return !hasBrands && brandChoice === "__new__";
               })
               .map((p: any) => {
-              const active = selected === p.id;
+                const active = selected?.kind === "sub" && selected.id === p.id;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => { setSelected({ kind: "sub", id: p.id }); setDiscount(null); }}
+                    className={`text-left rounded-xl border bg-white p-4 transition shadow-sm hover:shadow-md ${active ? "border-primary ring-2 ring-primary/20" : "border-border"}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold">{p.name}</h3>
+                      {p.is_trial && <Badge variant="secondary">Trial</Badge>}
+                    </div>
+                    <div className="mt-2 text-2xl font-bold">৳{Number(p.price).toFixed(0)}</div>
+                    <p className="text-xs text-muted-foreground">for {p.duration_days} days</p>
+                    {p.description && <p className="mt-2 text-xs text-muted-foreground">{p.description}</p>}
+                    <ul className="mt-3 space-y-1 text-xs">
+                      <li className="flex items-center gap-1.5"><Smartphone className="h-3.5 w-3.5" /> {p.device_limit} device{p.device_limit > 1 ? "s" : ""}</li>
+                      <li className="flex items-center gap-1.5"><KeyRound className="h-3.5 w-3.5" /> {p.license_count} WordPress license{p.license_count > 1 ? "s" : ""}</li>
+                      <li className="flex items-center gap-1.5">
+                        {p.message_limit ? <><Calendar className="h-3.5 w-3.5" /> {p.message_limit.toLocaleString()} messages</> : <><InfinityIcon className="h-3.5 w-3.5" /> Unlimited SMS</>}
+                      </li>
+                    </ul>
+                  </button>
+                );
+              })}
+
+            {!upgrading && (creditPackages.data ?? []).map((cp: any) => {
+              const active = selected?.kind === "credit" && selected.id === cp.id;
+              const credits = Math.floor(Number(cp.min_topup_tk) / Number(cp.tk_per_credit));
               return (
                 <button
-                  key={p.id}
+                  key={cp.id}
                   type="button"
-                  onClick={() => { setSelected(p.id); setDiscount(null); }}
+                  onClick={() => { setSelected({ kind: "credit", id: cp.id }); setDiscount(null); }}
                   className={`text-left rounded-xl border bg-white p-4 transition shadow-sm hover:shadow-md ${active ? "border-primary ring-2 ring-primary/20" : "border-border"}`}
                 >
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold">{p.name}</h3>
-                    {p.is_trial && <Badge variant="secondary">Trial</Badge>}
+                    <h3 className="font-semibold">{cp.name}</h3>
+                    <Badge variant="outline" className="uppercase text-[10px]">{cp.code}</Badge>
                   </div>
-                  <div className="mt-2 text-2xl font-bold">৳{Number(p.price).toFixed(0)}</div>
-                  <p className="text-xs text-muted-foreground">for {p.duration_days} days</p>
-                  {p.description && <p className="mt-2 text-xs text-muted-foreground">{p.description}</p>}
+                  <div className="mt-2 text-2xl font-bold">৳{Number(cp.min_topup_tk).toFixed(0)}</div>
+                  <p className="text-xs text-muted-foreground">৳{cp.tk_per_credit} / credit · pay as you go</p>
                   <ul className="mt-3 space-y-1 text-xs">
-                    <li className="flex items-center gap-1.5"><Smartphone className="h-3.5 w-3.5" /> {p.device_limit} device{p.device_limit > 1 ? "s" : ""}</li>
-                    <li className="flex items-center gap-1.5"><KeyRound className="h-3.5 w-3.5" /> {p.license_count} WordPress license{p.license_count > 1 ? "s" : ""}</li>
-                    <li className="flex items-center gap-1.5">
-                      {p.message_limit ? <><Calendar className="h-3.5 w-3.5" /> {p.message_limit.toLocaleString()} messages</> : <><InfinityIcon className="h-3.5 w-3.5" /> Unlimited SMS</>}
-                    </li>
+                    <li className="flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5" /> {credits.toLocaleString()} credits included</li>
+                    <li className="flex items-center gap-1.5"><Smartphone className="h-3.5 w-3.5" /> {cp.device_limit} device{cp.device_limit > 1 ? "s" : ""}</li>
+                    <li className="flex items-center gap-1.5"><KeyRound className="h-3.5 w-3.5" /> {cp.wp_site_limit} WordPress site{cp.wp_site_limit > 1 ? "s" : ""}</li>
                   </ul>
                 </button>
               );
             })}
           </div>
         )}
+
 
         {loggedIn && (myBrands.data?.length ?? 0) > 0 && !upgrading && (
           <Card className="border-primary/30 bg-primary/5">
@@ -270,7 +305,7 @@ function OrderPage() {
           </Card>
         )}
 
-        {selected && pkg && (
+        {selected && (pkg || creditPkg) && (
           <form onSubmit={submit} className="grid gap-6 lg:grid-cols-3">
             <Card className="lg:col-span-2">
               <CardContent className="pt-6 space-y-4">
@@ -402,13 +437,14 @@ function OrderPage() {
               <CardContent className="pt-6 space-y-3">
                 <h3 className="font-semibold">Order summary</h3>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Package</span>
-                  <span className="font-medium">{pkg.name}</span>
+                  <span className="text-muted-foreground">Plan</span>
+                  <span className="font-medium">{planName}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Duration</span>
-                  <span>{pkg.duration_days} days</span>
+                  <span className="text-muted-foreground">{pkg ? "Duration" : "Credits"}</span>
+                  <span>{planSub}</span>
                 </div>
+
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Price</span>
                   <span>৳{original.toFixed(0)}</span>

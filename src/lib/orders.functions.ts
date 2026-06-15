@@ -15,6 +15,20 @@ export const listActivePackages = createServerFn({ method: "GET" }).handler(asyn
   return data ?? [];
 });
 
+// Public: list active credit packages (SME / Corporate / …)
+export const listActiveCreditPackages = createServerFn({ method: "GET" }).handler(async () => {
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
+    .from("credit_packages")
+    .select("id, name, code, tk_per_credit, min_topup_tk, device_limit, wp_site_limit, sort_order")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .order("min_topup_tk", { ascending: true });
+  if (error) throw new Error(error.message);
+  return data ?? [];
+});
+
+
 // Public: validate coupon
 export const validateCoupon = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
@@ -35,7 +49,8 @@ export const createOrder = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z
       .object({
-        package_id: z.string().uuid(),
+        package_id: z.string().uuid().optional().nullable(),
+        credit_package_id: z.string().uuid().optional().nullable(),
         full_name: z.string().trim().min(2).max(100),
         email: z.string().trim().email().max(255),
         password: z.string().min(6).max(72),
@@ -47,8 +62,12 @@ export const createOrder = createServerFn({ method: "POST" })
         txid: z.string().trim().max(64).optional().nullable(),
         coupon_code: z.string().trim().max(64).optional().nullable(),
       })
+      .refine((v) => !!v.package_id !== !!v.credit_package_id, {
+        message: "Pick exactly one of package_id or credit_package_id",
+      })
       .parse(d),
   )
+
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
@@ -88,20 +107,35 @@ export const createOrder = createServerFn({ method: "POST" })
       }
     }
 
-    // Fetch package
-    const { data: pkg, error: pErr } = await supabaseAdmin
-      .from("packages")
-      .select("*")
-      .eq("id", data.package_id)
-      .eq("is_active", true)
-      .maybeSingle();
-    if (pErr || !pkg) throw new Error("Package not found");
+    // Fetch package (subscription) or credit package
+    let pkg: any = null;
+    let creditPkg: any = null;
+    let original = 0;
+    let creditsPurchased = 0;
+    let planName = "";
 
-    // Trial is for new customers only — block if email has prior orders or existing brand
-    if (pkg.is_trial) {
-      const { data: priorOrder } = await supabaseAdmin
-        .from("orders").select("id").eq("email", data.email).limit(1).maybeSingle();
-      if (priorOrder) throw new Error("Trial is for new customers only and cannot be renewed. Please choose a paid package.");
+    if (data.package_id) {
+      const { data: p, error: pErr } = await supabaseAdmin
+        .from("packages").select("*").eq("id", data.package_id).eq("is_active", true).maybeSingle();
+      if (pErr || !p) throw new Error("Package not found");
+      pkg = p;
+      original = Number(p.price);
+      planName = p.name;
+
+      // Trial is for new customers only
+      if (pkg.is_trial) {
+        const { data: priorOrder } = await supabaseAdmin
+          .from("orders").select("id").eq("email", data.email).limit(1).maybeSingle();
+        if (priorOrder) throw new Error("Trial is for new customers only and cannot be renewed. Please choose a paid package.");
+      }
+    } else {
+      const { data: cp, error: cErr } = await supabaseAdmin
+        .from("credit_packages").select("*").eq("id", data.credit_package_id!).eq("is_active", true).maybeSingle();
+      if (cErr || !cp) throw new Error("Credit package not found");
+      creditPkg = cp;
+      original = Number(cp.min_topup_tk);
+      creditsPurchased = Math.floor(original / Number(cp.tk_per_credit));
+      planName = cp.name;
     }
 
     // Validate coupon if provided
@@ -110,7 +144,7 @@ export const createOrder = createServerFn({ method: "POST" })
     if (data.coupon_code && data.coupon_code.trim()) {
       const { data: cres, error: cErr } = await supabaseAdmin.rpc("validate_coupon", {
         _code: data.coupon_code,
-        _amount: Number(pkg.price),
+        _amount: original,
       });
       if (cErr) throw new Error(cErr.message);
       const r = cres as any;
@@ -118,7 +152,6 @@ export const createOrder = createServerFn({ method: "POST" })
       couponId = r.id;
       discount = Number(r.discount ?? 0);
     }
-    const original = Number(pkg.price);
     const final = Math.max(original - discount, 0);
     const requirePayment = final > 0;
     if (requirePayment) {
@@ -129,10 +162,7 @@ export const createOrder = createServerFn({ method: "POST" })
     // Duplicate TXID guard
     if (data.txid && data.txid.trim()) {
       const { data: dup } = await supabaseAdmin
-        .from("orders")
-        .select("id")
-        .eq("txid", data.txid)
-        .maybeSingle();
+        .from("orders").select("id").eq("txid", data.txid).maybeSingle();
       if (dup) throw new Error("This bKash TXID has already been submitted.");
     }
 
@@ -165,20 +195,25 @@ export const createOrder = createServerFn({ method: "POST" })
       .upsert({ user_id: userId, role: "brand_owner" }, { onConflict: "user_id,role" });
 
     // Create pending brand
+    const brandPayload: any = {
+      name: data.brand_name,
+      status: "pending",
+      created_by: userId,
+      business_doc_type: data.business_doc_type,
+      business_doc_number: data.business_doc_number,
+    };
+    if (pkg) {
+      brandPayload.message_limit = pkg.message_limit;
+      brandPayload.device_limit = pkg.device_limit;
+      brandPayload.license_limit = pkg.license_count;
+    } else {
+      brandPayload.pricing_model = "credits";
+      brandPayload.message_limit = 0;
+      brandPayload.device_limit = creditPkg.device_limit;
+      brandPayload.license_limit = creditPkg.wp_site_limit;
+    }
     const { data: brand, error: bErr } = await supabaseAdmin
-      .from("brands")
-      .insert({
-        name: data.brand_name,
-        status: "pending" as any,
-        message_limit: pkg.message_limit,
-        device_limit: pkg.device_limit,
-        license_limit: pkg.license_count,
-        created_by: userId,
-        business_doc_type: data.business_doc_type,
-        business_doc_number: data.business_doc_number,
-      } as any)
-      .select("id")
-      .single();
+      .from("brands").insert(brandPayload).select("id").single();
     if (bErr || !brand) throw new Error(bErr?.message ?? "Could not create brand");
 
     await supabaseAdmin
@@ -189,27 +224,31 @@ export const createOrder = createServerFn({ method: "POST" })
       );
 
     // Create order
+    const orderPayload: any = {
+      user_id: userId,
+      brand_id: brand.id,
+      coupon_id: couponId,
+      full_name: data.full_name,
+      email: data.email,
+      phone: data.phone ?? null,
+      bkash_number: data.bkash_number ?? "",
+      txid: data.txid ?? "",
+      original_amount: original,
+      discount_amount: discount,
+      final_amount: final,
+      status: "pending",
+      ip_address: ip,
+    };
+    if (pkg) {
+      orderPayload.package_id = pkg.id;
+      orderPayload.kind = "subscription";
+    } else {
+      orderPayload.credit_package_id = creditPkg.id;
+      orderPayload.credits_purchased = creditsPurchased;
+      orderPayload.kind = "credit_topup";
+    }
     const { data: order, error: oErr } = await supabaseAdmin
-      .from("orders")
-      .insert({
-        package_id: pkg.id,
-        user_id: userId,
-        brand_id: brand.id,
-        coupon_id: couponId,
-        full_name: data.full_name,
-        email: data.email,
-        phone: data.phone ?? null,
-        bkash_number: data.bkash_number ?? "",
-        txid: data.txid ?? "",
-        original_amount: original,
-        discount_amount: discount,
-        final_amount: final,
-        status: "pending",
-        ip_address: ip,
-      })
-
-      .select("id")
-      .single();
+      .from("orders").insert(orderPayload).select("id").single();
     if (oErr || !order) throw new Error(oErr?.message ?? "Could not create order");
 
     // Best-effort WhatsApp notifications (never break the order flow)
@@ -220,7 +259,7 @@ export const createOrder = createServerFn({ method: "POST" })
         email: data.email,
         phone: data.phone ?? "—",
         brand: data.brand_name,
-        package: pkg.name,
+        package: planName,
         amount: final,
         bkash: data.bkash_number ?? "—",
         txid: data.txid ?? "—",
@@ -237,6 +276,7 @@ export const createOrder = createServerFn({ method: "POST" })
 
     return { ok: true, order_id: order.id };
   });
+
 
 // Owner: list all orders
 export const listOrders = createServerFn({ method: "GET" })
@@ -798,7 +838,8 @@ export const createOrderForMe = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
     z
       .object({
-        package_id: z.string().uuid(),
+        package_id: z.string().uuid().optional().nullable(),
+        credit_package_id: z.string().uuid().optional().nullable(),
         brand_id: z.string().uuid().optional().nullable(),
         brand_name: z.string().trim().min(1).max(100).optional().nullable(),
         phone: z.string().trim().max(30).optional().nullable(),
@@ -806,15 +847,34 @@ export const createOrderForMe = createServerFn({ method: "POST" })
         txid: z.string().trim().max(64).optional().nullable(),
         coupon_code: z.string().trim().max(64).optional().nullable(),
       })
+      .refine((v) => !!v.package_id !== !!v.credit_package_id, {
+        message: "Pick exactly one of package_id or credit_package_id",
+      })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    const { data: pkg, error: pErr } = await supabaseAdmin
-      .from("packages").select("*").eq("id", data.package_id).eq("is_active", true).maybeSingle();
-    if (pErr || !pkg) throw new Error("Package not found");
-    if (pkg.is_trial) throw new Error("Trial is for new customers only and cannot be renewed. Please choose a paid package.");
+    let pkg: any = null;
+    let creditPkg: any = null;
+    let original = 0;
+    let creditsPurchased = 0;
+
+    if (data.package_id) {
+      const { data: p, error: pErr } = await supabaseAdmin
+        .from("packages").select("*").eq("id", data.package_id).eq("is_active", true).maybeSingle();
+      if (pErr || !p) throw new Error("Package not found");
+      if (p.is_trial) throw new Error("Trial is for new customers only and cannot be renewed. Please choose a paid package.");
+      pkg = p;
+      original = Number(p.price);
+    } else {
+      const { data: cp, error: cErr } = await supabaseAdmin
+        .from("credit_packages").select("*").eq("id", data.credit_package_id!).eq("is_active", true).maybeSingle();
+      if (cErr || !cp) throw new Error("Credit package not found");
+      creditPkg = cp;
+      original = Number(cp.min_topup_tk);
+      creditsPurchased = Math.floor(original / Number(cp.tk_per_credit));
+    }
 
     // If brand_id provided, must be owned by this user
     let brandId: string | null = null;
@@ -834,7 +894,7 @@ export const createOrderForMe = createServerFn({ method: "POST" })
     let discount = 0;
     if (data.coupon_code && data.coupon_code.trim()) {
       const { data: cres, error: cErr } = await supabaseAdmin.rpc("validate_coupon", {
-        _code: data.coupon_code, _amount: Number(pkg.price),
+        _code: data.coupon_code, _amount: original,
       });
       if (cErr) throw new Error(cErr.message);
       const r = cres as any;
@@ -842,7 +902,6 @@ export const createOrderForMe = createServerFn({ method: "POST" })
       couponId = r.id;
       discount = Number(r.discount ?? 0);
     }
-    const original = Number(pkg.price);
     const final = Math.max(original - discount, 0);
     if (final > 0) {
       if (!data.bkash_number || data.bkash_number.trim().length < 8) throw new Error("bKash number required");
@@ -857,17 +916,23 @@ export const createOrderForMe = createServerFn({ method: "POST" })
 
     // If new brand, create as pending
     if (!brandId) {
+      const brandPayload: any = {
+        name: brandName,
+        status: "pending",
+        created_by: context.userId,
+      };
+      if (pkg) {
+        brandPayload.message_limit = pkg.message_limit;
+        brandPayload.device_limit = pkg.device_limit;
+        brandPayload.license_limit = pkg.license_count;
+      } else {
+        brandPayload.pricing_model = "credits";
+        brandPayload.message_limit = 0;
+        brandPayload.device_limit = creditPkg.device_limit;
+        brandPayload.license_limit = creditPkg.wp_site_limit;
+      }
       const { data: nb, error: bErr } = await supabaseAdmin
-        .from("brands")
-        .insert({
-          name: brandName,
-          status: "pending" as any,
-          message_limit: pkg.message_limit,
-          device_limit: pkg.device_limit,
-          license_limit: pkg.license_count,
-          created_by: context.userId,
-        } as any)
-        .select("id").single();
+        .from("brands").insert(brandPayload).select("id").single();
       if (bErr || !nb) throw new Error(bErr?.message ?? "Could not create brand");
       brandId = nb.id;
       await supabaseAdmin.from("brand_members").upsert(
@@ -876,26 +941,33 @@ export const createOrderForMe = createServerFn({ method: "POST" })
       );
     }
 
+    const orderPayload: any = {
+      user_id: context.userId,
+      brand_id: brandId,
+      coupon_id: couponId,
+      full_name: profile?.full_name ?? "",
+      email: profile?.email ?? "",
+      phone: data.phone ?? profile?.phone ?? null,
+      bkash_number: data.bkash_number ?? "",
+      txid: data.txid ?? "",
+      original_amount: original,
+      discount_amount: discount,
+      final_amount: final,
+      status: "pending",
+    };
+    if (pkg) {
+      orderPayload.package_id = pkg.id;
+      orderPayload.kind = "subscription";
+    } else {
+      orderPayload.credit_package_id = creditPkg.id;
+      orderPayload.credits_purchased = creditsPurchased;
+      orderPayload.kind = "credit_topup";
+    }
     const { data: order, error: oErr } = await supabaseAdmin
-      .from("orders")
-      .insert({
-        package_id: pkg.id,
-        user_id: context.userId,
-        brand_id: brandId,
-        coupon_id: couponId,
-        full_name: profile?.full_name ?? "",
-        email: profile?.email ?? "",
-        phone: data.phone ?? profile?.phone ?? null,
-        bkash_number: data.bkash_number ?? "",
-        txid: data.txid ?? "",
-        original_amount: original,
-        discount_amount: discount,
-        final_amount: final,
-        status: "pending",
-      })
-      .select("id").single();
+      .from("orders").insert(orderPayload).select("id").single();
     if (oErr || !order) throw new Error(oErr?.message ?? "Could not create order");
 
     return { ok: true, order_id: order.id, brand_id: brandId };
   });
+
 
