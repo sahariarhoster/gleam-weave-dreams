@@ -305,7 +305,7 @@ function OrderPage() {
           </Card>
         )}
 
-        {selected && pkg && (
+        {selected && (pkg || creditPkg) && (
           <form onSubmit={submit} className="grid gap-6 lg:grid-cols-3">
             <Card className="lg:col-span-2">
               <CardContent className="pt-6 space-y-4">
