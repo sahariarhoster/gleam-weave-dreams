@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -87,6 +88,47 @@ function DevicesPage() {
   const [open, setOpen] = useState(false);
   const [testing, setTesting] = useState<Device | null>(null);
   const [linking, setLinking] = useState<Device | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const toggleOne = (id: string, on: boolean) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (on) next.add(id); else next.delete(id);
+      return next;
+    });
+  };
+  const allIds: string[] = (devices.data ?? []).map((d: any) => d.id as string);
+  const allSelected = allIds.length > 0 && allIds.every((id: string) => selected.has(id));
+  const someSelected = selected.size > 0 && !allSelected;
+  const toggleAll = (on: boolean) => setSelected(on ? new Set<string>(allIds) : new Set<string>());
+
+  const bulkDeleteMut = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const results = await Promise.allSettled(ids.map((id) => fnDelete({ data: { id } })));
+      const failed = results.filter((r) => r.status === "rejected").length;
+      return { ok: ids.length - failed, failed };
+    },
+    onSuccess: (r) => {
+      if (r.failed === 0) toast.success(`Deleted ${r.ok} device${r.ok === 1 ? "" : "s"}`);
+      else toast.warning(`Deleted ${r.ok}, failed ${r.failed}`);
+      setSelected(new Set());
+      qc.invalidateQueries({ queryKey: ["devices"] });
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const bulkDisableMut = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const results = await Promise.allSettled(ids.map((id) => fnApplyDefaults({ data: { id } })));
+      const failed = results.filter((r) => r.status === "rejected").length;
+      return { ok: ids.length - failed, failed };
+    },
+    onSuccess: (r) => {
+      if (r.failed === 0) toast.success(`Applied defaults to ${r.ok} device${r.ok === 1 ? "" : "s"}`);
+      else toast.warning(`Applied ${r.ok}, failed ${r.failed}`);
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
 
   const refreshMut = useMutation({
     mutationFn: () => fnRefresh({}),
@@ -175,13 +217,56 @@ function DevicesPage() {
         }
       />
       <Card className="border-border/60 shadow-sm">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex flex-row items-center justify-between gap-2">
           <CardTitle className="text-sm font-medium text-muted-foreground">All Devices</CardTitle>
+          {canManage && selected.size > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">{selected.size} selected</span>
+              {isOwner && (
+                <Button
+                  size="sm" variant="outline" className="h-8 gap-1"
+                  onClick={() => bulkDisableMut.mutate(Array.from(selected))}
+                  disabled={bulkDisableMut.isPending}
+                >
+                  <BellOff className="h-3.5 w-3.5" /> Disable Receive
+                </Button>
+              )}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button size="sm" variant="outline" className="h-8 gap-1 text-rose-600 hover:bg-rose-50 hover:text-rose-700">
+                    <Trash2 className="h-3.5 w-3.5" /> Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete {selected.size} device{selected.size === 1 ? "" : "s"}?</AlertDialogTitle>
+                    <AlertDialogDescription>This cannot be undone. Campaigns linked to these devices may fail.</AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => bulkDeleteMut.mutate(Array.from(selected))}
+                      className="bg-rose-600 hover:bg-rose-700"
+                    >Delete</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
               <TableRow>
+                {canManage && (
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                      onCheckedChange={(v) => toggleAll(!!v)}
+                      aria-label="Select all"
+                    />
+                  </TableHead>
+                )}
                 <TableHead>Name</TableHead>
                 {isOwner && <TableHead>Device ID</TableHead>}
                 <TableHead>SIM</TableHead>
@@ -192,15 +277,24 @@ function DevicesPage() {
             </TableHeader>
             <TableBody>
               {devices.isLoading && (
-                <TableRow><TableCell colSpan={isOwner ? 6 : 5} className="py-10 text-center text-sm text-muted-foreground">Loading…</TableCell></TableRow>
+                <TableRow><TableCell colSpan={(isOwner ? 6 : 5) + (canManage ? 1 : 0)} className="py-10 text-center text-sm text-muted-foreground">Loading…</TableCell></TableRow>
               )}
               {!devices.isLoading && (devices.data?.length ?? 0) === 0 && (
-                <TableRow><TableCell colSpan={isOwner ? 6 : 5} className="py-10 text-center text-sm text-muted-foreground">
+                <TableRow><TableCell colSpan={(isOwner ? 6 : 5) + (canManage ? 1 : 0)} className="py-10 text-center text-sm text-muted-foreground">
                   No devices yet.
                 </TableCell></TableRow>
               )}
               {(devices.data ?? []).map((d: any) => (
-                <TableRow key={d.id}>
+                <TableRow key={d.id} data-state={selected.has(d.id) ? "selected" : undefined}>
+                  {canManage && (
+                    <TableCell>
+                      <Checkbox
+                        checked={selected.has(d.id)}
+                        onCheckedChange={(v) => toggleOne(d.id, !!v)}
+                        aria-label={`Select ${d.name}`}
+                      />
+                    </TableCell>
+                  )}
                   <TableCell className="font-medium">{d.name}</TableCell>
                   {isOwner && <TableCell className="max-w-[280px] truncate font-mono text-xs">{d.device_unique_id}</TableCell>}
                   <TableCell className="text-sm">{formatSim(d.sim_info)}</TableCell>
