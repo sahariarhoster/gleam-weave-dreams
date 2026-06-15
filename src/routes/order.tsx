@@ -28,6 +28,7 @@ export const Route = createFileRoute("/order")({
 
 function OrderPage() {
   const fnList = useServerFn(listActivePackages);
+  const fnCredits = useServerFn(listActiveCreditPackages);
   const fnCoupon = useServerFn(validateCoupon);
   const fnCreate = useServerFn(createOrder);
   const fnCreateMe = useServerFn(createOrderForMe);
@@ -38,13 +39,16 @@ function OrderPage() {
   const loggedIn = !!user;
 
   const packages = useQuery({ queryKey: ["public-packages"], queryFn: () => fnList() });
+  const creditPackages = useQuery({ queryKey: ["public-credit-packages"], queryFn: () => fnCredits() });
   const myBrands = useQuery({
     queryKey: ["my-brands-for-order", user?.id ?? "anon"],
     queryFn: () => fnMyBrands(),
     enabled: loggedIn,
   });
 
-  const [selected, setSelected] = useState<string>("");
+  // selection: { kind: "sub" | "credit", id: string }
+  const [selected, setSelected] = useState<{ kind: "sub" | "credit"; id: string } | null>(null);
+
   const [brandChoice, setBrandChoice] = useState<string>("__new__"); // brand_id or __new__
   const [form, setForm] = useState({
     full_name: "",
