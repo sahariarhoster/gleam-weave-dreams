@@ -88,6 +88,47 @@ function DevicesPage() {
   const [open, setOpen] = useState(false);
   const [testing, setTesting] = useState<Device | null>(null);
   const [linking, setLinking] = useState<Device | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const toggleOne = (id: string, on: boolean) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (on) next.add(id); else next.delete(id);
+      return next;
+    });
+  };
+  const allIds = (devices.data ?? []).map((d: any) => d.id as string);
+  const allSelected = allIds.length > 0 && allIds.every((id) => selected.has(id));
+  const someSelected = selected.size > 0 && !allSelected;
+  const toggleAll = (on: boolean) => setSelected(on ? new Set(allIds) : new Set());
+
+  const bulkDeleteMut = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const results = await Promise.allSettled(ids.map((id) => fnDelete({ data: { id } })));
+      const failed = results.filter((r) => r.status === "rejected").length;
+      return { ok: ids.length - failed, failed };
+    },
+    onSuccess: (r) => {
+      if (r.failed === 0) toast.success(`Deleted ${r.ok} device${r.ok === 1 ? "" : "s"}`);
+      else toast.warning(`Deleted ${r.ok}, failed ${r.failed}`);
+      setSelected(new Set());
+      qc.invalidateQueries({ queryKey: ["devices"] });
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
+  const bulkDisableMut = useMutation({
+    mutationFn: async (ids: string[]) => {
+      const results = await Promise.allSettled(ids.map((id) => fnApplyDefaults({ data: { id } })));
+      const failed = results.filter((r) => r.status === "rejected").length;
+      return { ok: ids.length - failed, failed };
+    },
+    onSuccess: (r) => {
+      if (r.failed === 0) toast.success(`Applied defaults to ${r.ok} device${r.ok === 1 ? "" : "s"}`);
+      else toast.warning(`Applied ${r.ok}, failed ${r.failed}`);
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
 
   const refreshMut = useMutation({
     mutationFn: () => fnRefresh({}),
