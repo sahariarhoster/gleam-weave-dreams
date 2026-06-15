@@ -68,7 +68,7 @@ function LicensesPage() {
   }
 
   const genMut = useMutation({
-    mutationFn: (b: string) => fnGen({ data: { brand_id: b } }),
+    mutationFn: (p: { brand_id: string; license_type: "wordpress" | "custom_site" }) => fnGen({ data: p }),
     onSuccess: () => { toast.success("License generated"); qc.invalidateQueries({ queryKey: ["licenses"] }); },
     onError: (e) => toast.error((e as Error).message),
   });
