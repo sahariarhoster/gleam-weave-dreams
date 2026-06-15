@@ -335,19 +335,20 @@ function AdminView() {
 }
 
 function ChangePackageDialog({
-  brandId, currentPkgId, packages, onSubmit,
+  brandId, currentPkgId, packages, onSubmit, triggerLabel,
 }: {
   brandId: string;
   currentPkgId: string | null;
   packages: any[];
   onSubmit: (packageId: string) => void;
+  triggerLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [pkg, setPkg] = useState<string>(currentPkgId ?? "");
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline">Change</Button>
+        <Button size="sm" variant="outline">{triggerLabel ?? "Change"}</Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
