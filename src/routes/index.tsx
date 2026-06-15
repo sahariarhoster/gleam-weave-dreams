@@ -183,7 +183,7 @@ function Hero() {
           {/* Trust signals */}
           <div className="mt-12 flex flex-wrap items-center justify-center gap-6 text-sm text-foreground/70 md:gap-10">
             {[
-              "আনলিমিটেড মেসেজ",
+              "পে-অ্যাজ-ইউ-গো ক্রেডিট",
               "৫ মিনিটে সেটআপ",
               "বাংলায় ২৪/৭ সাপোর্ট",
             ].map((t) => (
@@ -834,9 +834,9 @@ function FinalCta() {
               <Sparkles className="h-3 w-3" /> অর্ডার করুন এখনই
             </span>
             <h2 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-5xl">
-              ৬০০ টাকা থেকে শুরু।{" "}
+              মাত্র ৳০.৬৫ থেকে{" "}
               <span className="text-[color:var(--color-gold)]">
-                আনলিমিটেড মেসেজ
+                প্রতি ডেলিভার্ড SMS
               </span>
               ।
             </h2>
