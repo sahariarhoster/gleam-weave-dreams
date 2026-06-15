@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Send, Shield, Zap, DollarSign, ShoppingCart, CheckCircle2, ArrowRight,
@@ -25,8 +25,41 @@ export const Route = createFileRoute("/")({
 });
 
 function LandingPage() {
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => {
+        if (!n.nodeValue || !n.nodeValue.includes("১")) return NodeFilter.FILTER_REJECT;
+        const p = n.parentElement;
+        if (!p || p.closest("script,style,strong,b")) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    });
+    const nodes: Text[] = [];
+    let cur: Node | null;
+    while ((cur = walker.nextNode())) nodes.push(cur as Text);
+    for (const node of nodes) {
+      const frag = document.createDocumentFragment();
+      const parts = node.nodeValue!.split(/(১)/g);
+      for (const part of parts) {
+        if (part === "১") {
+          const s = document.createElement("strong");
+          s.textContent = "১";
+          s.style.fontWeight = "700";
+          frag.appendChild(s);
+        } else if (part) {
+          frag.appendChild(document.createTextNode(part));
+        }
+      }
+      node.parentNode?.replaceChild(frag, node);
+    }
+  }, []);
+
   return (
-    <div lang="bn" className="font-bangla min-h-screen bg-background text-foreground antialiased">
+    <div ref={rootRef} lang="bn" className="font-bangla min-h-screen bg-background text-foreground antialiased">
       <Header />
       <main>
         <Hero />
