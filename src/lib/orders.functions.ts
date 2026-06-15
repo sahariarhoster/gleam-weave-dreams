@@ -122,11 +122,16 @@ export const createOrder = createServerFn({ method: "POST" })
       original = p.is_trial ? 0 : Number(p.price);
       planName = p.name;
 
-      // Trial is for new customers only
+      // Trial is for new customers only — block by email, phone, or business doc
       if (pkg.is_trial) {
+        const orFilter = [
+          `email.eq.${data.email}`,
+          normPhone ? `phone.eq.${data.phone}` : null,
+          data.business_doc_number ? `business_doc_number.eq.${data.business_doc_number}` : null,
+        ].filter(Boolean).join(",");
         const { data: priorOrder } = await supabaseAdmin
-          .from("orders").select("id").eq("email", data.email).limit(1).maybeSingle();
-        if (priorOrder) throw new Error("Trial is for new customers only and cannot be renewed. Please choose a paid package.");
+          .from("orders").select("id").or(orFilter).limit(1).maybeSingle();
+        if (priorOrder) throw new Error("Trial is for new customers only. A trial has already been claimed for this email, phone, or business document.");
       }
     } else {
       const { data: cp, error: cErr } = await supabaseAdmin
