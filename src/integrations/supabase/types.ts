@@ -49,6 +49,47 @@ export type Database = {
           },
         ]
       }
+      addon_purchases: {
+        Row: {
+          brand_id: string
+          created_at: string
+          id: string
+          kind: Database["public"]["Enums"]["addon_kind"]
+          order_id: string | null
+          quantity: number
+          total_tk: number
+          unit_price_tk: number
+        }
+        Insert: {
+          brand_id: string
+          created_at?: string
+          id?: string
+          kind: Database["public"]["Enums"]["addon_kind"]
+          order_id?: string | null
+          quantity?: number
+          total_tk: number
+          unit_price_tk: number
+        }
+        Update: {
+          brand_id?: string
+          created_at?: string
+          id?: string
+          kind?: Database["public"]["Enums"]["addon_kind"]
+          order_id?: string | null
+          quantity?: number
+          total_tk?: number
+          unit_price_tk?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "addon_purchases_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       blocked_numbers: {
         Row: {
           brand_id: string
@@ -128,7 +169,9 @@ export type Database = {
           license_limit: number
           message_limit: number | null
           name: string
+          pricing_model: Database["public"]["Enums"]["pricing_model"]
           status: Database["public"]["Enums"]["brand_status"]
+          trial_used_at: string | null
           updated_at: string
           whmcs_product_id: string | null
           whmcs_service_id: string | null
@@ -144,7 +187,9 @@ export type Database = {
           license_limit?: number
           message_limit?: number | null
           name: string
+          pricing_model?: Database["public"]["Enums"]["pricing_model"]
           status?: Database["public"]["Enums"]["brand_status"]
+          trial_used_at?: string | null
           updated_at?: string
           whmcs_product_id?: string | null
           whmcs_service_id?: string | null
@@ -160,7 +205,9 @@ export type Database = {
           license_limit?: number
           message_limit?: number | null
           name?: string
+          pricing_model?: Database["public"]["Enums"]["pricing_model"]
           status?: Database["public"]["Enums"]["brand_status"]
+          trial_used_at?: string | null
           updated_at?: string
           whmcs_product_id?: string | null
           whmcs_service_id?: string | null
@@ -479,6 +526,146 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_packages: {
+        Row: {
+          code: string
+          created_at: string
+          device_limit: number
+          id: string
+          is_active: boolean
+          min_topup_tk: number
+          name: string
+          sort_order: number
+          tk_per_credit: number
+          updated_at: string
+          wp_site_limit: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          device_limit?: number
+          id?: string
+          is_active?: boolean
+          min_topup_tk: number
+          name: string
+          sort_order?: number
+          tk_per_credit: number
+          updated_at?: string
+          wp_site_limit?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          device_limit?: number
+          id?: string
+          is_active?: boolean
+          min_topup_tk?: number
+          name?: string
+          sort_order?: number
+          tk_per_credit?: number
+          updated_at?: string
+          wp_site_limit?: number
+        }
+        Relationships: []
+      }
+      credit_transactions: {
+        Row: {
+          balance_after: number | null
+          brand_id: string
+          created_at: string
+          created_by: string | null
+          credits: number
+          id: string
+          message_ref: string | null
+          note: string | null
+          order_id: string | null
+          tk_amount: number | null
+          type: Database["public"]["Enums"]["credit_txn_type"]
+        }
+        Insert: {
+          balance_after?: number | null
+          brand_id: string
+          created_at?: string
+          created_by?: string | null
+          credits: number
+          id?: string
+          message_ref?: string | null
+          note?: string | null
+          order_id?: string | null
+          tk_amount?: number | null
+          type: Database["public"]["Enums"]["credit_txn_type"]
+        }
+        Update: {
+          balance_after?: number | null
+          brand_id?: string
+          created_at?: string
+          created_by?: string | null
+          credits?: number
+          id?: string
+          message_ref?: string | null
+          note?: string | null
+          order_id?: string | null
+          tk_amount?: number | null
+          type?: Database["public"]["Enums"]["credit_txn_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_transactions_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: false
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_wallets: {
+        Row: {
+          balance: number
+          brand_id: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          last_low_balance_notice_at: string | null
+          package_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          balance?: number
+          brand_id: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          last_low_balance_notice_at?: string | null
+          package_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          balance?: number
+          brand_id?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          last_low_balance_notice_at?: string | null
+          package_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_wallets_brand_id_fkey"
+            columns: ["brand_id"]
+            isOneToOne: true
+            referencedRelation: "brands"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_wallets_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "credit_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       devices: {
         Row: {
           api_secret: string
@@ -531,6 +718,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          addon_kind: Database["public"]["Enums"]["addon_kind"] | null
           admin_notes: string | null
           approved_at: string | null
           approved_by: string | null
@@ -538,12 +726,15 @@ export type Database = {
           brand_id: string | null
           coupon_id: string | null
           created_at: string
+          credit_package_id: string | null
+          credits_purchased: number | null
           discount_amount: number
           email: string
           final_amount: number
           full_name: string
           id: string
           ip_address: string | null
+          kind: Database["public"]["Enums"]["order_kind"]
           original_amount: number
           package_id: string
           phone: string | null
@@ -553,6 +744,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          addon_kind?: Database["public"]["Enums"]["addon_kind"] | null
           admin_notes?: string | null
           approved_at?: string | null
           approved_by?: string | null
@@ -560,12 +752,15 @@ export type Database = {
           brand_id?: string | null
           coupon_id?: string | null
           created_at?: string
+          credit_package_id?: string | null
+          credits_purchased?: number | null
           discount_amount?: number
           email: string
           final_amount: number
           full_name: string
           id?: string
           ip_address?: string | null
+          kind?: Database["public"]["Enums"]["order_kind"]
           original_amount: number
           package_id: string
           phone?: string | null
@@ -575,6 +770,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          addon_kind?: Database["public"]["Enums"]["addon_kind"] | null
           admin_notes?: string | null
           approved_at?: string | null
           approved_by?: string | null
@@ -582,12 +778,15 @@ export type Database = {
           brand_id?: string | null
           coupon_id?: string | null
           created_at?: string
+          credit_package_id?: string | null
+          credits_purchased?: number | null
           discount_amount?: number
           email?: string
           final_amount?: number
           full_name?: string
           id?: string
           ip_address?: string | null
+          kind?: Database["public"]["Enums"]["order_kind"]
           original_amount?: number
           package_id?: string
           phone?: string | null
@@ -609,6 +808,13 @@ export type Database = {
             columns: ["coupon_id"]
             isOneToOne: false
             referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_credit_package_id_fkey"
+            columns: ["credit_package_id"]
+            isOneToOne: false
+            referencedRelation: "credit_packages"
             referencedColumns: ["id"]
           },
           {
@@ -842,6 +1048,8 @@ export type Database = {
           admin_notify_numbers: string | null
           id: boolean
           licenses_per_brand: number
+          low_balance_threshold: number
+          low_balance_wa_template: string | null
           notify_device_id: string | null
           notify_phone: string | null
           plugin_changelog: string | null
@@ -855,11 +1063,14 @@ export type Database = {
           tpl_order_placed: string | null
           updated_at: string
           whmcs_api_token: string | null
+          zero_balance_wa_template: string | null
         }
         Insert: {
           admin_notify_numbers?: string | null
           id?: boolean
           licenses_per_brand?: number
+          low_balance_threshold?: number
+          low_balance_wa_template?: string | null
           notify_device_id?: string | null
           notify_phone?: string | null
           plugin_changelog?: string | null
@@ -873,11 +1084,14 @@ export type Database = {
           tpl_order_placed?: string | null
           updated_at?: string
           whmcs_api_token?: string | null
+          zero_balance_wa_template?: string | null
         }
         Update: {
           admin_notify_numbers?: string | null
           id?: boolean
           licenses_per_brand?: number
+          low_balance_threshold?: number
+          low_balance_wa_template?: string | null
           notify_device_id?: string | null
           notify_phone?: string | null
           plugin_changelog?: string | null
@@ -891,6 +1105,7 @@ export type Database = {
           tpl_order_placed?: string | null
           updated_at?: string
           whmcs_api_token?: string | null
+          zero_balance_wa_template?: string | null
         }
         Relationships: [
           {
@@ -991,6 +1206,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_send: { Args: { _brand_id: string }; Returns: boolean }
+      deduct_credit: {
+        Args: { _brand_id: string; _message_ref: string }
+        Returns: number
+      }
+      expire_credits: { Args: never; Returns: number }
       get_dashboard_stats: { Args: never; Returns: Json }
       get_dashboard_stats_for_current_user: {
         Args: { _end?: string; _start?: string }
@@ -1032,12 +1253,38 @@ export type Database = {
         Args: { _brand_id: string; _user_id: string }
         Returns: boolean
       }
+      top_up_credits: {
+        Args: {
+          _brand_id: string
+          _credits: number
+          _order_id: string
+          _package_id: string
+          _tk: number
+        }
+        Returns: {
+          balance: number
+          brand_id: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          last_low_balance_notice_at: string | null
+          package_id: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "credit_wallets"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       validate_coupon: {
         Args: { _amount: number; _code: string }
         Returns: Json
       }
     }
     Enums: {
+      addon_kind: "device" | "wp_license" | "combo"
       app_role:
         | "owner"
         | "member"
@@ -1048,7 +1295,10 @@ export type Database = {
         | "sales_agent"
       brand_role: "brand_admin" | "sender" | "brand_member"
       brand_status: "active" | "suspended" | "expired" | "pending"
+      credit_txn_type: "topup" | "deduct" | "refund" | "adjustment" | "expiry"
       device_status: "active" | "inactive" | "disconnected"
+      order_kind: "subscription" | "credit_topup" | "addon"
+      pricing_model: "legacy_subscription" | "trial" | "credits"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1176,6 +1426,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      addon_kind: ["device", "wp_license", "combo"],
       app_role: [
         "owner",
         "member",
@@ -1187,7 +1438,10 @@ export const Constants = {
       ],
       brand_role: ["brand_admin", "sender", "brand_member"],
       brand_status: ["active", "suspended", "expired", "pending"],
+      credit_txn_type: ["topup", "deduct", "refund", "adjustment", "expiry"],
       device_status: ["active", "inactive", "disconnected"],
+      order_kind: ["subscription", "credit_topup", "addon"],
+      pricing_model: ["legacy_subscription", "trial", "credits"],
     },
   },
 } as const

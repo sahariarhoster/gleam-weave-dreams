@@ -41,10 +41,20 @@ export const Route = createFileRoute("/api/public/cron/tick")({
           // load campaign details
           const { data: c } = await supabaseAdmin
             .from("campaigns")
-            .select("id, device_id, min_delay_seconds, max_delay_seconds, daily_limit, send_window_start, send_window_end, sent_count, failed_count, ignore_failure_pause")
+            .select("id, brand_id, device_id, min_delay_seconds, max_delay_seconds, daily_limit, send_window_start, send_window_end, sent_count, failed_count, ignore_failure_pause")
             .eq("id", camp.id)
             .single();
           if (!c) continue;
+
+          // Credit gate — pause if brand can't send
+          if (c.brand_id) {
+            const { data: canSend } = await supabaseAdmin.rpc("can_send", { _brand_id: c.brand_id });
+            if (!canSend) {
+              await supabaseAdmin.from("campaigns").update({ status: "paused" }).eq("id", c.id);
+              results.push({ id: c.id, paused: "no_credits" });
+              continue;
+            }
+          }
 
           // check window (BD time approx UTC+6)
           const now = new Date();
@@ -116,6 +126,13 @@ export const Route = createFileRoute("/api/public/cron/tick")({
                 await supabaseAdmin.from("campaign_messages").update({
                   status: "sent", sent_at: new Date().toISOString(), gateway_response: res as any,
                 }).eq("id", m.id);
+                if (c.brand_id) {
+                  const { error: dErr } = await supabaseAdmin.rpc("deduct_credit", { _brand_id: c.brand_id, _message_ref: m.id });
+                  if (dErr) {
+                    // out of credits mid-batch — campaign is auto-paused inside the function
+                    break;
+                  }
+                }
               } else {
                 failed++;
                 await supabaseAdmin.from("campaign_messages").update({
