@@ -204,9 +204,12 @@ export const createOrder = createServerFn({ method: "POST" })
     };
     if (pkg) {
       // Trial = credit-model brand seeded on approval (no legacy subscription)
-      const isTrial = !!pkg.is_trial;
-      brandPayload.pricing_model = isTrial ? "credits" : "legacy_subscription";
-      brandPayload.message_limit = isTrial ? 0 : pkg.message_limit;
+      if (pkg.is_trial) {
+        brandPayload.pricing_model = "credits";
+        brandPayload.message_limit = 0;
+      } else {
+        brandPayload.message_limit = pkg.message_limit;
+      }
       brandPayload.device_limit = pkg.device_limit;
       brandPayload.license_limit = pkg.license_count;
     } else {
@@ -215,6 +218,7 @@ export const createOrder = createServerFn({ method: "POST" })
       brandPayload.device_limit = creditPkg.device_limit;
       brandPayload.license_limit = creditPkg.wp_site_limit;
     }
+
 
     const { data: brand, error: bErr } = await supabaseAdmin
       .from("brands").insert(brandPayload).select("id").single();
