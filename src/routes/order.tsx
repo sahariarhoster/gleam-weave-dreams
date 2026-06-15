@@ -437,13 +437,14 @@ function OrderPage() {
               <CardContent className="pt-6 space-y-3">
                 <h3 className="font-semibold">Order summary</h3>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Package</span>
-                  <span className="font-medium">{pkg.name}</span>
+                  <span className="text-muted-foreground">Plan</span>
+                  <span className="font-medium">{planName}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Duration</span>
-                  <span>{pkg.duration_days} days</span>
+                  <span className="text-muted-foreground">{pkg ? "Duration" : "Credits"}</span>
+                  <span>{planSub}</span>
                 </div>
+
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Price</span>
                   <span>৳{original.toFixed(0)}</span>
