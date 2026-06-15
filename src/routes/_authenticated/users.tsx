@@ -127,18 +127,50 @@ function UsersPage() {
       />
       <Card className="border-border/60 shadow-sm">
         <CardContent className="pt-6">
-          <div className="relative mb-4 max-w-sm">
-            <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search by name, email, phone, or brand…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-8"
-            />
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <div className="relative max-w-sm flex-1 min-w-[220px]">
+              <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, email, phone, or brand…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+            {selected.size > 0 && (
+              <div className="ml-auto flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">{selected.size} selected</span>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button size="sm" variant="outline" className="h-8 gap-1 text-rose-600 hover:bg-rose-50 hover:text-rose-700">
+                      <Trash2 className="h-3.5 w-3.5" /> Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete {selected.size} user{selected.size === 1 ? "" : "s"}?</AlertDialogTitle>
+                      <AlertDialogDescription>This permanently removes the selected accounts and all their access. This cannot be undone.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => bulkDeleteMut.mutate(Array.from(selected))} className="bg-rose-600 hover:bg-rose-700">Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            )}
           </div>
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                    onCheckedChange={(v) => toggleAll(!!v)}
+                    aria-label="Select all"
+                    disabled={selectableIds.length === 0}
+                  />
+                </TableHead>
                 <TableHead>User</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
@@ -148,12 +180,23 @@ function UsersPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.isLoading && <TableRow><TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">Loading…</TableCell></TableRow>}
+              {users.isLoading && <TableRow><TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">Loading…</TableCell></TableRow>}
               {!users.isLoading && filteredUsers.length === 0 && (
-                <TableRow><TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">No users match your search.</TableCell></TableRow>
+                <TableRow><TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">No users match your search.</TableCell></TableRow>
               )}
               {filteredUsers.map((u: any) => (
-                <TableRow key={u.id}>
+                <TableRow key={u.id} data-state={selected.has(u.id) ? "selected" : undefined}>
+                  <TableCell>
+                    {u.id === me?.id ? (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    ) : (
+                      <Checkbox
+                        checked={selected.has(u.id)}
+                        onCheckedChange={(v) => toggleOne(u.id, !!v)}
+                        aria-label={`Select ${u.email}`}
+                      />
+                    )}
+                  </TableCell>
                   <TableCell className="font-medium">{u.full_name || "—"}</TableCell>
                   <TableCell className="text-sm">{u.email}</TableCell>
                   <TableCell className="text-sm">{u.phone ? <a href={`tel:${u.phone}`} className="hover:underline">{u.phone}</a> : <span className="text-muted-foreground">—</span>}</TableCell>
