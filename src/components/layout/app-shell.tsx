@@ -46,7 +46,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               <SidebarTrigger />
               <h1 className="text-base font-semibold tracking-tight">{title}</h1>
             </div>
-            <UserMenu />
+            <div className="flex items-center gap-2">
+              <CreditPill />
+              <UserMenu />
+            </div>
           </header>
           <main className="flex-1 p-3 md:p-4">{children}</main>
         </div>
