@@ -89,12 +89,15 @@ function OrderPage() {
     }
   }, [search.upgrade, myBrands.data]);
 
-  const pkg = (packages.data ?? []).find((p: any) => p.id === selected);
-  const original = pkg ? Number(pkg.price) : 0;
+  const pkg = selected?.kind === "sub" ? (packages.data ?? []).find((p: any) => p.id === selected.id) : null;
+  const creditPkg = selected?.kind === "credit" ? (creditPackages.data ?? []).find((p: any) => p.id === selected.id) : null;
+  const original = pkg ? Number(pkg.price) : creditPkg ? Number(creditPkg.min_topup_tk) : 0;
   const final = discount?.valid ? (discount.final ?? original) : original;
+  const planName = pkg?.name ?? creditPkg?.name ?? "";
+  const planSub = pkg ? `${pkg.duration_days} days` : creditPkg ? `${Math.floor(Number(creditPkg.min_topup_tk) / Number(creditPkg.tk_per_credit)).toLocaleString()} credits` : "";
 
   async function checkCoupon() {
-    if (!pkg || !form.coupon_code.trim()) return;
+    if (!selected || !form.coupon_code.trim()) return;
     setCouponChecking(true);
     try {
       const res = await fnCoupon({ data: { code: form.coupon_code.trim(), amount: original } });
@@ -113,13 +116,16 @@ function OrderPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selected) return toast.error("Pick a package");
+    if (!selected) return toast.error("Pick a plan");
     setSubmitting(true);
     try {
+      const idFields = selected.kind === "sub"
+        ? { package_id: selected.id, credit_package_id: null }
+        : { package_id: null, credit_package_id: selected.id };
       if (loggedIn) {
         await fnCreateMe({
           data: {
-            package_id: selected,
+            ...idFields,
             brand_id: upgrading ? brandChoice : null,
             brand_name: upgrading ? null : form.brand_name,
             phone: form.phone || null,
@@ -131,7 +137,7 @@ function OrderPage() {
       } else {
         await fnCreate({
           data: {
-            package_id: selected,
+            ...idFields,
             full_name: form.full_name,
             email: form.email,
             password: form.password,
@@ -148,6 +154,7 @@ function OrderPage() {
       setDone(true);
     } catch (e) {
       toast.error((e as Error).message);
+
     } finally {
       setSubmitting(false);
     }
