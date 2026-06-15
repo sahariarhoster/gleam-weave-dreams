@@ -375,11 +375,27 @@ function TestDialog({ device, pending, onSend }: { device: Device | null; pendin
 }
 
 function DeviceDialog({
-  editing, brands, onDone,
-}: { editing: Device | null; brands: { id: string; name: string }[]; onDone: () => void }) {
+  editing, brands, onDone, isOwner,
+}: { editing: Device | null; brands: { id: string; name: string }[]; onDone: () => void; isOwner?: boolean }) {
   const fnUpdate = useServerFn(updateDevice);
   const fnStart = useServerFn(startDeviceLink);
   const fnPoll = useServerFn(pollDeviceLink);
+  const fnCreate = useServerFn(createDevice);
+  const [mode, setMode] = useState<"qr" | "manual">("qr");
+  const [manual, setManual] = useState({ device_unique_id: "", api_secret: "" });
+  const createMut = useMutation({
+    mutationFn: () => fnCreate({
+      data: {
+        name: form.name,
+        device_unique_id: manual.device_unique_id,
+        api_secret: manual.api_secret,
+        sim_info: form.sim_info || null,
+        brand_id: form.brand_id || null,
+      },
+    }),
+    onSuccess: () => { toast.success("Device added"); onDone(); },
+    onError: (e) => toast.error((e as Error).message),
+  });
 
   const [form, setForm] = useState({
     name: editing?.name ?? "",
