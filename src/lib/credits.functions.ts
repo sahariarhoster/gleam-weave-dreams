@@ -207,7 +207,9 @@ export const createCreditTopupOrder = createServerFn({ method: "POST" })
     if (!brand) throw new Error("Brand not found");
     const { data: member } = await supabaseAdmin
       .from("brand_members").select("role").eq("brand_id", data.brand_id).eq("user_id", context.userId).maybeSingle();
-    const isAdmin = (member?.role === "brand_admin") || brand.created_by === context.userId;
+    const { data: isOwner } = await supabaseAdmin.rpc("has_role", { _user_id: context.userId, _role: "owner" });
+    const { data: isSupport } = await supabaseAdmin.rpc("has_role", { _user_id: context.userId, _role: "support_agent" });
+    const isAdmin = isOwner || isSupport || (member?.role === "brand_admin") || brand.created_by === context.userId;
     if (!isAdmin) throw new Error("Only the brand admin can top up");
 
     const { data: pkg } = await supabaseAdmin
