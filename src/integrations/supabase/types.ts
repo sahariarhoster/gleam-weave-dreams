@@ -742,7 +742,7 @@ export type Database = {
           ip_address: string | null
           kind: Database["public"]["Enums"]["order_kind"]
           original_amount: number
-          package_id: string
+          package_id: string | null
           phone: string | null
           status: string
           txid: string
@@ -768,7 +768,7 @@ export type Database = {
           ip_address?: string | null
           kind?: Database["public"]["Enums"]["order_kind"]
           original_amount: number
-          package_id: string
+          package_id?: string | null
           phone?: string | null
           status?: string
           txid: string
@@ -794,7 +794,7 @@ export type Database = {
           ip_address?: string | null
           kind?: Database["public"]["Enums"]["order_kind"]
           original_amount?: number
-          package_id?: string
+          package_id?: string | null
           phone?: string | null
           status?: string
           txid?: string
