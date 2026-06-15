@@ -64,9 +64,13 @@ function TopupPage() {
   });
 
   // Topup state
-  const [packageId, setPackageId] = useState<string>("");
+  const [packageId, setPackageId] = useState<string>(search.pkg ?? "");
   const [amount, setAmount] = useState<number>(0);
   const selectedPkg = useMemo(() => (pkgs.data ?? []).find((p: any) => p.id === packageId), [pkgs.data, packageId]);
+
+  useEffect(() => {
+    if (search.pkg && !packageId) setPackageId(search.pkg);
+  }, [search.pkg]); // eslint-disable-line
 
   useEffect(() => {
     if (!selectedPkg) return;
