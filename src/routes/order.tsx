@@ -133,6 +133,8 @@ function OrderPage() {
             password: form.password,
             phone: form.phone,
             brand_name: form.brand_name,
+            business_doc_type: form.business_doc_type,
+            business_doc_number: form.business_doc_number,
             bkash_number: requirePayment ? form.bkash_number : null,
             txid: requirePayment ? form.txid : null,
             coupon_code: form.coupon_code || null,
