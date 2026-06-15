@@ -289,6 +289,7 @@ function LicensesPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>License Key</TableHead>
+                <TableHead>Type</TableHead>
                 <TableHead>Brand</TableHead>
                 <TableHead>Device</TableHead>
                 <TableHead>Site</TableHead>
@@ -304,6 +305,9 @@ function LicensesPage() {
                     <button onClick={() => copy(l.license_key)} className="inline-flex items-center gap-1 hover:underline">
                       {l.license_key} <Copy className="h-3 w-3" />
                     </button>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline">{String(l.license_key ?? "").startsWith("WAN") ? "External" : "WordPress"}</Badge>
                   </TableCell>
                   <TableCell>{l.brand_name}</TableCell>
                   <TableCell>{l.device_name ?? <span className="text-muted-foreground">—</span>}</TableCell>
