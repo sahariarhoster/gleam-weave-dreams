@@ -22,7 +22,7 @@ export const Route = createFileRoute("/order")({
   validateSearch: (s: Record<string, unknown>): { upgrade?: string } => ({
     upgrade: typeof s.upgrade === "string" ? s.upgrade : undefined,
   }),
-  head: () => ({ meta: [{ title: "Place an Order — WA Suite" }] }),
+  head: () => ({ meta: [{ title: "Create your account — WA Suite" }] }),
   component: OrderPage,
 });
 
