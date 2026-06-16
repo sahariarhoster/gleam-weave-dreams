@@ -17,7 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Progress } from "@/components/ui/progress";
-import { listCampaigns, createCampaign, deleteCampaign, setCampaignStatus, runCampaignChunk, cancelCampaign, setCampaignIgnoreFailurePause } from "@/lib/campaigns.functions";
+import { listCampaigns, createCampaign, deleteCampaign, setCampaignStatus, runCampaignChunk, cancelCampaign, setCampaignIgnoreFailurePause, aiRewriteMessage } from "@/lib/campaigns.functions";
 import { PageHeader } from "@/components/layout/page-header";
 import { listBrandsLiteClient, listCampaignsClient, listDevicesClient, listGroupsClient } from "@/lib/client-queries";
 
