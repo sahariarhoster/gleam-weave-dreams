@@ -56,11 +56,27 @@ function startScrape() {
         document.querySelector('[aria-label="Chat list"]') ||
         document.querySelector('#pane-side');
       if (!pane) throw new Error("Open web.whatsapp.com and sign in first.");
-      const scroller =
-        pane.querySelector('div[style*="overflow"][style*="scroll"]') ||
-        pane.querySelector('div[style*="overflow-y"]') ||
-        pane;
-      log("Found chat list pane", "ok");
+
+      // Find the actual scrollable ancestor by walking up from a real list item.
+      // WhatsApp's chat list is virtualized — the scroller is often several
+      // levels up from #pane-side and selector-based guesses miss it.
+      const findScroller = () => {
+        const probe =
+          pane.querySelector('[role="listitem"]') ||
+          pane.querySelector('div[role="grid"] > div') ||
+          pane.querySelector('[role="row"]');
+        let el = probe || pane;
+        while (el && el !== document.body) {
+          const s = getComputedStyle(el);
+          if (/(auto|scroll)/.test(s.overflowY) && el.scrollHeight > el.clientHeight + 10) {
+            return el;
+          }
+          el = el.parentElement;
+        }
+        return pane;
+      };
+      let scroller = findScroller();
+      log(`Found scroller (${scroller.scrollHeight}px tall)`, "ok");
 
       const contacts = new Map();
 
@@ -128,32 +144,60 @@ function startScrape() {
         return added;
       };
 
+      // Reliable scroll: try scrollTop assignment first, fall back to a wheel
+      // event (some WhatsApp builds ignore scrollTop on the virtualized list).
+      const scrollBy = async (px) => {
+        const before = scroller.scrollTop;
+        scroller.scrollTop = before + px;
+        if (scroller.scrollTop === before) {
+          scroller.dispatchEvent(new WheelEvent("wheel", {
+            deltaY: px, bubbles: true, cancelable: true,
+          }));
+        }
+      };
+
       scroller.scrollTop = 0;
-      await sleep(600);
+      await sleep(800);
       collect();
       log(`Initial pass: ${state.count} contacts`);
 
+      // Use a small step (~one row height) so virtualized rows render long
+      // enough to be collected before being recycled out of the DOM.
+      const STEP = 72;
       let lastTop = -1;
       let stable = 0;
+      let noProgress = 0;
       let iter = 0;
-      for (; iter < 4000; iter++) {
+      for (; iter < 20000; iter++) {
         const addedBefore = state.count;
+        await scrollBy(STEP);
+        await sleep(120);
         collect();
-        const step = Math.max(200, Math.floor(scroller.clientHeight * 0.8));
-        scroller.scrollTop = scroller.scrollTop + step;
-        await sleep(350);
-        collect();
-        if (iter % 5 === 0) {
+        if (iter % 20 === 0) {
           log(`scroll ${state.scrollTop}/${state.scrollHeight} • ${state.count} contacts (+${state.count - addedBefore})`);
         }
         if (scroller.scrollTop === lastTop) {
           stable++;
-          if (stable >= 6) { log("Reached bottom", "ok"); break; }
+          // Re-resolve the scroller in case WhatsApp swapped containers.
+          if (stable === 3) {
+            const fresh = findScroller();
+            if (fresh !== scroller) { scroller = fresh; log("Re-bound scroller", "ok"); }
+          }
+          if (stable >= 12) { log("Reached bottom", "ok"); break; }
         } else {
           stable = 0;
           lastTop = scroller.scrollTop;
         }
+        if (state.count === addedBefore) {
+          noProgress++;
+          // Settle pause lets virtualization render the next window.
+          if (noProgress % 25 === 0) await sleep(500);
+        } else {
+          noProgress = 0;
+        }
       }
+      // Final settle + collect at the bottom.
+      await sleep(600);
       collect();
       state.result = Array.from(contacts.values());
       state.finished = true;
