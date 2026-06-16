@@ -411,3 +411,49 @@ export const runCampaignChunk = createServerFn({ method: "POST" })
 
     return { ran: batch.length, sent, failed, requeued, paused: patch.status === "paused" };
   });
+
+// ============ AI REWRITE ============
+// Generates N paraphrased variants and returns the original + variants as spintax.
+export const aiRewriteMessage = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      message: z.string().min(1).max(2000),
+      count: z.number().int().min(1).max(5).default(3),
+    }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const key = process.env.LOVABLE_API_KEY;
+    if (!key) throw new Error("AI is not configured");
+    const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        messages: [
+          {
+            role: "system",
+            content:
+              "You rewrite WhatsApp marketing messages into natural paraphrases that keep the EXACT same meaning, tone, language, emojis, and any placeholders like {name} or URLs. Output ONLY the rewrites, one per line, no numbering, no quotes, no commentary.",
+          },
+          {
+            role: "user",
+            content: `Give me ${data.count} different paraphrased versions of this message:\n\n${data.message}`,
+          },
+        ],
+      }),
+    });
+    if (res.status === 429) throw new Error("AI rate limit — try again in a moment");
+    if (res.status === 402) throw new Error("AI credits exhausted — add credits in workspace billing");
+    if (!res.ok) throw new Error(`AI error ${res.status}`);
+    const json: any = await res.json();
+    const text: string = json?.choices?.[0]?.message?.content ?? "";
+    const variants = text
+      .split("\n")
+      .map((s) => s.replace(/^[-*\d.)\s]+/, "").trim())
+      .filter((s) => s.length > 0)
+      .slice(0, data.count);
+    if (variants.length === 0) throw new Error("AI returned no variants");
+    const all = [data.message.trim(), ...variants];
+    return { variants, spintax: "{" + all.join("|") + "}" };
+  });
