@@ -256,7 +256,7 @@ async function runScrape() {
   });
   let cursor = 0;
   while (true) {
-    await new Promise((r) => setTimeout(r, 150));
+    await new Promise((r) => setTimeout(r, 80));
     const [{ result }] = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       world: "MAIN",
