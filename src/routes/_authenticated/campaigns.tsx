@@ -235,7 +235,6 @@ function NewCampaignDialog({ onDone }: { onDone: () => void }) {
     brand_id: "",
     device_id: "",
     name: "",
-    message: "",
     media_url: "",
     scheduled_at: "",
     send_mode: "safety_basic" as "direct" | "safety_basic" | "safety_max",
@@ -244,7 +243,23 @@ function NewCampaignDialog({ onDone }: { onDone: () => void }) {
     send_window_start: "00:00",
     send_window_end: "23:59",
   });
+  const [messages, setMessages] = useState<string[]>([""]);
   const [selectedGroups, setSelectedGroups] = useState<Set<string>>(new Set());
+
+  function updateMessage(i: number, v: string) {
+    setMessages((arr) => arr.map((m, idx) => (idx === i ? v : m)));
+  }
+  function addMessage() { setMessages((arr) => [...arr, ""]); }
+  function removeMessage(i: number) {
+    setMessages((arr) => (arr.length <= 1 ? [""] : arr.filter((_, idx) => idx !== i)));
+  }
+
+  function buildSpintax() {
+    const cleaned = messages.map((m) => m.trim()).filter(Boolean);
+    if (cleaned.length === 0) return "";
+    if (cleaned.length === 1) return cleaned[0];
+    return `{${cleaned.join("|")}}`;
+  }
 
   function pickMode(m: "direct" | "safety_basic" | "safety_max") {
     setForm({ ...form, send_mode: m, min_delay_seconds: PRESETS[m].min, max_delay_seconds: PRESETS[m].max });
