@@ -284,7 +284,7 @@ function NewCampaignDialog({ onDone }: { onDone: () => void }) {
   const filteredDevices = (devices.data ?? []).filter((d: any) => !form.brand_id || d.brand_id === form.brand_id || !d.brand_id);
 
   return (
-    <DialogContent className="max-w-2xl">
+    <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
       <DialogHeader><DialogTitle>New Campaign</DialogTitle></DialogHeader>
       <form onSubmit={(e) => { e.preventDefault(); mut.mutate(); }} className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
