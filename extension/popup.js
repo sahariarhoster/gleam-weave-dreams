@@ -81,14 +81,16 @@ function startScrape() {
       const contacts = new Map();
       const jidCache = new WeakMap(); // cache findJid per row node
 
+      // Returns { phone, isGroup }. Group chats (@g.us) are detected and skipped.
       const findJid = (node) => {
-        if (!node) return "";
+        if (!node) return { phone: "", isGroup: false };
         if (jidCache.has(node)) return jidCache.get(node);
         const key = Object.keys(node).find(
           (k) => k.startsWith("__reactProps$") || k.startsWith("__reactFiber$")
         );
-        if (!key) { jidCache.set(node, ""); return ""; }
+        if (!key) { const r = { phone: "", isGroup: false }; jidCache.set(node, r); return r; }
         const seen = new Set();
+        let foundGroup = false;
         const scan = (obj, depth) => {
           if (!obj || depth > 5 || typeof obj !== "object" || seen.has(obj)) return "";
           seen.add(obj);
@@ -96,6 +98,7 @@ function startScrape() {
             let v;
             try { v = obj[k]; } catch { continue; }
             if (typeof v === "string") {
+              if (/\d+(-\d+)?@g\.us/.test(v) || /@g\.us/.test(v)) { foundGroup = true; }
               const m = v.match(/(\d{7,15})@(?:c\.us|s\.whatsapp\.net)/);
               if (m) return m[1];
             } else if (v && typeof v === "object") {
@@ -105,7 +108,8 @@ function startScrape() {
           }
           return "";
         };
-        const out = scan(node[key], 0);
+        const phone = scan(node[key], 0);
+        const out = { phone, isGroup: foundGroup && !phone };
         jidCache.set(node, out);
         return out;
       };
@@ -124,8 +128,10 @@ function startScrape() {
           seenRows.add(row);
           let phone = "";
           let name = title;
-          const jid = findJid(row) || findJid(row.firstElementChild);
-          if (jid) phone = jid;
+          const j1 = findJid(row);
+          const j2 = j1.phone ? j1 : findJid(row.firstElementChild);
+          if (j2.isGroup) { seenRows.add(row); return; } // skip group chats
+          if (j2.phone) phone = j2.phone;
           if (!phone) {
             const t = title.trim();
             if (/^\+[\d\s\-()]{7,}$/.test(t)) {
@@ -134,14 +140,15 @@ function startScrape() {
               name = "";
             }
           }
-          const key = phone ? phone : "name:" + name;
-          if (!key || key === "name:") return;
+          // Skip anything without a real phone number (groups, broadcasts, status, etc.)
+          if (!phone) return;
+          const key = phone;
           const existing = contacts.get(key);
           if (!existing) {
             contacts.set(key, { name: name || null, phone });
             added++;
-          } else if (!existing.phone && phone) {
-            contacts.set(key, { name: existing.name || name || null, phone });
+          } else if (!existing.name && name) {
+            contacts.set(key, { name, phone });
           }
         });
         state.count = contacts.size;
@@ -284,13 +291,20 @@ function toCSV(rows) {
     const s = String(v).replace(/"/g, '""');
     return /[",\n]/.test(s) ? `"${s}"` : s;
   };
+  // Wrap phone as ="..." so Excel/Sheets treat it as text (no 8.8E+12)
+  const escPhone = (v) => {
+    if (!v) return "";
+    const digits = String(v).replace(/[^\d+]/g, "");
+    return `="${digits}"`;
+  };
   const lines = ["name,phone"];
-  rows.forEach((r) => lines.push(`${esc(r.name)},${esc(r.phone)}`));
+  rows.forEach((r) => lines.push(`${esc(r.name)},${escPhone(r.phone)}`));
   return lines.join("\n");
 }
 
 function download(csv) {
-  const blob = new Blob([csv], { type: "text/csv" });
+  // UTF-8 BOM so Excel opens it correctly
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
