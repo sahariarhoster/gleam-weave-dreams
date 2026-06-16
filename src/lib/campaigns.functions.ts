@@ -122,7 +122,7 @@ export const createCampaign = createServerFn({ method: "POST" })
         campaign_id: camp.id,
         contact_id: r.contact_id,
         phone: r.phone,
-        rendered_message: data.message.replace(/\{name\}/g, r.name || ""),
+        rendered_message: expandSpintax(data.message).replace(/\{name\}/g, r.name || ""),
         status: "queued",
       }));
       // chunked insert
