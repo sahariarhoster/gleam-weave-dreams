@@ -157,47 +157,48 @@ function startScrape() {
       };
 
       scroller.scrollTop = 0;
-      await sleep(800);
+      await sleep(250);
       collect();
       log(`Initial pass: ${state.count} contacts`);
 
-      // Use a small step (~one row height) so virtualized rows render long
-      // enough to be collected before being recycled out of the DOM.
-      const STEP = 72;
+      // Step ~= viewport so we cover ground fast; virtualized rows still get
+      // a short settle to render before we collect.
       let lastTop = -1;
       let stable = 0;
       let noProgress = 0;
       let iter = 0;
+      let lastLogged = 0;
       for (; iter < 20000; iter++) {
         const addedBefore = state.count;
-        await scrollBy(STEP);
-        await sleep(120);
+        const step = Math.max(200, Math.floor(scroller.clientHeight * 0.6));
+        await scrollBy(step);
+        await sleep(45);
         collect();
-        if (iter % 20 === 0) {
+        // Log on every change in count, or every ~1.5s, whichever comes first.
+        const now = Date.now();
+        if (state.count !== addedBefore || now - lastLogged > 1500) {
           log(`scroll ${state.scrollTop}/${state.scrollHeight} • ${state.count} contacts (+${state.count - addedBefore})`);
+          lastLogged = now;
         }
         if (scroller.scrollTop === lastTop) {
           stable++;
-          // Re-resolve the scroller in case WhatsApp swapped containers.
-          if (stable === 3) {
+          if (stable === 2) {
             const fresh = findScroller();
             if (fresh !== scroller) { scroller = fresh; log("Re-bound scroller", "ok"); }
           }
-          if (stable >= 12) { log("Reached bottom", "ok"); break; }
+          if (stable >= 5) { log("Reached bottom", "ok"); break; }
         } else {
           stable = 0;
           lastTop = scroller.scrollTop;
         }
         if (state.count === addedBefore) {
           noProgress++;
-          // Settle pause lets virtualization render the next window.
-          if (noProgress % 25 === 0) await sleep(500);
+          if (noProgress % 15 === 0) await sleep(200);
         } else {
           noProgress = 0;
         }
       }
-      // Final settle + collect at the bottom.
-      await sleep(600);
+      await sleep(250);
       collect();
       state.result = Array.from(contacts.values());
       state.finished = true;
