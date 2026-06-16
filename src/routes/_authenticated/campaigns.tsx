@@ -286,6 +286,7 @@ function NewCampaignDialog({ onDone }: { onDone: () => void }) {
       fnCreate({
         data: {
           ...form,
+          message: buildSpintax(),
           media_url: form.media_url || null,
           scheduled_at: form.scheduled_at ? new Date(form.scheduled_at).toISOString() : null,
           min_delay_seconds: Number(form.min_delay_seconds),
@@ -298,10 +299,12 @@ function NewCampaignDialog({ onDone }: { onDone: () => void }) {
   });
 
   const rewriteMut = useMutation({
-    mutationFn: () => fnRewrite({ data: { message: form.message, count: 3 } }),
+    mutationFn: (base: string) => fnRewrite({ data: { message: base, count: 3 } }),
     onSuccess: (r: any) => {
-      setForm((f) => ({ ...f, message: r.spintax }));
-      toast.success(`Added ${r.variants.length} AI variants`);
+      const variants: string[] = Array.isArray(r.variants) ? r.variants : [];
+      if (variants.length === 0) { toast.error("No variants returned"); return; }
+      setMessages((arr) => [...arr, ...variants]);
+      toast.success(`Added ${variants.length} AI variants`);
     },
     onError: (e) => toast.error((e as Error).message),
   });
