@@ -282,6 +282,15 @@ function NewCampaignDialog({ onDone }: { onDone: () => void }) {
     onError: (e) => toast.error((e as Error).message),
   });
 
+  const rewriteMut = useMutation({
+    mutationFn: () => fnRewrite({ data: { message: form.message, count: 3 } }),
+    onSuccess: (r: any) => {
+      setForm((f) => ({ ...f, message: r.spintax }));
+      toast.success(`Added ${r.variants.length} AI variants`);
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
   const filteredDevices = (devices.data ?? []).filter((d: any) => !form.brand_id || d.brand_id === form.brand_id || !d.brand_id);
 
   return (
