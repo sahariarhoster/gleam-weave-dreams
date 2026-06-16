@@ -332,26 +332,49 @@ function NewCampaignDialog({ onDone }: { onDone: () => void }) {
         <div className="space-y-1.5"><Label>Campaign Name</Label>
           <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         </div>
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label>Message</Label>
-            <Button
-              type="button"
-              size="sm"
-              variant="outline"
-              className="h-7 gap-1 text-xs"
-              disabled={!form.message.trim() || rewriteMut.isPending}
-              onClick={() => rewriteMut.mutate()}
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-              {rewriteMut.isPending ? "Rewriting…" : "AI Rewrite (3 variants)"}
+            <Label>Message Variants ({messages.filter((m) => m.trim()).length})</Label>
+            <Button type="button" size="sm" variant="outline" className="h-7 gap-1 text-xs" onClick={addMessage}>
+              <Plus className="h-3.5 w-3.5" /> Add variant
             </Button>
           </div>
-          <Textarea required rows={5} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
+          {messages.map((m, i) => (
+            <div key={i} className="space-y-1.5 rounded-md border bg-muted/20 p-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-medium text-muted-foreground">Variant {i + 1}</span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 gap-1 px-2 text-xs"
+                    disabled={!m.trim() || rewriteMut.isPending}
+                    onClick={() => rewriteMut.mutate(m)}
+                    title="Generate 3 AI paraphrased variants from this message"
+                  >
+                    <Sparkles className="h-3 w-3" />
+                    {rewriteMut.isPending ? "…" : "AI Rewrite"}
+                  </Button>
+                  {messages.length > 1 && (
+                    <Button type="button" size="icon" variant="ghost" className="h-6 w-6 text-rose-600" onClick={() => removeMessage(i)} title="Remove variant">
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
+              </div>
+              <Textarea
+                required={i === 0}
+                rows={4}
+                value={m}
+                onChange={(e) => updateMessage(i, e.target.value)}
+                placeholder={i === 0 ? "Your main message…" : "Alternate wording with the same meaning…"}
+              />
+            </div>
+          ))}
           <p className="text-[11px] leading-relaxed text-muted-foreground">
-            Use <code className="rounded bg-muted px-1">{`{name}`}</code> for personalization. Add message variants with spintax:
-            <code className="ml-1 rounded bg-muted px-1">{`{Hello|Hi|Hey}`}</code> — one option is picked at random per recipient to reduce ban risk.
-            Click <b>AI Rewrite</b> to auto-generate paraphrased variants.
+            Use <code className="rounded bg-muted px-1">{`{name}`}</code> for personalization. Add multiple variants — one is picked at random per recipient to reduce ban risk.
+            You can also use inline spintax like <code className="rounded bg-muted px-1">{`{Hello|Hi|Hey}`}</code>. Click <b>AI Rewrite</b> on any variant to auto-generate 3 more.
           </p>
         </div>
         <div className="space-y-1.5"><Label>Target Groups</Label>
