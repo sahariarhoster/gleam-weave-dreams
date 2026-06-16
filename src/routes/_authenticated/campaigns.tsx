@@ -220,6 +220,7 @@ function CampaignsPage() {
 
 function NewCampaignDialog({ onDone }: { onDone: () => void }) {
   const fnCreate = useServerFn(createCampaign);
+  const fnRewrite = useServerFn(aiRewriteMessage);
 
   const brands = useQuery({ queryKey: ["brands-lite"], queryFn: listBrandsLiteClient });
   const devices = useQuery({ queryKey: ["devices"], queryFn: listDevicesClient });
