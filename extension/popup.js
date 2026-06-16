@@ -128,8 +128,10 @@ function startScrape() {
           seenRows.add(row);
           let phone = "";
           let name = title;
-          const jid = findJid(row) || findJid(row.firstElementChild);
-          if (jid) phone = jid;
+          const j1 = findJid(row);
+          const j2 = j1.phone ? j1 : findJid(row.firstElementChild);
+          if (j2.isGroup) { seenRows.add(row); return; } // skip group chats
+          if (j2.phone) phone = j2.phone;
           if (!phone) {
             const t = title.trim();
             if (/^\+[\d\s\-()]{7,}$/.test(t)) {
@@ -138,14 +140,15 @@ function startScrape() {
               name = "";
             }
           }
-          const key = phone ? phone : "name:" + name;
-          if (!key || key === "name:") return;
+          // Skip anything without a real phone number (groups, broadcasts, status, etc.)
+          if (!phone) return;
+          const key = phone;
           const existing = contacts.get(key);
           if (!existing) {
             contacts.set(key, { name: name || null, phone });
             added++;
-          } else if (!existing.phone && phone) {
-            contacts.set(key, { name: existing.name || name || null, phone });
+          } else if (!existing.name && name) {
+            contacts.set(key, { name, phone });
           }
         });
         state.count = contacts.size;
