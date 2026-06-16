@@ -36,6 +36,21 @@ function windowSeconds(start: string, end: string): number {
   return Math.max(diff, 60);
 }
 
+// Spintax: pick one option randomly from each {a|b|c} group. Leaves {name} alone (no pipe).
+// Supports one level of nesting by iterating until stable.
+export function expandSpintax(input: string): string {
+  let out = input;
+  const re = /\{([^{}]*\|[^{}]*)\}/;
+  for (let i = 0; i < 20; i++) {
+    const m = out.match(re);
+    if (!m) break;
+    const opts = m[1].split("|");
+    const pick = opts[Math.floor(Math.random() * opts.length)];
+    out = out.slice(0, m.index!) + pick + out.slice(m.index! + m[0].length);
+  }
+  return out;
+}
+
 export const listCampaigns = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
