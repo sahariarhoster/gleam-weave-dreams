@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Plus, Trash2, Megaphone, Play, Pause, Eye, Ban, ShieldAlert, ShieldCheck } from "lucide-react";
+import { Plus, Trash2, Megaphone, Play, Pause, Eye, Ban, ShieldAlert, ShieldCheck, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Progress } from "@/components/ui/progress";
-import { listCampaigns, createCampaign, deleteCampaign, setCampaignStatus, runCampaignChunk, cancelCampaign, setCampaignIgnoreFailurePause } from "@/lib/campaigns.functions";
+import { listCampaigns, createCampaign, deleteCampaign, setCampaignStatus, runCampaignChunk, cancelCampaign, setCampaignIgnoreFailurePause, aiRewriteMessage } from "@/lib/campaigns.functions";
 import { PageHeader } from "@/components/layout/page-header";
 import { listBrandsLiteClient, listCampaignsClient, listDevicesClient, listGroupsClient } from "@/lib/client-queries";
 
@@ -220,6 +220,7 @@ function CampaignsPage() {
 
 function NewCampaignDialog({ onDone }: { onDone: () => void }) {
   const fnCreate = useServerFn(createCampaign);
+  const fnRewrite = useServerFn(aiRewriteMessage);
 
   const brands = useQuery({ queryKey: ["brands-lite"], queryFn: listBrandsLiteClient });
   const devices = useQuery({ queryKey: ["devices"], queryFn: listDevicesClient });
@@ -281,6 +282,15 @@ function NewCampaignDialog({ onDone }: { onDone: () => void }) {
     onError: (e) => toast.error((e as Error).message),
   });
 
+  const rewriteMut = useMutation({
+    mutationFn: () => fnRewrite({ data: { message: form.message, count: 3 } }),
+    onSuccess: (r: any) => {
+      setForm((f) => ({ ...f, message: r.spintax }));
+      toast.success(`Added ${r.variants.length} AI variants`);
+    },
+    onError: (e) => toast.error((e as Error).message),
+  });
+
   const filteredDevices = (devices.data ?? []).filter((d: any) => !form.brand_id || d.brand_id === form.brand_id || !d.brand_id);
 
   return (
@@ -305,8 +315,26 @@ function NewCampaignDialog({ onDone }: { onDone: () => void }) {
           <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
         </div>
         <div className="space-y-1.5">
-          <Label>Message (use {`{name}`} for personalization)</Label>
-          <Textarea required rows={4} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
+          <div className="flex items-center justify-between">
+            <Label>Message</Label>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              className="h-7 gap-1 text-xs"
+              disabled={!form.message.trim() || rewriteMut.isPending}
+              onClick={() => rewriteMut.mutate()}
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              {rewriteMut.isPending ? "Rewriting…" : "AI Rewrite (3 variants)"}
+            </Button>
+          </div>
+          <Textarea required rows={5} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} />
+          <p className="text-[11px] leading-relaxed text-muted-foreground">
+            Use <code className="rounded bg-muted px-1">{`{name}`}</code> for personalization. Add message variants with spintax:
+            <code className="ml-1 rounded bg-muted px-1">{`{Hello|Hi|Hey}`}</code> — one option is picked at random per recipient to reduce ban risk.
+            Click <b>AI Rewrite</b> to auto-generate paraphrased variants.
+          </p>
         </div>
         <div className="space-y-1.5"><Label>Target Groups</Label>
           <div className="max-h-32 overflow-y-auto rounded-md border p-2">
