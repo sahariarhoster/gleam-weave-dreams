@@ -79,16 +79,18 @@ function startScrape() {
       log(`Found scroller (${scroller.scrollHeight}px tall)`, "ok");
 
       const contacts = new Map();
+      const jidCache = new WeakMap(); // cache findJid per row node
 
       const findJid = (node) => {
         if (!node) return "";
+        if (jidCache.has(node)) return jidCache.get(node);
         const key = Object.keys(node).find(
           (k) => k.startsWith("__reactProps$") || k.startsWith("__reactFiber$")
         );
-        if (!key) return "";
+        if (!key) { jidCache.set(node, ""); return ""; }
         const seen = new Set();
         const scan = (obj, depth) => {
-          if (!obj || depth > 6 || typeof obj !== "object" || seen.has(obj)) return "";
+          if (!obj || depth > 5 || typeof obj !== "object" || seen.has(obj)) return "";
           seen.add(obj);
           for (const k in obj) {
             let v;
@@ -103,18 +105,23 @@ function startScrape() {
           }
           return "";
         };
-        return scan(node[key], 0);
+        const out = scan(node[key], 0);
+        jidCache.set(node, out);
+        return out;
       };
 
+      const seenRows = new WeakSet();
       const collect = () => {
         const rows = document.querySelectorAll(
           '#pane-side [role="listitem"], #pane-side [role="row"], #pane-side div[role="grid"] > div'
         );
         let added = 0;
         rows.forEach((row) => {
+          if (seenRows.has(row)) return;
           const titleEl = row.querySelector("span[title]");
           const title = titleEl?.getAttribute("title") || row.getAttribute("aria-label") || "";
           if (!title) return;
+          seenRows.add(row);
           let phone = "";
           let name = title;
           const jid = findJid(row) || findJid(row.firstElementChild);
@@ -144,9 +151,8 @@ function startScrape() {
         return added;
       };
 
-      // Reliable scroll: try scrollTop assignment first, fall back to a wheel
-      // event (some WhatsApp builds ignore scrollTop on the virtualized list).
-      const scrollBy = async (px) => {
+      const raf = () => new Promise((r) => requestAnimationFrame(() => r()));
+      const scrollBy = (px) => {
         const before = scroller.scrollTop;
         scroller.scrollTop = before + px;
         if (scroller.scrollTop === before) {
@@ -157,24 +163,22 @@ function startScrape() {
       };
 
       scroller.scrollTop = 0;
-      await sleep(250);
+      await sleep(120);
       collect();
       log(`Initial pass: ${state.count} contacts`);
 
-      // Step ~= viewport so we cover ground fast; virtualized rows still get
-      // a short settle to render before we collect.
+      // Aggressive: jump ~1.8x viewport per step, wait only one frame.
       let lastTop = -1;
       let stable = 0;
       let noProgress = 0;
       let iter = 0;
       let lastLogged = 0;
-      for (; iter < 20000; iter++) {
+      for (; iter < 40000; iter++) {
         const addedBefore = state.count;
-        const step = Math.max(200, Math.floor(scroller.clientHeight * 0.6));
-        await scrollBy(step);
-        await sleep(45);
+        const step = Math.max(400, Math.floor(scroller.clientHeight * 1.8));
+        scrollBy(step);
+        await raf();
         collect();
-        // Log on every change in count, or every ~1.5s, whichever comes first.
         const now = Date.now();
         if (state.count !== addedBefore || now - lastLogged > 1500) {
           log(`scroll ${state.scrollTop}/${state.scrollHeight} • ${state.count} contacts (+${state.count - addedBefore})`);
@@ -186,19 +190,21 @@ function startScrape() {
             const fresh = findScroller();
             if (fresh !== scroller) { scroller = fresh; log("Re-bound scroller", "ok"); }
           }
-          if (stable >= 5) { log("Reached bottom", "ok"); break; }
+          // give virtualized list one extra settle before declaring done
+          if (stable === 3) await sleep(150);
+          if (stable >= 4) { log("Reached bottom", "ok"); break; }
         } else {
           stable = 0;
           lastTop = scroller.scrollTop;
         }
         if (state.count === addedBefore) {
           noProgress++;
-          if (noProgress % 15 === 0) await sleep(200);
+          if (noProgress % 20 === 0) await sleep(80);
         } else {
           noProgress = 0;
         }
       }
-      await sleep(250);
+      await sleep(150);
       collect();
       state.result = Array.from(contacts.values());
       state.finished = true;
@@ -250,7 +256,7 @@ async function runScrape() {
   });
   let cursor = 0;
   while (true) {
-    await new Promise((r) => setTimeout(r, 150));
+    await new Promise((r) => setTimeout(r, 80));
     const [{ result }] = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       world: "MAIN",
