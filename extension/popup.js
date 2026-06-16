@@ -78,7 +78,146 @@ function startScrape() {
       let scroller = findScroller();
       log(`Found scroller (${scroller.scrollHeight}px tall)`, "ok");
 
-[same as above]
+      const contacts = new Map();
+      const jidCache = new WeakMap(); // cache findJid per row node
+
+      const findJid = (node) => {
+        if (!node) return "";
+        if (jidCache.has(node)) return jidCache.get(node);
+        const key = Object.keys(node).find(
+          (k) => k.startsWith("__reactProps$") || k.startsWith("__reactFiber$")
+        );
+        if (!key) { jidCache.set(node, ""); return ""; }
+        const seen = new Set();
+        const scan = (obj, depth) => {
+          if (!obj || depth > 5 || typeof obj !== "object" || seen.has(obj)) return "";
+          seen.add(obj);
+          for (const k in obj) {
+            let v;
+            try { v = obj[k]; } catch { continue; }
+            if (typeof v === "string") {
+              const m = v.match(/(\d{7,15})@(?:c\.us|s\.whatsapp\.net)/);
+              if (m) return m[1];
+            } else if (v && typeof v === "object") {
+              const r = scan(v, depth + 1);
+              if (r) return r;
+            }
+          }
+          return "";
+        };
+        const out = scan(node[key], 0);
+        jidCache.set(node, out);
+        return out;
+      };
+
+      const seenRows = new WeakSet();
+      const collect = () => {
+        const rows = document.querySelectorAll(
+          '#pane-side [role="listitem"], #pane-side [role="row"], #pane-side div[role="grid"] > div'
+        );
+        let added = 0;
+        rows.forEach((row) => {
+          if (seenRows.has(row)) return;
+          const titleEl = row.querySelector("span[title]");
+          const title = titleEl?.getAttribute("title") || row.getAttribute("aria-label") || "";
+          if (!title) return;
+          seenRows.add(row);
+          let phone = "";
+          let name = title;
+          const jid = findJid(row) || findJid(row.firstElementChild);
+          if (jid) phone = jid;
+          if (!phone) {
+            const t = title.trim();
+            if (/^\+[\d\s\-()]{7,}$/.test(t)) {
+              phone = t.replace(/[^\d+]/g, "");
+              if (phone.replace(/\D/g, "").length < 8) phone = "";
+              name = "";
+            }
+          }
+          const key = phone ? phone : "name:" + name;
+          if (!key || key === "name:") return;
+          const existing = contacts.get(key);
+          if (!existing) {
+            contacts.set(key, { name: name || null, phone });
+            added++;
+          } else if (!existing.phone && phone) {
+            contacts.set(key, { name: existing.name || name || null, phone });
+          }
+        });
+        state.count = contacts.size;
+        state.scrollTop = scroller.scrollTop;
+        state.scrollHeight = Math.max(1, scroller.scrollHeight - scroller.clientHeight);
+        if (state.scrollTop > state.maxTop) state.maxTop = state.scrollTop;
+        return added;
+      };
+
+      const raf = () => new Promise((r) => requestAnimationFrame(() => r()));
+      const scrollBy = (px) => {
+        const before = scroller.scrollTop;
+        scroller.scrollTop = before + px;
+        if (scroller.scrollTop === before) {
+          scroller.dispatchEvent(new WheelEvent("wheel", {
+            deltaY: px, bubbles: true, cancelable: true,
+          }));
+        }
+      };
+
+      scroller.scrollTop = 0;
+      await sleep(120);
+      collect();
+      log(`Initial pass: ${state.count} contacts`);
+
+      // Aggressive: jump ~1.8x viewport per step, wait only one frame.
+      let lastTop = -1;
+      let stable = 0;
+      let noProgress = 0;
+      let iter = 0;
+      let lastLogged = 0;
+      for (; iter < 40000; iter++) {
+        const addedBefore = state.count;
+        const step = Math.max(400, Math.floor(scroller.clientHeight * 1.8));
+        scrollBy(step);
+        await raf();
+        collect();
+        const now = Date.now();
+        if (state.count !== addedBefore || now - lastLogged > 1500) {
+          log(`scroll ${state.scrollTop}/${state.scrollHeight} • ${state.count} contacts (+${state.count - addedBefore})`);
+          lastLogged = now;
+        }
+        if (scroller.scrollTop === lastTop) {
+          stable++;
+          if (stable === 2) {
+            const fresh = findScroller();
+            if (fresh !== scroller) { scroller = fresh; log("Re-bound scroller", "ok"); }
+          }
+          // give virtualized list one extra settle before declaring done
+          if (stable === 3) await sleep(150);
+          if (stable >= 4) { log("Reached bottom", "ok"); break; }
+        } else {
+          stable = 0;
+          lastTop = scroller.scrollTop;
+        }
+        if (state.count === addedBefore) {
+          noProgress++;
+          if (noProgress % 20 === 0) await sleep(80);
+        } else {
+          noProgress = 0;
+        }
+      }
+      await sleep(150);
+      collect();
+      state.result = Array.from(contacts.values());
+      state.finished = true;
+      log(`Done. ${state.result.length} contacts collected.`, "ok");
+    } catch (e) {
+      state.error = e.message || String(e);
+      state.finished = true;
+      log("Error: " + state.error, "err");
+    }
+  })();
+
+  return { started: true };
+}
 
 // Poll: read state and return delta logs from cursor
 function pollScrape(cursor) {
