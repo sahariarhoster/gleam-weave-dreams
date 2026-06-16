@@ -291,13 +291,20 @@ function toCSV(rows) {
     const s = String(v).replace(/"/g, '""');
     return /[",\n]/.test(s) ? `"${s}"` : s;
   };
+  // Wrap phone as ="..." so Excel/Sheets treat it as text (no 8.8E+12)
+  const escPhone = (v) => {
+    if (!v) return "";
+    const digits = String(v).replace(/[^\d+]/g, "");
+    return `="${digits}"`;
+  };
   const lines = ["name,phone"];
-  rows.forEach((r) => lines.push(`${esc(r.name)},${esc(r.phone)}`));
+  rows.forEach((r) => lines.push(`${esc(r.name)},${escPhone(r.phone)}`));
   return lines.join("\n");
 }
 
 function download(csv) {
-  const blob = new Blob([csv], { type: "text/csv" });
+  // UTF-8 BOM so Excel opens it correctly
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
