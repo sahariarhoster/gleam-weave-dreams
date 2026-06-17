@@ -458,6 +458,27 @@ function ImportDialog({ brands, onDone }: { brands: { id: string; name: string }
           <Textarea rows={6} value={text} onChange={(e) => setText(e.target.value)} placeholder="+8801711000111, Karim, karim@example.com" className="font-mono text-xs" />
           <p className="text-xs text-muted-foreground">First column must be the phone. Header row optional. Existing phones are skipped.</p>
         </div>
+        <div className="space-y-1.5">
+          <Label>Add to an existing group (optional)</Label>
+          <Select value={existingGroupId} onValueChange={setExistingGroupId} disabled={!brandId}>
+            <SelectTrigger><SelectValue placeholder="— None —" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">— None —</SelectItem>
+              {(groups.data ?? []).map((g: any) => (
+                <SelectItem key={g.id} value={g.id}>{g.name} ({g.member_count})</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label>And/or create a new group (optional)</Label>
+          <Input
+            value={groupName}
+            onChange={(e) => setGroupName(e.target.value)}
+            placeholder="e.g. Imported Leads"
+          />
+          <p className="text-xs text-muted-foreground">Leave blank to skip creating a new group.</p>
+        </div>
         {parsed.total > 0 && (
           <div className="rounded-md border border-border/60 bg-muted/40 p-3 text-sm">
             <div className="font-medium mb-1">Preview</div>
