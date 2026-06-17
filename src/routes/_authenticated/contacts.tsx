@@ -412,10 +412,20 @@ function ImportDialog({ brands, onDone }: { brands: { id: string; name: string }
   const mut = useMutation({
     mutationFn: async () => {
       if (parsed.cleanRows.length === 0) throw new Error("No valid rows to import");
-      return fn({ data: { brand_id: brandId, rows: parsed.cleanRows } });
+      return fn({
+        data: {
+          brand_id: brandId,
+          rows: parsed.cleanRows,
+          existing_group_id: existingGroupId !== "none" ? existingGroupId : null,
+          group_name: groupName.trim() || null,
+        },
+      });
     },
     onSuccess: (r: any) => {
-      toast.success(`Imported ${r.inserted} new contact(s) out of ${parsed.valid} valid (${r.skipped ?? 0} skipped)`);
+      const groupNote = r.group_ids?.length
+        ? ` · added to ${r.group_ids.length} group(s)`
+        : "";
+      toast.success(`Imported ${r.inserted} new contact(s) out of ${parsed.valid} valid (${r.skipped ?? 0} skipped)${groupNote}`);
       setConfirming(false);
       onDone();
     },
