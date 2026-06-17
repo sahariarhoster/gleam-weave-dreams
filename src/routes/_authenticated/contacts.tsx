@@ -436,7 +436,7 @@ function ImportDialog({ brands, onDone }: { brands: { id: string; name: string }
       <DialogHeader><DialogTitle>Import Contacts</DialogTitle></DialogHeader>
       <div className="space-y-3">
         <div className="space-y-1.5"><Label>Brand</Label>
-          <Select value={brandId} onValueChange={setBrandId}>
+          <Select value={brandId} onValueChange={(v) => { setBrandId(v); setExistingGroupId("none"); }}>
             <SelectTrigger><SelectValue placeholder="Pick a brand" /></SelectTrigger>
             <SelectContent>{brands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
           </Select>
