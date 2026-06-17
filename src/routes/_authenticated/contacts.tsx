@@ -319,6 +319,14 @@ function ImportDialog({ brands, onDone }: { brands: { id: string; name: string }
   const [brandId, setBrandId] = useState("");
   const [text, setText] = useState("");
   const [fileName, setFileName] = useState("");
+  const [existingGroupId, setExistingGroupId] = useState<string>("none");
+  const [groupName, setGroupName] = useState("");
+
+  const groups = useQuery({
+    queryKey: ["groups", brandId],
+    queryFn: () => listGroupsClient(brandId ? { brand_id: brandId } : {}),
+    enabled: !!brandId,
+  });
 
   const parseRows = (raw: string) => {
     const split = (line: string) =>
