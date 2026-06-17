@@ -319,6 +319,14 @@ function ImportDialog({ brands, onDone }: { brands: { id: string; name: string }
   const [brandId, setBrandId] = useState("");
   const [text, setText] = useState("");
   const [fileName, setFileName] = useState("");
+  const [existingGroupId, setExistingGroupId] = useState<string>("none");
+  const [groupName, setGroupName] = useState("");
+
+  const groups = useQuery({
+    queryKey: ["groups", brandId],
+    queryFn: () => listGroupsClient(brandId ? { brand_id: brandId } : {}),
+    enabled: !!brandId,
+  });
 
   const parseRows = (raw: string) => {
     const split = (line: string) =>
@@ -404,10 +412,20 @@ function ImportDialog({ brands, onDone }: { brands: { id: string; name: string }
   const mut = useMutation({
     mutationFn: async () => {
       if (parsed.cleanRows.length === 0) throw new Error("No valid rows to import");
-      return fn({ data: { brand_id: brandId, rows: parsed.cleanRows } });
+      return fn({
+        data: {
+          brand_id: brandId,
+          rows: parsed.cleanRows,
+          existing_group_id: existingGroupId !== "none" ? existingGroupId : null,
+          group_name: groupName.trim() || null,
+        },
+      });
     },
     onSuccess: (r: any) => {
-      toast.success(`Imported ${r.inserted} new contact(s) out of ${parsed.valid} valid (${r.skipped ?? 0} skipped)`);
+      const groupNote = r.group_ids?.length
+        ? ` · added to ${r.group_ids.length} group(s)`
+        : "";
+      toast.success(`Imported ${r.inserted} new contact(s) out of ${parsed.valid} valid (${r.skipped ?? 0} skipped)${groupNote}`);
       setConfirming(false);
       onDone();
     },
@@ -418,7 +436,7 @@ function ImportDialog({ brands, onDone }: { brands: { id: string; name: string }
       <DialogHeader><DialogTitle>Import Contacts</DialogTitle></DialogHeader>
       <div className="space-y-3">
         <div className="space-y-1.5"><Label>Brand</Label>
-          <Select value={brandId} onValueChange={setBrandId}>
+          <Select value={brandId} onValueChange={(v) => { setBrandId(v); setExistingGroupId("none"); }}>
             <SelectTrigger><SelectValue placeholder="Pick a brand" /></SelectTrigger>
             <SelectContent>{brands.map((b) => <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>)}</SelectContent>
           </Select>
@@ -439,6 +457,27 @@ function ImportDialog({ brands, onDone }: { brands: { id: string; name: string }
           <Label>Or paste rows (phone, name, email)</Label>
           <Textarea rows={6} value={text} onChange={(e) => setText(e.target.value)} placeholder="+8801711000111, Karim, karim@example.com" className="font-mono text-xs" />
           <p className="text-xs text-muted-foreground">First column must be the phone. Header row optional. Existing phones are skipped.</p>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Add to an existing group (optional)</Label>
+          <Select value={existingGroupId} onValueChange={setExistingGroupId} disabled={!brandId}>
+            <SelectTrigger><SelectValue placeholder="— None —" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">— None —</SelectItem>
+              {(groups.data ?? []).map((g: any) => (
+                <SelectItem key={g.id} value={g.id}>{g.name} ({g.member_count})</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label>And/or create a new group (optional)</Label>
+          <Input
+            value={groupName}
+            onChange={(e) => setGroupName(e.target.value)}
+            placeholder="e.g. Imported Leads"
+          />
+          <p className="text-xs text-muted-foreground">Leave blank to skip creating a new group.</p>
         </div>
         {parsed.total > 0 && (
           <div className="rounded-md border border-border/60 bg-muted/40 p-3 text-sm">

@@ -70,6 +70,8 @@ export const importContacts = createServerFn({ method: "POST" })
         phone: z.string().max(64),
         email: z.string().max(200).optional(),
       })).min(1).max(5000),
+      existing_group_id: z.string().uuid().nullable().optional(),
+      group_name: z.string().min(1).max(100).nullable().optional(),
     }).parse(d),
   )
   .handler(async ({ data, context }) => {
@@ -89,14 +91,48 @@ export const importContacts = createServerFn({ method: "POST" })
         created_by: context.userId,
       });
     }
-    if (payload.length === 0) {
-      return { ok: true, inserted: 0, total: data.rows.length, skipped };
+    let inserted = 0;
+    if (payload.length > 0) {
+      const { error, count } = await context.supabase
+        .from("contacts")
+        .upsert(payload, { onConflict: "brand_id,phone", count: "exact", ignoreDuplicates: true });
+      if (error) throw new Error(error.message);
+      inserted = count ?? 0;
     }
-    const { error, count } = await context.supabase
-      .from("contacts")
-      .upsert(payload, { onConflict: "brand_id,phone", count: "exact", ignoreDuplicates: true });
-    if (error) throw new Error(error.message);
-    return { ok: true, inserted: count ?? 0, total: data.rows.length, skipped };
+
+    // Optionally add the imported phones (new + pre-existing) to group(s).
+    const groupIds: string[] = [];
+    if (data.existing_group_id) groupIds.push(data.existing_group_id);
+    if (data.group_name?.trim()) {
+      const { data: g, error: gErr } = await context.supabase
+        .from("contact_groups")
+        .insert({ brand_id: data.brand_id, name: data.group_name.trim(), created_by: context.userId })
+        .select("id").single();
+      if (gErr) throw new Error(gErr.message);
+      if (g?.id) groupIds.push(g.id);
+    }
+
+    let addedToGroups = 0;
+    if (groupIds.length > 0 && seen.size > 0) {
+      const { data: rows } = await context.supabase
+        .from("contacts")
+        .select("id")
+        .eq("brand_id", data.brand_id)
+        .in("phone", Array.from(seen));
+      const contactIds = (rows ?? []).map((r: any) => r.id);
+      if (contactIds.length > 0) {
+        const links = groupIds.flatMap((gid) =>
+          contactIds.map((cid) => ({ group_id: gid, contact_id: cid })),
+        );
+        const { error: linkErr } = await context.supabase
+          .from("contact_group_members")
+          .upsert(links, { onConflict: "group_id,contact_id", ignoreDuplicates: true });
+        if (linkErr) throw new Error(linkErr.message);
+        addedToGroups = contactIds.length;
+      }
+    }
+
+    return { ok: true, inserted, total: data.rows.length, skipped, group_ids: groupIds, added_to_groups: addedToGroups };
   });
 
 // ============ GROUPS ============
