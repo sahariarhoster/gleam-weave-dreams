@@ -192,7 +192,15 @@ function MembersDialog({ group, onDone }: { group: Group; onDone: () => void }) 
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-10"></TableHead>
+              <TableHead className="w-10">
+                <Checkbox
+                  checked={(contacts.data?.length ?? 0) > 0 && current.size === (contacts.data?.length ?? 0)}
+                  onCheckedChange={(v) => {
+                    if (v) setSelected(new Set<string>((contacts.data ?? []).map((c: any) => c.id)));
+                    else setSelected(new Set<string>());
+                  }}
+                />
+              </TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Phone</TableHead>
             </TableRow>
